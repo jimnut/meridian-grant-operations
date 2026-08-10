@@ -1,0 +1,16 @@
+# Pings the demo every ~10 minutes so the free-tier instance never cold-starts
+# on a crawler or a first visitor. Render's free allotment (750 h/mo) covers a
+# single always-warm service, so this costs nothing anywhere.
+name: keep-warm
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          curl -sf --max-time 90 --retry 2 https://grantconsole.com/api/health
