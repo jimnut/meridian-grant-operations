@@ -46,6 +46,7 @@ const WEAK_SECRETS = new Set([
   'test',
   'test-session-secret-not-used-in-production',
   'meridian',
+  'grantconsole',
   'password',
 ]);
 
@@ -126,9 +127,13 @@ export const config = {
   sessionTtlHours: envInt('SESSION_TTL_HOURS', 72),
   maxUploadBytes: envInt('MAX_UPLOAD_MB', 10) * 1024 * 1024,
   maxUploadMb: envInt('MAX_UPLOAD_MB', 10),
-  sessionCookieName: 'meridian_session',
+  sessionCookieName: 'grantconsole_session',
   demoMode: resolveDemoMode(),
   allowedOrigins: buildAllowedOrigins(),
+  /** Canonical public origin, used for sitemap/robots URLs. */
+  siteUrl: envString('SITE_URL', 'https://grantconsole.com').replace(/\/+$/, ''),
+  /** GA4 measurement id (G-XXXXXXXX). Analytics is off unless this is set. */
+  gaMeasurementId: envString('GA_MEASUREMENT_ID'),
 } as const;
 
 function buildAllowedOrigins(): string[] {

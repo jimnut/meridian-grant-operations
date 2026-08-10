@@ -6,7 +6,7 @@ import type { Role } from '../../shared/constants';
  * This is demo-only data for a local workspace. Real deployments create users
  * through an invitation flow and never ship a known password.
  */
-export const DEMO_PASSWORD = 'Meridian!Demo2026';
+export const DEMO_PASSWORD = 'GrantConsole!Demo2026';
 
 export interface DemoUserSpec {
   key: string;

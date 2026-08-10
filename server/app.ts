@@ -9,6 +9,7 @@ import { config } from './config';
 import { attachContext, csrfProtection, loadSession, requireAuth } from './auth/middleware';
 import type { Db } from './db/connection';
 import { errorMiddleware, notFoundMiddleware } from './lib/http';
+import { landingCsp, landingHtml, publicDir, robotsTxt, sitemapXml } from './lib/site';
 import authRoutes from './routes/auth';
 import funderRoutes from './routes/funders';
 import grantChildRoutes from './routes/grant-children';
@@ -62,6 +63,26 @@ export function createApp(options: AppOptions = {}): Express {
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', version: 1 });
   });
+
+  // Public marketing surface. The landing page is the indexable face of the
+  // product; the SPA shell is noindex. Anyone already holding a session cookie
+  // falls through to the app instead.
+  app.get('/', (req, res, next) => {
+    if ((req.cookies as Record<string, string> | undefined)?.[config.sessionCookieName]) return next();
+    res.setHeader('Content-Security-Policy', landingCsp());
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.type('html').send(landingHtml());
+  });
+  app.get('/robots.txt', (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.type('text/plain').send(robotsTxt());
+  });
+  app.get('/sitemap.xml', (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.type('application/xml').send(sitemapXml());
+  });
+  // Favicon, OG image and other public assets ship straight from the source tree.
+  app.use(express.static(publicDir(), { index: false, maxAge: '1d' }));
 
   // CSRF + origin checks apply to every state-changing API request.
   app.use('/api', csrfProtection);

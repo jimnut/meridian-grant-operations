@@ -1,8 +1,12 @@
-# Meridian — Grant Operations
+# GrantConsole — Grant Operations
+
+> Live at **[grantconsole.com](https://grantconsole.com)** — anonymous visitors get an indexable
+> marketing page (`server/public/landing.html`); a session cookie routes straight to the app.
+> The SPA shell itself is `noindex`; `robots.txt` and `sitemap.xml` are served by the API server.
 
 **One calm workspace for nonprofit grant teams to manage deadlines, restricted budgets, compliance work, supporting evidence, renewal history, and audit-ready funder reports.**
 
-Meridian is a recipient-side, **post-award grant health command center** for small and midsize nonprofits — the teams juggling several restricted grants at once through spreadsheets, email threads and a shared drive. It is not a fundraising CRM and not a grant-discovery database. Its job is to answer three questions honestly:
+GrantConsole is a recipient-side, **post-award grant health command center** for small and midsize nonprofits — the teams juggling several restricted grants at once through spreadsheets, email threads and a shared drive. It is not a fundraising CRM and not a grant-discovery database. Its job is to answer three questions honestly:
 
 1. What needs attention today, and *why*?
 2. Are we ready to report, and what exactly is missing?
@@ -34,7 +38,7 @@ npm run serve         # seed if needed, build, then serve everything from http:/
 Every seeded account uses the same password:
 
 ```
-Meridian!Demo2026
+GrantConsole!Demo2026
 ```
 
 | Email | Role | Person | Organization |
@@ -244,6 +248,8 @@ Copy `.env.example` to `.env` to override. Every value has a safe development de
 | `SESSION_TTL_HOURS` | `72` | Session lifetime |
 | `MAX_UPLOAD_MB` | `10` | Evidence upload cap |
 | `ALLOWED_ORIGINS` | — | Extra origins permitted to send mutations |
+| `SITE_URL` | `https://grantconsole.com` | Canonical origin for robots.txt / sitemap.xml |
+| `GA_MEASUREMENT_ID` | *(off)* | GA4 id; the landing page ships Google's tag only when set |
 
 `data/`, `.test-data/` and `.e2e-data/` are git-ignored; no secrets or runtime data are committed.
 

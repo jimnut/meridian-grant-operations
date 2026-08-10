@@ -30,7 +30,7 @@ describe('sign-in', () => {
 
     const cookies = response.headers['set-cookie'] as unknown as string[];
     expect(cookies).toBeDefined();
-    const sessionCookie = cookies.find((c) => c.startsWith('meridian_session='));
+    const sessionCookie = cookies.find((c) => c.startsWith('grantconsole_session='));
     expect(sessionCookie).toContain('HttpOnly');
     expect(sessionCookie).toContain('SameSite=Lax');
     expect(sessionCookie).toContain('Path=/');
@@ -94,7 +94,7 @@ describe('session lifecycle', () => {
     const client = await signIn(context.app, DEMO_USERS.member);
     const response = await request(context.app)
       .get('/api/auth/session')
-      .set('Cookie', 'meridian_session=forged-id.forged-signature');
+      .set('Cookie', 'grantconsole_session=forged-id.forged-signature');
     expect(response.status).toBe(401);
     // The genuine agent still works, proving the rejection was signature based.
     expect((await client.agent.get('/api/auth/session')).status).toBe(200);

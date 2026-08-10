@@ -273,7 +273,7 @@ test('command palette finds a grant by name', async ({ page }) => {
   await signIn(page, ACCOUNTS.owner);
   await page.keyboard.press('Control+k');
 
-  const palette = page.getByRole('dialog', { name: 'Search Meridian' });
+  const palette = page.getByRole('dialog', { name: 'Search GrantConsole' });
   await expect(palette).toBeVisible();
   await palette.getByRole('combobox').fill('Food Hub');
   await expect(palette.getByRole('option', { name: /Community Food Hub Expansion/ })).toBeVisible();

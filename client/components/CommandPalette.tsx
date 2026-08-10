@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Building2, CalendarDays, FileText, LayoutDashboard, Search, Settings, Users } from 'lucide-react';
 
+import { BRAND } from '../../shared/brand';
 import { api } from '../lib/api';
 
 const FOCUSABLE =
@@ -233,7 +234,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         className="palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Search Meridian"
+        aria-label={`Search ${BRAND.titleSuffix}`}
         ref={paletteRef}
         onKeyDown={onPaletteKeyDown}
       >

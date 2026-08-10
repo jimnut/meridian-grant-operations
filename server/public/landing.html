@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <title>GrantConsole — Post-Award Grant Management Software for Nonprofits</title>
+  <meta name="description" content="Track grant deadlines, restricted budgets, compliance evidence and funder reports in one calm workspace built for nonprofit grant teams. Try the live demo — no sign-up." />
+  <link rel="canonical" href="https://grantconsole.com/" />
+  <meta name="theme-color" content="#16241e" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GrantConsole" />
+  <meta property="og:title" content="GrantConsole — Post-Award Grant Management for Nonprofits" />
+  <meta property="og:description" content="Every grant obligation, accounted for. Deadlines, restricted budgets, evidence and audit-ready funder reports in one calm workspace." />
+  <meta property="og:url" content="https://grantconsole.com/" />
+  <meta property="og:image" content="https://grantconsole.com/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="GrantConsole — Post-Award Grant Management for Nonprofits" />
+  <meta name="twitter:description" content="Every grant obligation, accounted for. Deadlines, restricted budgets, evidence and audit-ready funder reports in one calm workspace." />
+  <meta name="twitter:image" content="https://grantconsole.com/og-image.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "GrantConsole",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "https://grantconsole.com/",
+        "description": "Post-award grant management software for nonprofit teams: deadline and compliance tracking, restricted budget monitoring, evidence collection, and audit-ready funder reporting.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free live demo" },
+        "audience": { "@type": "Audience", "audienceType": "Nonprofit organizations" }
+      },
+      {
+        "@type": "Organization",
+        "name": "GrantConsole",
+        "url": "https://grantconsole.com/",
+        "logo": "https://grantconsole.com/favicon.svg",
+        "email": "support@grantconsole.com"
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is post-award grant management?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Post-award grant management is everything that happens after a grant is won: meeting reporting deadlines, spending restricted funds as budgeted, collecting the evidence funders require, completing compliance tasks, and preparing renewals. GrantConsole focuses entirely on this stage — it is not a fundraising CRM or a grant-discovery database." }
+          },
+          {
+            "@type": "Question",
+            "name": "How does GrantConsole track grant deadlines?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Every task, report, renewal and grant-period date lives on one calendar, resolved in your organization's timezone. Risk signals fire from explicit rules — a deliverable past due, an evidence gap close to a deadline, spending ahead of schedule — and each signal states the rule that produced it." }
+          },
+          {
+            "@type": "Question",
+            "name": "Can GrantConsole track restricted funds?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Budgets are tracked per grant, to the cent, against the elapsed grant period — so a grant 40% through its period with 70% of its budget spent is flagged as spending ahead of schedule, before it becomes a conversation with the funder." }
+          },
+          {
+            "@type": "Question",
+            "name": "What is an audit-ready reporting packet?",
+            "acceptedAnswer": { "@type": "Answer", "text": "For any grant, GrantConsole assembles the full picture a funder or auditor expects — budget against actuals, deliverables with attached evidence, open risks, and the complete activity trail — as a printable packet and CSV exports." }
+          },
+          {
+            "@type": "Question",
+            "name": "Who is GrantConsole for?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Small and midsize nonprofits managing several restricted grants at once — typically through spreadsheets, email threads and a shared drive. Grants managers, finance leads and executive directors share one workspace with role-based access." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <!--ANALYTICS-->
+
+  <style>
+    :root {
+      --canvas: #f6f4ef; --canvas-deep: #efece4; --surface: #ffffff;
+      --ink-900: #14231d; --ink-700: #2c3b34; --ink-600: #46534b; --ink-500: #63706a;
+      --nav-bg: #16241e; --nav-text: #cfd8d3; --nav-text-strong: #f3f1ec;
+      --accent: #1c6b58; --accent-hover: #175a4a; --accent-soft: #e7f0ec; --accent-ink: #0f4638;
+      --amber-soft: #f7edda; --amber-ink: #7a5a18; --risk-soft: #f7e5e2; --risk-ink: #8c3327;
+      --border: #e3ded3; --radius: 12px;
+      --serif: 'Iowan Old Style', 'Palatino Nova', Palatino, Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--canvas); color: var(--ink-900);
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    a { color: var(--accent); }
+
+    header.site {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 0;
+    }
+    .wordmark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink-900); }
+    .wordmark svg { border-radius: 8px; }
+    .wordmark__text { display: block; line-height: 1.25; }
+    .wordmark b { font-size: 18px; letter-spacing: -0.01em; }
+    .wordmark span { color: var(--ink-500); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-top: -2px; }
+    .btn {
+      display: inline-block; padding: 11px 20px; border-radius: 10px; text-decoration: none;
+      font-weight: 600; font-size: 15px; border: 1px solid var(--border); color: var(--ink-700); background: var(--surface);
+    }
+    .btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn--primary:hover { background: var(--accent-hover); }
+    .btn--lg { padding: 14px 26px; font-size: 16px; }
+
+    .hero { padding: 56px 0 40px; max-width: 760px; }
+    .hero .eyebrow { color: var(--accent-ink); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em; }
+    .hero h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(34px, 5.2vw, 52px); line-height: 1.12; letter-spacing: -0.015em; margin: 12px 0 0; }
+    .hero p.lede { font-size: 19px; color: var(--ink-600); margin: 20px 0 28px; max-width: 640px; }
+    .hero .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .hero .demo-note { color: var(--ink-500); font-size: 14px; }
+
+    .strip {
+      background: var(--nav-bg); color: var(--nav-text); padding: 34px 0; margin-top: 40px;
+    }
+    .strip .wrap { display: grid; gap: 8px; }
+    .strip p { margin: 0; font-size: 17px; max-width: 760px; }
+    .strip strong { color: var(--nav-text-strong); }
+
+    section.features { padding: 56px 0 8px; }
+    h2 { font-size: 26px; letter-spacing: -0.01em; margin: 0 0 6px; }
+    .section-sub { color: var(--ink-500); margin: 0 0 28px; max-width: 640px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 22px;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 17px; }
+    .card p { margin: 0; color: var(--ink-600); font-size: 15px; }
+
+    section.rules { padding: 56px 0 8px; }
+    .rule {
+      display: flex; gap: 14px; align-items: flex-start; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px;
+    }
+    .pill { flex: none; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-top: 2px; }
+    .pill--risk { background: var(--risk-soft); color: var(--risk-ink); }
+    .pill--watch { background: var(--amber-soft); color: var(--amber-ink); }
+    .rule p { margin: 0; color: var(--ink-600); font-size: 15px; }
+    .rule strong { color: var(--ink-900); }
+
+    section.faq { padding: 56px 0 24px; max-width: 760px; }
+    .faq details {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px 20px; margin-bottom: 10px;
+    }
+    .faq summary { cursor: pointer; font-weight: 600; padding: 12px 0; }
+    .faq details p { color: var(--ink-600); margin: 0 0 16px; }
+
+    .closing { padding: 40px 0 64px; text-align: center; }
+    .closing h2 { font-family: var(--serif); font-weight: 500; font-size: 30px; }
+
+    footer.site {
+      border-top: 1px solid var(--border); padding: 26px 0 40px; color: var(--ink-500); font-size: 14px;
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+    }
+    footer.site a { color: var(--ink-600); }
+    @media (max-width: 640px) {
+      .hero { padding-top: 32px; }
+      header.site .btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <a class="wordmark" href="/" aria-label="GrantConsole home">
+        <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#16241e"/><text x="16" y="22" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="18" font-weight="600" fill="#4fae90">G</text></svg>
+        <span class="wordmark__text">
+          <b>GrantConsole</b>
+          <span>Grant operations</span>
+        </span>
+      </a>
+      <a class="btn btn--primary" href="/signin">Try the live demo</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">Post-award grant management for nonprofits</p>
+        <h1>Every grant obligation, accounted&nbsp;for.</h1>
+        <p class="lede">
+          GrantConsole is one calm workspace where nonprofit teams track grant deadlines, restricted
+          budgets, compliance evidence and funder reports — instead of managing millions of dollars in
+          obligations through spreadsheets, email threads and someone's memory.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn--primary btn--lg" href="/signin">Try the live demo</a>
+          <a class="btn btn--lg" href="#how">See how it works</a>
+          <span class="demo-note">One click, no sign-up — explore a fully seeded workspace.</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="strip">
+    <div class="wrap">
+      <p>
+        <strong>The quiet failure mode of grant funding is operational.</strong> A missed report, an
+        overspent restricted budget or a lost receipt doesn't just cost one grant — it costs the
+        renewal, the reference and the relationship. GrantConsole answers three questions honestly:
+        <strong>what needs attention today and why · are we ready to report · where do restricted funds actually stand.</strong>
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="features" id="features">
+      <h2>Built for the work after the award letter</h2>
+      <p class="section-sub">Not a fundraising CRM. Not a grant-discovery database. The operational system for the grants you already hold.</p>
+      <div class="grid">
+        <div class="card">
+          <h3>Deadline &amp; compliance calendar</h3>
+          <p>Tasks, reports, renewals and grant-period dates on one calendar, resolved in your timezone — a deadline never flips over at 5&nbsp;pm.</p>
+        </div>
+        <div class="card">
+          <h3>Restricted budget tracking</h3>
+          <p>Every grant budget tracked to the cent against the elapsed grant period, so overspending is flagged months before the final report.</p>
+        </div>
+        <div class="card">
+          <h3>Evidence, attached where it counts</h3>
+          <p>Receipts, reports and sign-offs attach to the exact deliverable that requires them. Evidence gaps surface before the deadline, not after.</p>
+        </div>
+        <div class="card">
+          <h3>Audit-ready reporting packets</h3>
+          <p>One click assembles budget vs. actuals, deliverables with evidence, open risks and the full activity trail — printable, exportable, defensible.</p>
+        </div>
+        <div class="card">
+          <h3>Renewal exposure, quantified</h3>
+          <p>See exactly how much awarded value must be re-won in the next 90 days, and which renewal conversations aren't scheduled yet.</p>
+        </div>
+        <div class="card">
+          <h3>Roles your auditor will like</h3>
+          <p>Owner, manager, member and viewer roles enforced server-side, with an append-only activity trail of who changed what, when.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="rules" id="how">
+      <h2>Risk signals that explain themselves</h2>
+      <p class="section-sub">No opaque health scores. Every signal states the rule that produced it, so the Monday meeting starts with decisions, not detective work.</p>
+      <div class="rule">
+        <span class="pill pill--risk">At risk</span>
+        <p><strong>“Monthly expenditure report” was due 12 days ago and has not been submitted.</strong> An open deliverable's due date has passed.</p>
+      </div>
+      <div class="rule">
+        <span class="pill pill--risk">At risk</span>
+        <p><strong>Spending ahead of schedule by 30 points.</strong> 71% of the restricted budget is spent with 41% of the grant period elapsed.</p>
+      </div>
+      <div class="rule">
+        <span class="pill pill--watch">Watch</span>
+        <p><strong>Renewal window inside 90 days, nothing scheduled.</strong> The awarded value at stake is counted, and the missing renewal task is named.</p>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <h2>Questions grant teams ask</h2>
+      <details>
+        <summary>What is post-award grant management?</summary>
+        <p>Everything that happens after a grant is won: meeting reporting deadlines, spending restricted funds as budgeted, collecting the evidence funders require, completing compliance tasks and preparing renewals. GrantConsole focuses entirely on this stage.</p>
+      </details>
+      <details>
+        <summary>How is this different from a fundraising CRM?</summary>
+        <p>A CRM manages donors and asks. GrantConsole manages obligations — the deadlines, restricted budgets and reports attached to money you already hold. Many teams run both, side by side.</p>
+      </details>
+      <details>
+        <summary>Can it track restricted funds?</summary>
+        <p>Yes — per grant, to the cent, against the elapsed grant period. A grant 40% through its period with 70% of its budget spent is flagged as ahead of schedule, with the numbers shown.</p>
+      </details>
+      <details>
+        <summary>What does the reporting packet include?</summary>
+        <p>Budget against actuals, deliverables with attached evidence, open risks and the complete activity trail — assembled per grant, designed for print/save-as-PDF, with CSV exports alongside.</p>
+      </details>
+      <details>
+        <summary>Who is it for?</summary>
+        <p>Small and midsize nonprofits juggling several restricted grants at once — grants managers, finance leads and executive directors sharing one workspace with role-based access.</p>
+      </details>
+    </section>
+
+    <section class="closing">
+      <h2>See your portfolio the calm way.</h2>
+      <p class="section-sub" style="margin: 8px auto 24px;">The live demo is a fully seeded nonprofit workspace — two organizations, fifteen grants, real deadlines. One click to explore.</p>
+      <a class="btn btn--primary btn--lg" href="/signin">Try the live demo</a>
+    </section>
+
+    <footer class="site">
+      <span>© GrantConsole · grant operations for nonprofit teams</span>
+      <span><a href="mailto:support@grantconsole.com">support@grantconsole.com</a> · <a href="/signin">Live demo</a></span>
+    </footer>
+  </div>
+</body>
+</html>

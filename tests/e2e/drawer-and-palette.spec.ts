@@ -93,7 +93,7 @@ test.describe('command palette', () => {
     await searchButton.focus();
 
     await page.keyboard.press('ControlOrMeta+k');
-    const palette = page.getByRole('dialog', { name: 'Search Meridian' });
+    const palette = page.getByRole('dialog', { name: 'Search GrantConsole' });
     await expect(palette).toBeVisible();
     await expect(palette.getByRole('combobox')).toBeFocused();
     await expect(page.locator('#root')).toHaveAttribute('inert', '');
@@ -125,7 +125,7 @@ test.describe('command palette', () => {
     });
 
     await page.keyboard.press('ControlOrMeta+k');
-    const palette = page.getByRole('dialog', { name: 'Search Meridian' });
+    const palette = page.getByRole('dialog', { name: 'Search GrantConsole' });
     await palette.getByRole('combobox').fill('Family');
     await expect(palette.getByText('Searching…')).toBeVisible();
 
@@ -151,7 +151,7 @@ test.describe('command palette', () => {
     });
 
     await page.keyboard.press('ControlOrMeta+k');
-    const palette = page.getByRole('dialog', { name: 'Search Meridian' });
+    const palette = page.getByRole('dialog', { name: 'Search GrantConsole' });
     await palette.getByRole('combobox').fill('Family');
 
     await expect(palette.getByText(/Search is unavailable right now/)).toBeVisible();

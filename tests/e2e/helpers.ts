@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
-export const DEMO_PASSWORD = 'Meridian!Demo2026';
+export const DEMO_PASSWORD = 'GrantConsole!Demo2026';
 
 export const ACCOUNTS = {
   owner: 'dana@riverbendalliance.org',

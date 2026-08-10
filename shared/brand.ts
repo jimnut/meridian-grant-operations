@@ -7,9 +7,9 @@
  */
 export const BRAND = {
   /** Product wordmark. */
-  name: 'Meridian',
+  name: 'GrantConsole',
   /** Full legal/marketing name used in document headers and the sign-in card. */
-  fullName: 'Meridian Grant Operations',
+  fullName: 'GrantConsole — Grant Operations',
   /** Short descriptor placed under the wordmark. */
   descriptor: 'Grant Operations',
   /** One-line value proposition. */
@@ -18,13 +18,13 @@ export const BRAND = {
   /** Compact tagline for tight spaces. */
   shortTagline: 'Post-award grant health, in one place.',
   /** Monogram used in the sidebar mark. */
-  monogram: 'M',
+  monogram: 'G',
   /** Suffix appended to browser document titles. */
-  titleSuffix: 'Meridian',
+  titleSuffix: 'GrantConsole',
   /** Used in exported file names — lowercase, filesystem safe. */
-  fileSlug: 'meridian',
+  fileSlug: 'grantconsole',
   /** Support contact surfaced in error states. */
-  supportEmail: 'support@meridian.example',
+  supportEmail: 'support@grantconsole.com',
 } as const;
 
 export type Brand = typeof BRAND;
