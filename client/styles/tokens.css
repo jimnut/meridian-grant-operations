@@ -1,0 +1,137 @@
+/*
+ * Meridian design tokens — "calm stewardship".
+ *
+ * A warm paper canvas, deep forest ink for navigation, one restrained teal-green
+ * accent, muted amber for attention and a desaturated red reserved for genuine
+ * risk. Nothing glows; nothing gradients.
+ */
+
+:root {
+  /* Canvas and surfaces */
+  --canvas: #f6f4ef;
+  --canvas-deep: #efece4;
+  --surface: #ffffff;
+  --surface-sunken: #faf8f4;
+  --surface-raised: #ffffff;
+
+  /* Ink */
+  --ink-900: #14231d;
+  --ink-800: #1d2f28;
+  --ink-700: #2c3b34;
+  --ink-600: #46534b;
+  --ink-500: #63706a;
+  /* Lightest ink used for small text — 4.5:1+ on every surface it sits on. */
+  --ink-400: #66736c;
+  --ink-300: #a3aca7;
+
+  /* Navigation shell */
+  --nav-bg: #16241e;
+  --nav-bg-hover: #203029;
+  --nav-bg-active: #24382f;
+  --nav-text: #cfd8d3;
+  --nav-text-strong: #f3f1ec;
+  --nav-text-dim: #8b9a93;
+  --nav-border: #2a3a33;
+
+  /* Accent — sophisticated teal-green */
+  --accent: #1c6b58;
+  --accent-hover: #175a4a;
+  --accent-active: #124638;
+  --accent-ink: #0f4638;
+  --accent-soft: #e7f0ec;
+  --accent-soft-strong: #d3e5de;
+  --accent-border: #b5d2c8;
+
+  /* Attention — muted amber */
+  --amber: #9a6c14;
+  --amber-ink: #6f4d0d;
+  --amber-soft: #fbf2e0;
+  --amber-border: #e8d5aa;
+
+  /* Risk — restrained red */
+  --risk: #9c3227;
+  --risk-ink: #7a271e;
+  --risk-soft: #faeae7;
+  --risk-border: #ecc5bd;
+
+  /* Positive */
+  --positive: #2b6a4a;
+  --positive-soft: #e6f1ea;
+  --positive-border: #bcd9c9;
+
+  /* Neutral info */
+  --info: #2f5c75;
+  --info-soft: #e8f0f4;
+  --info-border: #c2d7e2;
+
+  /* Lines */
+  --border: #e5e0d6;
+  --border-strong: #d4cdbe;
+  --border-subtle: #eeeae2;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-serif: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
+  --space-8: 2.5rem;
+  --space-9: 3rem;
+  --space-10: 4rem;
+
+  /* Radii — rounded, never pill-shaped except for dots and avatars */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgba(20, 35, 29, 0.06);
+  --shadow-sm: 0 1px 3px rgba(20, 35, 29, 0.07), 0 1px 2px rgba(20, 35, 29, 0.04);
+  --shadow-md: 0 4px 12px rgba(20, 35, 29, 0.08), 0 1px 3px rgba(20, 35, 29, 0.05);
+  --shadow-lg: 0 16px 40px rgba(20, 35, 29, 0.14), 0 4px 12px rgba(20, 35, 29, 0.08);
+
+  /* Layout */
+  --sidebar-width: 244px;
+  --topbar-height: 60px;
+  --content-max: 1400px;
+
+  --focus-ring: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent);
+  --transition: 140ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

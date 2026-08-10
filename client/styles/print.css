@@ -1,0 +1,87 @@
+/*
+ * Print styles. The reporting packet is designed to be printed or saved as a PDF
+ * from the browser, so the shell disappears and the document takes the page.
+ */
+
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+    font-size: 10.5pt;
+  }
+
+  .sidebar,
+  .topbar,
+  .toast-region,
+  .scrim,
+  .no-print,
+  .skip-link {
+    display: none !important;
+  }
+
+  .main {
+    margin-left: 0 !important;
+  }
+
+  .content {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  .packet {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .card {
+    border-color: #cccccc;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .packet__section {
+    break-inside: avoid;
+  }
+
+  /*
+   * On screen the packet tables scroll inside .table-wrap so they cannot push
+   * the document sideways; in print a scroll container would clip columns, so
+   * let the content flow instead.
+   */
+  .table-wrap {
+    overflow-x: visible;
+  }
+
+  .table thead th {
+    position: static;
+    background: #f2f2f2 !important;
+    color: #000000;
+  }
+
+  .badge {
+    border-color: #999999 !important;
+    background: transparent !important;
+    color: #000000 !important;
+  }
+
+  .progress {
+    border: 1px solid #999999;
+  }
+
+  .progress__bar {
+    background: #666666 !important;
+  }
+
+  a {
+    color: #000000;
+    text-decoration: none;
+  }
+}
