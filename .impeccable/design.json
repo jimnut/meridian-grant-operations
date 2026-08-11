@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-11T13:45:00-07:00",
+  "title": "Design System: GrantConsole — Marketing Landing",
+  "extensions": {
+    "colorMeta": {
+      "panel": { "role": "neutral", "displayName": "Panel (Ink Blue)", "canonical": "#1b2129", "tonalRamp": ["oklch(15% 0.02 255)", "oklch(26% 0.02 255)", "oklch(38% 0.02 255)", "oklch(49% 0.02 255)", "oklch(60% 0.02 255)", "oklch(72% 0.02 255)", "oklch(83% 0.02 255)", "oklch(95% 0.02 255)"] },
+      "panel-soft": { "role": "neutral", "displayName": "Panel Soft", "canonical": "#232b36", "tonalRamp": ["oklch(15% 0.025 255)", "oklch(26% 0.025 255)", "oklch(38% 0.025 255)", "oklch(49% 0.025 255)", "oklch(60% 0.025 255)", "oklch(72% 0.025 255)", "oklch(83% 0.025 255)", "oklch(95% 0.025 255)"] },
+      "panel-edge": { "role": "neutral", "displayName": "Panel Edge", "canonical": "#313b48", "tonalRamp": ["oklch(15% 0.03 255)", "oklch(26% 0.03 255)", "oklch(38% 0.03 255)", "oklch(49% 0.03 255)", "oklch(60% 0.03 255)", "oklch(72% 0.03 255)", "oklch(83% 0.03 255)", "oklch(95% 0.03 255)"] },
+      "panel-text": { "role": "neutral", "displayName": "Panel Text", "canonical": "#eef0f2", "tonalRamp": ["oklch(15% 0.005 240)", "oklch(26% 0.005 240)", "oklch(38% 0.005 240)", "oklch(49% 0.005 240)", "oklch(60% 0.005 240)", "oklch(72% 0.005 240)", "oklch(83% 0.005 240)", "oklch(95% 0.005 240)"] },
+      "panel-muted": { "role": "neutral", "displayName": "Panel Muted", "canonical": "#a7b0ba", "tonalRamp": ["oklch(15% 0.015 245)", "oklch(26% 0.015 245)", "oklch(38% 0.015 245)", "oklch(49% 0.015 245)", "oklch(60% 0.015 245)", "oklch(72% 0.015 245)", "oklch(83% 0.015 245)", "oklch(95% 0.015 245)"] },
+      "paper": { "role": "neutral", "displayName": "Paper (Warm)", "canonical": "#f7f6f3", "tonalRamp": ["oklch(15% 0.005 90)", "oklch(26% 0.005 90)", "oklch(38% 0.005 90)", "oklch(49% 0.005 90)", "oklch(60% 0.005 90)", "oklch(72% 0.005 90)", "oklch(83% 0.005 90)", "oklch(97% 0.005 90)"] },
+      "card": { "role": "neutral", "displayName": "Card White", "canonical": "#ffffff", "tonalRamp": ["oklch(15% 0 0)", "oklch(26% 0 0)", "oklch(38% 0 0)", "oklch(49% 0 0)", "oklch(60% 0 0)", "oklch(72% 0 0)", "oklch(83% 0 0)", "oklch(100% 0 0)"] },
+      "edge": { "role": "neutral", "displayName": "Edge Hairline", "canonical": "#e2dfd8", "tonalRamp": ["oklch(15% 0.012 90)", "oklch(26% 0.012 90)", "oklch(38% 0.012 90)", "oklch(49% 0.012 90)", "oklch(60% 0.012 90)", "oklch(72% 0.012 90)", "oklch(83% 0.012 90)", "oklch(95% 0.012 90)"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#20242b", "tonalRamp": ["oklch(15% 0.02 260)", "oklch(26% 0.02 260)", "oklch(38% 0.02 260)", "oklch(49% 0.02 260)", "oklch(60% 0.02 260)", "oklch(72% 0.02 260)", "oklch(83% 0.02 260)", "oklch(95% 0.02 260)"] },
+      "ink-soft": { "role": "neutral", "displayName": "Ink Soft", "canonical": "#565d66", "tonalRamp": ["oklch(15% 0.015 250)", "oklch(26% 0.015 250)", "oklch(38% 0.015 250)", "oklch(49% 0.015 250)", "oklch(60% 0.015 250)", "oklch(72% 0.015 250)", "oklch(83% 0.015 250)", "oklch(95% 0.015 250)"] },
+      "amber": { "role": "primary", "displayName": "Signal Amber (dark grounds only)", "canonical": "#e9973f", "tonalRamp": ["oklch(15% 0.14 65)", "oklch(26% 0.14 65)", "oklch(38% 0.14 65)", "oklch(49% 0.14 65)", "oklch(60% 0.14 65)", "oklch(73% 0.14 65)", "oklch(83% 0.1 65)", "oklch(95% 0.05 65)"] },
+      "amber-ink": { "role": "primary", "displayName": "Burnt Amber (light grounds)", "canonical": "#8a5410", "tonalRamp": ["oklch(15% 0.09 70)", "oklch(26% 0.1 70)", "oklch(38% 0.11 70)", "oklch(48% 0.11 70)", "oklch(60% 0.11 70)", "oklch(72% 0.1 70)", "oklch(83% 0.08 70)", "oklch(95% 0.04 70)"] },
+      "amber-deep": { "role": "primary", "displayName": "Amber Deep (focus and borders)", "canonical": "#c4761f", "tonalRamp": ["oklch(15% 0.1 68)", "oklch(26% 0.11 68)", "oklch(38% 0.12 68)", "oklch(49% 0.13 68)", "oklch(62% 0.13 68)", "oklch(72% 0.12 68)", "oklch(83% 0.09 68)", "oklch(95% 0.04 68)"] },
+      "teal-ink": { "role": "secondary", "displayName": "Teal Ink (rules and roles)", "canonical": "#1d6e63", "tonalRamp": ["oklch(15% 0.05 180)", "oklch(26% 0.06 180)", "oklch(38% 0.07 180)", "oklch(47% 0.08 180)", "oklch(60% 0.08 180)", "oklch(72% 0.07 180)", "oklch(83% 0.05 180)", "oklch(95% 0.02 180)"] },
+      "risk-ink": { "role": "secondary", "displayName": "Risk Ink (AT RISK tags)", "canonical": "#b3362a", "tonalRamp": ["oklch(15% 0.09 30)", "oklch(26% 0.12 30)", "oklch(38% 0.14 30)", "oklch(50% 0.16 30)", "oklch(60% 0.15 30)", "oklch(72% 0.12 30)", "oklch(83% 0.08 30)", "oklch(95% 0.03 30)"] },
+      "app-paper": { "role": "quoted-exhibit", "displayName": "App Paper (quoted)", "canonical": "#f6f4ef", "tonalRamp": ["oklch(15% 0.008 95)", "oklch(26% 0.008 95)", "oklch(38% 0.008 95)", "oklch(49% 0.008 95)", "oklch(60% 0.008 95)", "oklch(72% 0.008 95)", "oklch(83% 0.008 95)", "oklch(97% 0.008 95)"] },
+      "app-ink": { "role": "quoted-exhibit", "displayName": "App Ink (quoted)", "canonical": "#14231d", "tonalRamp": ["oklch(15% 0.02 165)", "oklch(26% 0.02 165)", "oklch(38% 0.02 165)", "oklch(49% 0.02 165)", "oklch(60% 0.02 165)", "oklch(72% 0.02 165)", "oklch(83% 0.02 165)", "oklch(95% 0.02 165)"] },
+      "app-ink-soft": { "role": "quoted-exhibit", "displayName": "App Ink Soft (quoted)", "canonical": "#46534b", "tonalRamp": ["oklch(15% 0.015 160)", "oklch(26% 0.015 160)", "oklch(38% 0.015 160)", "oklch(49% 0.015 160)", "oklch(60% 0.015 160)", "oklch(72% 0.015 160)", "oklch(83% 0.015 160)", "oklch(95% 0.015 160)"] },
+      "app-green": { "role": "quoted-exhibit", "displayName": "App Forest Green (quoted)", "canonical": "#1c6b58", "tonalRamp": ["oklch(15% 0.05 170)", "oklch(26% 0.06 170)", "oklch(38% 0.07 170)", "oklch(46% 0.075 170)", "oklch(60% 0.075 170)", "oklch(72% 0.06 170)", "oklch(83% 0.045 170)", "oklch(95% 0.02 170)"] },
+      "app-risk": { "role": "quoted-exhibit", "displayName": "App Risk Red (quoted)", "canonical": "#a33d31", "tonalRamp": ["oklch(15% 0.08 30)", "oklch(26% 0.1 30)", "oklch(38% 0.12 30)", "oklch(48% 0.13 30)", "oklch(60% 0.12 30)", "oklch(72% 0.1 30)", "oklch(83% 0.07 30)", "oklch(95% 0.03 30)"] },
+      "app-risk-soft": { "role": "quoted-exhibit", "displayName": "App Risk Soft (quoted)", "canonical": "#f7e5e2", "tonalRamp": ["oklch(15% 0.02 30)", "oklch(26% 0.02 30)", "oklch(38% 0.02 30)", "oklch(49% 0.02 30)", "oklch(60% 0.02 30)", "oklch(72% 0.02 30)", "oklch(83% 0.02 30)", "oklch(94% 0.02 30)"] },
+      "app-amber-soft": { "role": "quoted-exhibit", "displayName": "App Amber Soft (quoted)", "canonical": "#f7edda", "tonalRamp": ["oklch(15% 0.03 85)", "oklch(26% 0.03 85)", "oklch(38% 0.03 85)", "oklch(49% 0.03 85)", "oklch(60% 0.03 85)", "oklch(72% 0.03 85)", "oklch(83% 0.03 85)", "oklch(95% 0.03 85)"] },
+      "app-amber-ink": { "role": "quoted-exhibit", "displayName": "App Amber Ink (quoted)", "canonical": "#7a5a18", "tonalRamp": ["oklch(15% 0.08 85)", "oklch(26% 0.09 85)", "oklch(38% 0.1 85)", "oklch(47% 0.1 85)", "oklch(60% 0.1 85)", "oklch(72% 0.09 85)", "oklch(83% 0.07 85)", "oklch(95% 0.03 85)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The hero h1 only; Archivo 800, tight-tracked, text-wrap balance." },
+      "headline": { "displayName": "Headline", "purpose": "Section h2s and the closing line." },
+      "title": { "displayName": "Title", "purpose": "Specimen caption h3s; persona names at 15px." },
+      "body": { "displayName": "Body", "purpose": "Base prose at 16.5px/1.6; lede 18px, captions 14.5px, support 13-13.5px." },
+      "label": { "displayName": "Label (Mono Tag)", "purpose": "Boxed uppercase tags, roster label, wordmark subtitle, role tags. Uppercase is applied via text-transform." },
+      "data": { "displayName": "Data (Mono)", "purpose": "CTAs, mono links, ledger expressions, source captions, the demo password." }
+    },
+    "shadows": [
+      { "name": "shot-lift", "value": "0 18px 40px -24px rgba(32, 36, 43, 0.35)", "purpose": "The screenshot frame only — the page's single shadow (The One Shadow Rule)." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The roster settle-in, the page's only authored animation (0.5s, 70ms stagger from 0.15s, backwards fill; disabled under prefers-reduced-motion)." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "980px" },
+      { "name": "sm", "value": "560px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Demo Button",
+      "kind": "button",
+      "refersTo": "button-demo",
+      "description": "The page's single CTA: panel-dark fill, uppercase mono label, always pointing at /signin.",
+      "html": "<a class=\"ds-btn-demo\" href=\"#\">OPEN THE LIVE DEMO →</a>",
+      "css": ".ds-btn-demo { display: inline-block; text-align: center; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #fff; background: #1b2129; border: 1px solid #1b2129; text-decoration: none; padding: 15px 20px; border-radius: 8px; } .ds-btn-demo:hover { background: #232b36; } .ds-btn-demo:focus-visible { outline: 2px solid #c4761f; outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Demo Button (Amber Mobile)",
+      "kind": "button",
+      "refersTo": "button-demo-mobile",
+      "description": "The mobile variant shown inside the dark story panel below 980px — the one place bright amber may be a fill.",
+      "html": "<div class=\"ds-panel-ground\"><a class=\"ds-btn-demo-amber\" href=\"#\">OPEN THE LIVE DEMO →</a></div>",
+      "css": ".ds-panel-ground { background: #1b2129; padding: 20px; border-radius: 10px; } .ds-btn-demo-amber { display: block; text-align: center; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; color: #1b2129; background: #e9973f; border: 1px solid #e9973f; text-decoration: none; padding: 15px 20px; border-radius: 8px; } .ds-btn-demo-amber:focus-visible { outline: 2px solid #c4761f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Persona Card",
+      "kind": "card",
+      "refersTo": "persona-card",
+      "description": "A demo-roster row: name and title left, boxed role tag right; the whole card is a link.",
+      "html": "<a class=\"ds-persona\" href=\"#\"><span><span class=\"ds-p-name\">Marcus Oyelaran</span><span class=\"ds-p-title\">Director of Development &amp; Grants</span></span><span class=\"ds-p-role\">MANAGER</span></a>",
+      "css": ".ds-persona { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: #ffffff; border: 1px solid #e2dfd8; border-radius: 10px; padding: 13px 16px; text-decoration: none; color: #20242b; font-family: 'Archivo', -apple-system, 'Helvetica Neue', Arial, sans-serif; } .ds-persona:hover { border-color: #c4761f; } .ds-persona:focus-visible { outline: 2px solid #c4761f; outline-offset: 3px; } .ds-p-name { font-weight: 700; font-size: 15px; display: block; } .ds-p-title { color: #565d66; font-size: 13.5px; display: block; margin-top: 1px; } .ds-p-role { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; color: #1d6e63; border: 1px solid currentColor; border-radius: 4px; padding: 4px 9px; flex: none; }"
+    },
+    {
+      "name": "Boxed Status Tags",
+      "kind": "chip",
+      "refersTo": "tag-risk",
+      "description": "The semantic voice: uppercase mono tags with 1px currentColor borders — risk red, watch amber, teal rule/fact. Never filled.",
+      "html": "<div class=\"ds-tag-row\"><span class=\"ds-tag ds-tag-risk\">At risk</span><span class=\"ds-tag ds-tag-watch\">Watch</span><span class=\"ds-tag ds-tag-teal\">Rule 05</span></div>",
+      "css": ".ds-tag-row { display: flex; gap: 8px; } .ds-tag { display: inline-block; font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 9px; border: 1px solid currentColor; border-radius: 4px; line-height: 1.4; background: transparent; } .ds-tag-risk { color: #b3362a; } .ds-tag-watch { color: #8a5410; } .ds-tag-teal { color: #1d6e63; }"
+    },
+    {
+      "name": "Mono Link",
+      "kind": "custom",
+      "refersTo": "mono-link",
+      "description": "Evidence links in the data voice: burnt-amber mono, deep underline offset.",
+      "html": "<a class=\"ds-mono-link\" href=\"#\">See the rulebook working in the live demo →</a>",
+      "css": ".ds-mono-link { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-size: 14px; font-weight: 600; color: #8a5410; text-decoration: underline; text-underline-offset: 5px; } .ds-mono-link:hover { color: #20242b; } .ds-mono-link:focus-visible { outline: 2px solid #c4761f; outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Specimen Card",
+      "kind": "card",
+      "refersTo": "persona-card",
+      "description": "The signature component: an app-palette exhibit depicting a real product moment, above a caption with severity tag, rule number, and demo-workspace source line.",
+      "html": "<div class=\"ds-specimen\"><div class=\"ds-exhibit\"><div class=\"ds-x-row\"><strong>Housing Retention Fund</strong><span>restricted budget</span></div><div class=\"ds-x-bar\" role=\"img\" aria-label=\"71 percent of budget spent, 41 percent of period elapsed\"></div><div class=\"ds-x-under\"><span>71% of budget spent</span><span>41% of period elapsed</span></div></div><div class=\"ds-caption\"><div class=\"ds-tag-row\"><span class=\"ds-tag ds-tag-risk\">At risk</span><span class=\"ds-tag ds-tag-teal\">Rule 05</span></div><h3>Spending ahead of schedule</h3><p>Fires when spend outruns the elapsed grant period by more than 15 points.</p><p class=\"ds-src\">live demo workspace · Housing Retention Fund</p></div></div>",
+      "css": ".ds-specimen { background: #ffffff; border: 1px solid #e2dfd8; border-radius: 10px; display: flex; flex-direction: column; max-width: 380px; font-family: 'Archivo', -apple-system, 'Helvetica Neue', Arial, sans-serif; } .ds-exhibit { background: #f6f4ef; padding: 22px; color: #14231d; border-radius: 9px 9px 0 0; border-bottom: 1px solid #e2dfd8; } .ds-x-row { display: flex; justify-content: space-between; font-size: 12.5px; color: #46534b; margin-bottom: 6px; } .ds-x-row strong { color: #14231d; font-weight: 700; } .ds-x-bar { height: 10px; border-radius: 5px; background: linear-gradient(#a33d31, #a33d31) left / 71% 100% no-repeat, linear-gradient(#14231d, #14231d) 41% 0 / 2px 100% no-repeat, #e6e2d8; } .ds-x-under { display: flex; justify-content: space-between; font-size: 12.5px; color: #46534b; margin-top: 7px; } .ds-caption { padding: 18px 20px 20px; } .ds-caption h3 { margin: 12px 0 6px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: #20242b; } .ds-caption p { margin: 0; font-size: 14.5px; color: #565d66; } .ds-src { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: #565d66; margin-top: 12px; letter-spacing: 0.03em; } .ds-tag-row { display: flex; gap: 8px; } .ds-tag { display: inline-block; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 9px; border: 1px solid currentColor; border-radius: 4px; line-height: 1.4; } .ds-tag-risk { color: #b3362a; } .ds-tag-teal { color: #1d6e63; }"
+    },
+    {
+      "name": "Ledger Fact",
+      "kind": "custom",
+      "refersTo": "button-demo",
+      "description": "A dark-band finance fact: amber mono expression over a muted note, on the panel ground.",
+      "html": "<div class=\"ds-ledger\"><div class=\"ds-f-expr\">$0.10 + $0.20 = $0.30</div><p class=\"ds-f-note\">Money is never a float. Amounts are stored and summed as integer cents.</p></div>",
+      "css": ".ds-ledger { background: #1b2129; color: #eef0f2; border-radius: 12px; padding: 28px 30px; max-width: 340px; font-family: 'Archivo', -apple-system, 'Helvetica Neue', Arial, sans-serif; } .ds-f-expr { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; color: #e9973f; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; } .ds-f-note { color: #a7b0ba; font-size: 13.5px; margin: 8px 0 0; line-height: 1.55; }"
+    },
+    {
+      "name": "FAQ Item",
+      "kind": "custom",
+      "refersTo": "mono-link",
+      "description": "Native details/summary row with a mono +/− marker in amber deep; no JavaScript.",
+      "html": "<details class=\"ds-faq\"><summary>What is post-award grant management?</summary><p>Everything that happens after a grant is won: deadlines, restricted budgets, evidence, compliance tasks and renewals.</p></details>",
+      "css": ".ds-faq { border-bottom: 1px solid #e2dfd8; font-family: 'Archivo', -apple-system, 'Helvetica Neue', Arial, sans-serif; max-width: 560px; } .ds-faq summary { cursor: pointer; font-weight: 650; font-size: 16.5px; padding: 18px 4px; list-style: none; display: flex; align-items: center; gap: 14px; color: #20242b; } .ds-faq summary::before { content: \"+\"; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #c4761f; font-weight: 600; width: 16px; flex: none; } .ds-faq[open] summary::before { content: \"−\"; } .ds-faq summary::-webkit-details-marker { display: none; } .ds-faq summary:focus-visible { outline: 2px solid #c4761f; outline-offset: 3px; border-radius: 2px; } .ds-faq p { color: #565d66; font-size: 15px; margin: 0 0 20px; padding-left: 30px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Front Door",
+    "overview": "The landing page is not a brochure about the product; it is the product's own front door left open. Its structure is the app sign-in's split screen — story panel left, working demo roster right — and everything on the page is drawn from the seeded demo workspace: real rule names, real grant titles, real numbers. The personality is finance-grade honesty made warm: a deep ink-blue panel speaks the promise, warm paper carries the proof, and JetBrains Mono marks every machine truth the way a ledger marks entries. Amber is the single voice of emphasis, and it is spent carefully. Density is editorial, not dashboard: generous 72px section rhythm, one column of argument at a time, specimen cards presented like catalog exhibits with the app's own palette quoted inside them. The page rejects the single-column hero-scroll SaaS default, rejects invented social proof entirely, and rejects decoration that the product could not back with a rule.",
+    "keyCharacteristics": [
+      "Split-screen front door: ink-blue story panel + warm-paper action panel, borrowed from the app's own sign-in.",
+      "Two typefaces, two jobs: Archivo (variable, embedded) argues; JetBrains Mono testifies.",
+      "Boxed uppercase mono tags as the semantic voice: risk red, watch amber, teal rule/fact.",
+      "Specimen cards whose exhibits depict the real product in the app's own (quoted) palette.",
+      "Flat hairline world, one shadow, one animation.",
+      "Everything self-contained: fonts as data URIs, strict CSP, zero external requests."
+    ],
+    "rules": [
+      { "name": "The Two Ambers Rule", "body": "Bright amber (#e9973f) lives only on the dark panel; on paper or white, amber always appears as Burnt Amber (#8a5410) for text and Amber Deep (#c4761f) for borders/focus. There is no context where bright amber sits as text on a light ground.", "section": "colors" },
+      { "name": "The Quoted Palette Rule", "body": "The --app-* colors are quoted material: they appear exclusively inside exhibit panels that depict the product. The landing never speaks in the app's forest green, and the app never speaks in the landing's ink-blue or bright amber.", "section": "colors" },
+      { "name": "The Border-Not-Fill Rule", "body": "Semantic color (risk, watch, teal) is carried as tag text + 1px currentColor border on white — never as a filled chip. The only filled pill on the page lives inside an exhibit, quoting the app.", "section": "colors" },
+      { "name": "The Mono Voice Rule", "body": "JetBrains Mono is reserved for machine truth: tags, rule numbers, data expressions, source captions, CTAs, the password, the colophon. If the product computed it or enforces it, it is mono; if a human is being persuaded, it is Archivo.", "section": "typography" },
+      { "name": "The One Shadow Rule", "body": "New surfaces do not earn shadows. Separation comes from a 1px Edge hairline or a ground change; the screenshot frame keeps the page's only shadow.", "section": "elevation" },
+      { "name": "The Single Settle Rule", "body": "The page has exactly one authored animation: the four persona cards settle in once on load — 0.5s cubic-bezier(0.16, 1, 0.3, 1), 70ms stagger, backwards fill — fully disabled under prefers-reduced-motion. Everything else limits itself to instant hover color/border swaps.", "section": "components" }
+    ],
+    "dos": [
+      "Do keep the page entirely self-contained: inline CSS, both fonts embedded as woff2 data URIs, no external requests, strict CSP (see server/lib/site.ts).",
+      "Do preserve every SEO surface on any edit: canonical link, the JSON-LD @graph trio (SoftwareApplication, Organization, FAQPage matching the visible FAQ), the OG/Twitter image (/og-image.png, 1200x630), the <!--ANALYTICS--> placeholder comment, theme-color #1b2129, and the Express-served /robots.txt and /sitemap.xml.",
+      "Do hold the accessibility floor the build ships: WCAG AA contrast on every text/ground pair, the global 2px #c4761f focus-visible outline at 3px offset, aria-labels on pictorial exhibits and the roster nav, semantic details FAQ, and reduced-motion coverage.",
+      "Do draw all proof from the seeded demo: real rule names, real grant and persona names, real numbers, with a mono source line crediting the live demo workspace.",
+      "Do show the demo password in plain text (GrantConsole!Demo2026) — it is public by design.",
+      "Do keep money and rules in mono: any figure, rule number, or computed claim renders in JetBrains Mono."
+    ],
+    "donts": [
+      "Don't invent proof. No testimonials, customer names, logos, pilot claims, or usage numbers; the commented-out REVIEWS section stays dormant until real, permissioned quotes exist.",
+      "Don't bleed worlds across the boundary: no landing ink-blue/bright-amber inside the React app, and no app forest-green on the landing outside a quoted exhibit panel.",
+      "Don't put Signal Amber (#e9973f) text on paper or white — it fails AA there; use Burnt Amber (#8a5410).",
+      "Don't add shadows, gradients used as decoration, filled semantic chips outside exhibits, or any animation beyond the roster settle.",
+      "Don't add a navigation bar, secondary CTAs, or destinations other than /signin and mailto:support — the page earns exactly one action."
+    ]
+  }
+}
