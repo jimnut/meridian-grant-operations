@@ -2,14 +2,23 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 import cookieParser from 'cookie-parser';
-import express, { type Express } from 'express';
+import express, { type Express, type Response } from 'express';
 import helmet from 'helmet';
 
 import { config } from './config';
 import { attachContext, csrfProtection, loadSession, requireAuth } from './auth/middleware';
 import type { Db } from './db/connection';
 import { errorMiddleware, notFoundMiddleware } from './lib/http';
-import { landingCsp, landingHtml, publicDir, robotsTxt, sitemapXml } from './lib/site';
+import {
+  landingCsp,
+  landingHtml,
+  PUBLIC_INFO_PATHS,
+  publicDir,
+  publicInfoHtml,
+  publicNotFoundHtml,
+  robotsTxt,
+  sitemapXml,
+} from './lib/site';
 import authRoutes from './routes/auth';
 import funderRoutes from './routes/funders';
 import grantChildRoutes from './routes/grant-children';
@@ -20,8 +29,31 @@ export interface AppOptions {
   db?: Db;
   /** Serve the built client from dist/client. Enabled for the production server. */
   serveStatic?: boolean;
+  /** Override the built client directory in tests. */
+  clientDir?: string;
   /** Evidence storage root. Tests pass a temporary directory. */
   uploadsDir?: string;
+}
+
+const SPA_PATHS = [
+  /^\/$/,
+  /^\/signin\/?$/,
+  /^\/grants\/?$/,
+  /^\/grants\/[^/]+\/?$/,
+  /^\/grants\/[^/]+\/packet\/?$/,
+  /^\/funders\/?$/,
+  /^\/funders\/[^/]+\/?$/,
+  /^\/(?:calendar|reports|team|settings)\/?$/,
+];
+
+export function isSpaPath(pathname: string): boolean {
+  return SPA_PATHS.some((pattern) => pattern.test(pathname));
+}
+
+function sendPublicNotFound(res: Response): void {
+  res.setHeader('Content-Security-Policy', landingCsp());
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(404).type('html').send(publicNotFoundHtml());
 }
 
 export function createApp(options: AppOptions = {}): Express {
@@ -80,6 +112,13 @@ export function createApp(options: AppOptions = {}): Express {
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.type('html').send(landingHtml());
   });
+  for (const pagePath of PUBLIC_INFO_PATHS) {
+    app.get(pagePath, (_req, res) => {
+      res.setHeader('Content-Security-Policy', landingCsp());
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.type('html').send(publicInfoHtml(pagePath));
+    });
+  }
   app.get('/robots.txt', (_req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.type('text/plain').send(robotsTxt());
@@ -105,7 +144,7 @@ export function createApp(options: AppOptions = {}): Express {
   app.use('/api', notFoundMiddleware);
 
   if (options.serveStatic) {
-    const clientDir = path.resolve(process.cwd(), 'dist/client');
+    const clientDir = options.clientDir ?? path.resolve(process.cwd(), 'dist/client');
     if (fs.existsSync(clientDir)) {
       app.use(
         express.static(clientDir, {
@@ -118,13 +157,22 @@ export function createApp(options: AppOptions = {}): Express {
           },
         }),
       );
-      // SPA fallback: any non-API GET renders the client shell.
-      app.get('*', (_req, res) => {
+      // Only real client routes receive the SPA shell. Unknown public paths
+      // return an honest 404 instead of a soft-404 app page.
+      app.get('*', (req, res) => {
+        if (!isSpaPath(req.path)) {
+          sendPublicNotFound(res);
+          return;
+        }
         res.setHeader('Cache-Control', 'no-store');
         res.sendFile(path.join(clientDir, 'index.html'));
       });
     } else {
-      app.get('*', (_req, res) => {
+      app.get('*', (req, res) => {
+        if (!isSpaPath(req.path)) {
+          sendPublicNotFound(res);
+          return;
+        }
         res
           .status(503)
           .type('text/plain')

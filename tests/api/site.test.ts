@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -5,13 +9,22 @@ import { createApp } from '../../server/app';
 import { createTestContext, DEMO_USERS, seedContext, signIn, type TestContext } from '../helpers/context';
 
 let context: TestContext;
+let clientDir: string;
 
 beforeAll(async () => {
   context = createTestContext();
   await seedContext(context);
+  clientDir = fs.mkdtempSync(path.join(os.tmpdir(), 'grantconsole-client-'));
+  fs.writeFileSync(
+    path.join(clientDir, 'index.html'),
+    '<!doctype html><html><head><meta name="robots" content="noindex, nofollow"></head><body>client shell</body></html>',
+  );
 });
 
-afterAll(() => context.cleanup());
+afterAll(() => {
+  context.cleanup();
+  fs.rmSync(clientDir, { recursive: true, force: true });
+});
 
 describe('public marketing surface', () => {
   it('serves the indexable landing page to anonymous visitors', async () => {
@@ -47,6 +60,37 @@ describe('public marketing surface', () => {
     expect(csp).toContain("default-src 'none'");
     // Analytics is off in tests, so no script host is admitted at all.
     expect(csp).toContain("script-src 'none'");
+    expect(csp).toContain("font-src 'self' data:");
+  });
+
+  it('keeps the visible FAQ and FAQ structured data exactly aligned', async () => {
+    const response = await request(context.app).get('/');
+    const jsonLdMatch = response.text.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/);
+    expect(jsonLdMatch).not.toBeNull();
+    const structured = JSON.parse(jsonLdMatch![1]!) as {
+      '@graph': Array<{
+        '@type': string;
+        mainEntity?: Array<{ name: string; acceptedAnswer: { text: string } }>;
+      }>;
+    };
+    const faq = structured['@graph'].find((item) => item['@type'] === 'FAQPage');
+    const structuredFaq = (faq?.mainEntity ?? []).map((item) => [item.name, item.acceptedAnswer.text]);
+    const visibleFaq = [...response.text.matchAll(/<details>\s*<summary>([^<]+)<\/summary>\s*<p>([^<]+)<\/p>\s*<\/details>/g)].map(
+      (match) => [match[1]!.trim(), match[2]!.trim()],
+    );
+    expect(visibleFaq).toHaveLength(5);
+    expect(structuredFaq).toEqual(visibleFaq);
+  });
+
+  it('serves indexable, canonical trust pages without draft placeholders', async () => {
+    for (const pagePath of ['/about', '/contact', '/security', '/privacy', '/terms']) {
+      const response = await request(context.app).get(pagePath);
+      expect(response.status, pagePath).toBe(200);
+      expect(response.headers['content-type'], pagePath).toContain('text/html');
+      expect(response.text, pagePath).toContain(`<link rel="canonical" href="https://grantconsole.com${pagePath}"`);
+      expect(response.text, pagePath).not.toContain('noindex');
+      expect(response.text, pagePath).not.toContain('[VERIFY');
+    }
   });
 
   it('locks down the built app bundle even when a demo host omits NODE_ENV', async () => {
@@ -77,12 +121,35 @@ describe('public marketing surface', () => {
     expect(response.text).toContain('Sitemap: https://grantconsole.com/sitemap.xml');
   });
 
-  it('serves a valid single-URL sitemap', async () => {
+  it('serves a sitemap containing every indexable public page', async () => {
     const response = await request(context.app).get('/sitemap.xml');
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toContain('xml');
-    expect(response.text).toContain('<loc>https://grantconsole.com/</loc>');
+    for (const pagePath of ['/', '/about', '/contact', '/security', '/privacy', '/terms']) {
+      expect(response.text).toContain(`<loc>https://grantconsole.com${pagePath}</loc>`);
+    }
+    expect(response.text.match(/<url>/g)).toHaveLength(6);
     expect(response.text).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+  });
+
+  it('returns a real branded 404 while preserving known SPA routes', async () => {
+    const productionApp = createApp({
+      db: context.db,
+      uploadsDir: context.uploadsDir,
+      serveStatic: true,
+      clientDir,
+    });
+
+    const knownRoute = await request(productionApp).get('/signin');
+    expect(knownRoute.status).toBe(200);
+    expect(knownRoute.text).toContain('client shell');
+
+    const missingRoute = await request(productionApp).get('/definitely-not-a-real-page');
+    expect(missingRoute.status).toBe(404);
+    expect(missingRoute.headers['content-type']).toContain('text/html');
+    expect(missingRoute.text).toContain('Page not found');
+    expect(missingRoute.text).toContain('noindex, nofollow');
+    expect(missingRoute.text).not.toContain('client shell');
   });
 
   it('serves the favicon from the public directory', async () => {
