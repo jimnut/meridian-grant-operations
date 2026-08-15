@@ -39,6 +39,40 @@ describe('public marketing surface', () => {
     expect(response.text).toContain('two organizations, eighteen grants');
   });
 
+  it('ships complete social, crawler and entity metadata on the landing page', async () => {
+    const response = await request(context.app).get('/');
+    expect(response.text).toContain(
+      '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"',
+    );
+    expect(response.text).toContain('<meta property="og:locale" content="en_US"');
+    expect(response.text).toContain('<meta property="og:image:width" content="1730"');
+    expect(response.text).toContain('<meta property="og:image:height" content="909"');
+    expect(response.text).toContain('<meta property="og:image:alt"');
+    expect(response.text).toContain('<meta name="twitter:url" content="https://grantconsole.com/"');
+    expect(response.text).toContain('<meta name="twitter:image:alt"');
+
+    const script = response.text.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/);
+    expect(script?.[1]).toBeTruthy();
+    const structured = JSON.parse(script![1]!) as { '@graph': Array<{ '@type': string }> };
+    expect(structured['@graph'].map((entry) => entry['@type'])).toEqual([
+      'Organization',
+      'WebSite',
+      'WebPage',
+      'SoftwareApplication',
+      'FAQPage',
+    ]);
+  });
+
+  it('keeps important product copy and public destinations crawlable in HTML', async () => {
+    const response = await request(context.app).get('/');
+    expect(response.text).toContain('Post-award grant management software for nonprofits');
+    expect(response.text).toContain('Built for grant recipients, not grantmakers.');
+    expect(response.text).toContain('alt="GrantConsole dashboard showing awarded value');
+    for (const destination of ['/about', '/contact', '/security', '/privacy', '/terms', '/signin']) {
+      expect(response.text).toContain(`href="${destination}"`);
+    }
+  });
+
   it('keeps FAQ structured-data questions aligned with the visible FAQ', async () => {
     const response = await request(context.app).get('/');
     const script = response.text.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/);
