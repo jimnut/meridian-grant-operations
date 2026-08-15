@@ -148,6 +148,16 @@ describe('public marketing surface', () => {
     expect(response.text ?? '').not.toContain('canonical');
   });
 
+  it('serves the landing page when an expired or invalid session cookie remains', async () => {
+    const response = await request(context.app)
+      .get('/')
+      .set('Cookie', 'grantconsole_session=stale-session-cookie');
+
+    expect(response.status).toBe(200);
+    expect(response.text).toContain('<link rel="canonical" href="https://grantconsole.com/"');
+    expect(response.text).toContain('Post-award grant management software for nonprofits');
+  });
+
   it('serves robots.txt pointing at the sitemap and shielding the API', async () => {
     const response = await request(context.app).get('/robots.txt');
     expect(response.status).toBe(200);

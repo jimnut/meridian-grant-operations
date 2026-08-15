@@ -104,10 +104,11 @@ export function createApp(options: AppOptions = {}): Express {
   });
 
   // Public marketing surface. The landing page is the indexable face of the
-  // product; the SPA shell is noindex. Anyone already holding a session cookie
-  // falls through to the app instead.
+  // product; the SPA shell is noindex. Only a resolved, active session falls
+  // through to the app. A stale or invalid cookie must still see the landing
+  // page instead of being stranded on the sign-in screen.
   app.get('/', (req, res, next) => {
-    if ((req.cookies as Record<string, string> | undefined)?.[config.sessionCookieName]) return next();
+    if (req.session) return next();
     res.setHeader('Content-Security-Policy', landingCsp());
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.type('html').send(landingHtml());
