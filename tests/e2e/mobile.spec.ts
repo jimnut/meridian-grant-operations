@@ -29,13 +29,16 @@ test('mobile navigation opens, navigates and closes', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test('mobile portfolio table scrolls inside its container, not the page', async ({ page }) => {
+test('mobile portfolio defaults to cards and keeps the full table available', async ({ page }) => {
   await signIn(page, ACCOUNTS.owner);
   await page.goto('/grants');
   await expect(page.getByRole('heading', { name: 'Grants', level: 1 })).toBeVisible();
 
+  await expect(page.getByRole('button', { name: 'Board', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.board')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
+  await page.getByRole('button', { name: 'Table', exact: true }).click();
   const scrollable = await page.locator('.table-wrap').first().evaluate((el) => el.scrollWidth > el.clientWidth);
   expect(scrollable, 'wide table should scroll within its own wrapper').toBe(true);
 });

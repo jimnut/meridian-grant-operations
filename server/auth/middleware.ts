@@ -110,9 +110,10 @@ export function csrfProtection(req: Request, _res: Response, next: NextFunction)
       next(new ApiError('FORBIDDEN', 'Request blocked: unrecognised origin.'));
       return;
     }
-  } else if (config.isProduction) {
+  } else if (config.isProduction || req.secure) {
     // Browsers always send Origin on cross-origin state changes; requiring it in
-    // production closes the "no header at all" hole.
+    // production or over HTTPS closes the "no header at all" hole. `req.secure`
+    // respects the trusted reverse proxy used by hosted demo deployments.
     next(new ApiError('FORBIDDEN', 'Request blocked: missing origin.'));
     return;
   }

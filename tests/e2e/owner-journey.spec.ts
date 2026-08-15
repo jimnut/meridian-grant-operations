@@ -18,7 +18,10 @@ test('owner signs in with a demo shortcut and sees a derived dashboard', async (
   await expect(page.getByText('Reporting readiness')).toBeVisible();
 
   // Figures are real currency amounts, not placeholders.
-  const awarded = page.locator('.stat').filter({ hasText: 'Active awarded value' }).locator('.stat__value');
+  const awarded = page
+    .locator('.decision-strip__metric')
+    .filter({ hasText: 'Active awarded value' })
+    .locator('dd');
   await expect(awarded).toHaveText(/^\$[\d,]+\.\d{2}$/);
 
   // The attention queue explains itself.

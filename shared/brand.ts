@@ -1,9 +1,9 @@
 /**
  * Central brand configuration.
  *
- * Renaming the product is a single-file change: update the values here and every
- * surface (sign-in, navigation, page titles, reporting packets, CSV exports,
- * README-facing strings) follows.
+ * This is the source of truth for in-app brand surfaces such as sign-in,
+ * navigation, page titles, reporting packets, and exports. The dependency-free
+ * marketing page and repository documentation remain intentionally static.
  */
 export const BRAND = {
   /** Product wordmark. */

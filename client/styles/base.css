@@ -37,6 +37,8 @@ h6 {
 h1 {
   font-size: var(--text-2xl);
   letter-spacing: -0.02em;
+  font-family: var(--font-serif);
+  font-weight: 600;
 }
 h2 {
   font-size: var(--text-lg);
@@ -63,7 +65,7 @@ a {
 
 a:hover {
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
 
 button,

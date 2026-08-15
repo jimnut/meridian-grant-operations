@@ -43,6 +43,14 @@ const COLUMNS: Array<{ key: SortKey; label: string; numeric?: boolean }> = [
 
 /** Largest pageSize the server accepts (see grantQuerySchema in server/lib/validation.ts). */
 const MAX_PAGE_SIZE = 100;
+const PORTFOLIO_VIEW_KEY = 'grantconsole.portfolio.view';
+const LEGACY_PORTFOLIO_VIEW_KEY = 'meridian.portfolio.view';
+
+function initialPortfolioView(): 'table' | 'board' {
+  const stored = localStorage.getItem(PORTFOLIO_VIEW_KEY) ?? localStorage.getItem(LEGACY_PORTFOLIO_VIEW_KEY);
+  if (stored === 'table' || stored === 'board') return stored;
+  return window.matchMedia('(max-width: 760px)').matches ? 'board' : 'table';
+}
 
 /**
  * The board has no pager, so it must walk every server page until the reported
@@ -70,9 +78,7 @@ export function PortfolioPage() {
   const [params, setParams] = useSearchParams();
   const { data: lookups } = useLookups();
 
-  const [view, setView] = useState<'table' | 'board'>(() =>
-    (localStorage.getItem('meridian.portfolio.view') as 'table' | 'board' | null) ?? 'table',
-  );
+  const [view, setView] = useState<'table' | 'board'>(initialPortfolioView);
   const [createOpen, setCreateOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState(params.get('q') ?? '');
 
@@ -81,7 +87,8 @@ export function PortfolioPage() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('meridian.portfolio.view', view);
+    localStorage.setItem(PORTFOLIO_VIEW_KEY, view);
+    localStorage.removeItem(LEGACY_PORTFOLIO_VIEW_KEY);
   }, [view]);
 
   // Debounce the free-text search so typing does not fire a request per keystroke.
@@ -222,7 +229,7 @@ export function PortfolioPage() {
 
   return (
     <>
-      <header className="page-header">
+      <header className="page-header page-header--portfolio">
         <div className="page-header__text">
           <p className="page-header__eyebrow">Portfolio</p>
           <h1 className="page-header__title">Grants</h1>
@@ -232,7 +239,7 @@ export function PortfolioPage() {
           </p>
         </div>
         <div className="page-header__actions">
-          <div className="row" role="group" aria-label="View mode">
+          <div className="row view-switch" role="group" aria-label="View mode">
             <button
               type="button"
               className={`btn btn--sm ${view === 'table' ? 'btn--primary' : ''}`}
@@ -266,7 +273,7 @@ export function PortfolioPage() {
       </header>
 
       <div className="stack stack-4">
-        <div className="toolbar">
+        <div className="toolbar toolbar--portfolio">
           <div className="toolbar__search">
             <Search size={16} className="toolbar__search-icon" aria-hidden="true" />
             <label className="visually-hidden" htmlFor="portfolio-search">
@@ -377,6 +384,12 @@ export function PortfolioPage() {
             <span className="small">Archived</span>
           </label>
         </div>
+
+        <p className="muted small">
+          Reporting readiness measures preparation across reports due within 90 days. Health flags urgent rule
+          conditions—such as overdue work, near-term evidence gaps, or abnormal budget burn—so the two indicators can
+          differ.
+        </p>
 
         {activeFilters.length > 0 && (
           <div className="row row-wrap" role="status">

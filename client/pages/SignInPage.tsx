@@ -6,7 +6,7 @@ import { BRAND } from '../../shared/brand';
 import { ROLE_LABELS, type Role } from '../../shared/constants';
 import { api, ApiRequestError, setCsrfToken } from '../lib/api';
 import { useSession } from '../lib/session';
-import { Field, Input } from '../components/ui';
+import { Avatar, Field, Input } from '../components/ui';
 import type { SessionPayload } from '../../shared/types';
 
 interface DemoAccount {
@@ -114,7 +114,9 @@ export function SignInPage() {
         </div>
 
         <p className="signin__footnote small" style={{ color: 'var(--nav-text-dim)' }}>
-          Local demonstration workspace. Data lives in a SQLite file on this machine.
+          {demo
+            ? 'Live demonstration workspace with seeded nonprofit data. Changes are for evaluation only.'
+            : "Secure sign-in for your organization's grant operations workspace."}
         </p>
       </section>
 
@@ -183,6 +185,7 @@ export function SignInPage() {
                     onClick={() => signInAsDemoAccount(account)}
                     disabled={busy}
                   >
+                    <Avatar name={account.name} large />
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span className="demo-account__name truncate">
                         {account.name} · {ROLE_LABELS[account.role]}

@@ -12,6 +12,8 @@ export default tseslint.config(
       'playwright-report/**',
       'test-results/**',
       'coverage/**',
+      // Repository-local design tooling has its own runtime and lint contract.
+      '.github/skills/impeccable/**',
     ],
   },
   js.configs.recommended,

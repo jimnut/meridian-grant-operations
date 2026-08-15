@@ -231,7 +231,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       }}
     >
       <div
-        className="palette"
+        className="palette surface-glass surface-glass--elevated"
         role="dialog"
         aria-modal="true"
         aria-label={`Search ${BRAND.titleSuffix}`}

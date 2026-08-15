@@ -177,7 +177,7 @@ Additional rules: a manager cannot change an owner's role or grant the owner rol
 ## Security posture (local demo)
 
 - **Passwords** hashed with bcrypt (`bcryptjs`, cost 11). Sign-in returns an identical message for an unknown email and a wrong password.
-- **Sessions** are opaque ids in an `HttpOnly`, `SameSite=Lax`, `Path=/` cookie, HMAC-signed with `SESSION_SECRET` so a tampered cookie is rejected before any database lookup. `Secure` is set when `NODE_ENV=production`.
+- **Sessions** are opaque ids in an `HttpOnly`, `SameSite=Lax`, `Path=/` cookie, HMAC-signed with `SESSION_SECRET` so a tampered cookie is rejected before any database lookup. `Secure` is set in production and whenever HTTPS terminates at the trusted reverse proxy.
 - **CSRF**: every non-GET request is origin-checked, and authenticated mutations must double-submit the session's CSRF token in `x-csrf-token`. Mutations are never exposed over GET.
 - **Tenant isolation**: `org_id` comes from the session, never the request body. A foreign record id returns the same 404 as a nonexistent one, with no metadata.
 - **Server binding**: loopback (`127.0.0.1`) by default — a machine running the demo does not expose it to the local network unless `HOST` is set deliberately. Demo account shortcuts require an explicit `DEMO_MODE=true` and are refused in production outright.
@@ -191,12 +191,12 @@ Additional rules: a manager cannot change an owner's role or grant the owner rol
 ## Testing
 
 ```bash
-npm run verify       # lint + typecheck + 240 unit/API tests + production build
+npm run verify       # lint + typecheck + 255 unit/API tests + production build
 npm run test:e2e     # 41 Playwright tests (desktop + 390px mobile)
 npm run acceptance   # verify + the full browser suite from a clean deterministic seed
 ```
 
-**240 unit and API tests** cover:
+**255 unit and API tests** cover:
 
 - money parsing, integer-cent arithmetic, formatting, weighted pipeline;
 - date handling, timezone-resolved "today", fiscal years, due classification;
@@ -270,7 +270,7 @@ This is a local-first MVP. It is deliberately complete in the areas it covers an
 - **Board view is a grouped read-only view.** Status changes happen through the labelled control on the grant, deliberately: drag-and-drop as the only way to change state is a keyboard-accessibility trap.
 - **Activity metadata is not diff-level.** It records who changed what and the headline change, not a full field-by-field history.
 - **Rate limiting is in-memory**, so it resets on restart and does not span processes.
-- **Currency is per-grant but not converted.** Multi-currency portfolios display mixed symbols; there is no FX conversion in the rollups.
+- **One currency per organization.** Grants must use their workspace currency; there is no multi-currency portfolio or FX conversion.
 
 ### Before production
 

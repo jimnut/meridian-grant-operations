@@ -200,7 +200,7 @@ export function GrantDetailPage() {
 
   return (
     <>
-      <header className="page-header">
+      <header className="page-header page-header--grant">
         <div className="page-header__text">
           <p className="page-header__eyebrow">
             <Link to="/funders">{grant.funderName}</Link>
@@ -245,7 +245,7 @@ export function GrantDetailPage() {
         </div>
       )}
 
-      <div className="grid grid--stats" style={{ marginBottom: 'var(--space-5)' }}>
+      <div className="grid grid--stats grant-metrics" style={{ marginBottom: 'var(--space-5)' }}>
         <SummaryTile label="Awarded" value={formatCents(grant.awardedCents, grant.currency)} helper={grant.awardedCents === 0 ? `Requested ${formatCents(grant.requestedCents, grant.currency)}` : `Requested ${formatCents(grant.requestedCents, grant.currency)}`} />
         <SummaryTile
           label="Restricted spend"
@@ -265,7 +265,7 @@ export function GrantDetailPage() {
       </div>
 
       {!readOnly && (
-        <div className="toolbar" style={{ marginBottom: 'var(--space-5)' }}>
+        <div className="toolbar grant-statusbar" style={{ marginBottom: 'var(--space-5)' }}>
           <label className="field__label" htmlFor="grant-status-control" style={{ marginBottom: 0 }}>
             Lifecycle status
           </label>

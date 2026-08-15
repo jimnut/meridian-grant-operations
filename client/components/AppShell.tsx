@@ -174,15 +174,6 @@ export function AppShell() {
           </button>
         </div>
 
-        <div className="sidebar__search">
-          <button type="button" className="search-trigger" onClick={() => setPaletteOpen(true)}>
-            <Search size={15} aria-hidden="true" />
-            Search…
-            <kbd aria-hidden="true">⌘K</kbd>
-            <span className="visually-hidden">Open search. Keyboard shortcut: Command or Control plus K.</span>
-          </button>
-        </div>
-
         <nav className="nav" aria-label="Primary">
           <ul>
             {PRIMARY_NAV.map((entry) => (
@@ -263,11 +254,13 @@ export function AppShell() {
 
           <button
             type="button"
-            className="btn btn--ghost btn--icon"
+            className="topbar__search-command"
             onClick={() => setPaletteOpen(true)}
             aria-label="Search"
           >
-            <Search size={17} aria-hidden="true" />
+            <Search size={16} aria-hidden="true" />
+            <span>Search grants, funders…</span>
+            <kbd aria-hidden="true">⌘K</kbd>
           </button>
 
           <Menu

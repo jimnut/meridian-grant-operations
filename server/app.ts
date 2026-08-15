@@ -26,6 +26,9 @@ export interface AppOptions {
 
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
+  // A built SPA never needs Vite's eval/websocket allowances. Treat any server
+  // serving that bundle as hardened, even when a demo host omits NODE_ENV.
+  const servesBuiltClient = options.serveStatic === true;
 
   app.set('trust proxy', 'loopback');
   app.disable('x-powered-by');
@@ -44,8 +47,12 @@ export function createApp(options: AppOptions = {}): Express {
           // The client is a bundled SPA; styles are emitted by Vite as a stylesheet,
           // with a small inline style block for the initial paint.
           styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: config.isProduction ? ["'self'"] : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-          connectSrc: config.isProduction ? ["'self'"] : ["'self'", 'ws:', 'http://localhost:5173'],
+          scriptSrc:
+            config.isProduction || servesBuiltClient
+              ? ["'self'"]
+              : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          connectSrc:
+            config.isProduction || servesBuiltClient ? ["'self'"] : ["'self'", 'ws:', 'http://localhost:5173'],
           fontSrc: ["'self'", 'data:'],
         },
       },

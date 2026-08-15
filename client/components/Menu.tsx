@@ -99,18 +99,7 @@ export function Menu({
           role="menu"
           aria-label={label}
           onKeyDown={onKeyDown}
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            [align === 'end' ? 'right' : 'left']: 0,
-            zIndex: 50,
-            minWidth: 200,
-            padding: 'var(--space-1)',
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-md)',
-          }}
+          className={`menu menu--${align} surface-glass surface-glass--elevated`}
         >
           {items.map((item, index) => (
             <button
@@ -122,8 +111,7 @@ export function Menu({
               }}
               tabIndex={index === activeIndex ? 0 : -1}
               disabled={item.disabled}
-              className="palette__item"
-              style={item.tone === 'danger' ? { color: 'var(--risk-ink)' } : undefined}
+              className={`palette__item${item.tone === 'danger' ? ' palette__item--danger' : ''}`}
               onFocus={() => setActiveIndex(index)}
               onClick={() => {
                 close(false);

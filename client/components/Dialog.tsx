@@ -124,7 +124,7 @@ export function Dialog({
       }}
     >
       <div
-        className={`dialog${wide ? ' dialog--wide' : ''}`}
+        className={`dialog surface-glass surface-glass--elevated${wide ? ' dialog--wide' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

@@ -38,6 +38,19 @@ describe('sign-in', () => {
     expect(JSON.stringify(response.body)).not.toContain('password_hash');
   });
 
+  it('sets Secure on the session cookie when HTTPS terminates at the trusted proxy', async () => {
+    const response = await request(context.app)
+      .post('/api/auth/sign-in')
+      .set('Origin', 'https://grantconsole.com')
+      .set('Host', 'grantconsole.com')
+      .set('X-Forwarded-Proto', 'https')
+      .send({ email: DEMO_USERS.member, password: DEMO_PASSWORD });
+
+    const cookies = response.headers['set-cookie'] as unknown as string[];
+    expect(response.status).toBe(200);
+    expect(cookies.find((cookie) => cookie.startsWith('grantconsole_session='))).toContain('Secure');
+  });
+
   it('rejects a wrong password with the same message as an unknown email', async () => {
     const wrongPassword = await request(context.app)
       .post('/api/auth/sign-in')
@@ -129,6 +142,17 @@ describe('session lifecycle', () => {
 });
 
 describe('CSRF protection', () => {
+  it('requires an origin for an HTTPS mutation even when NODE_ENV was omitted', async () => {
+    const response = await request(context.app)
+      .post('/api/auth/sign-in')
+      .set('Host', 'grantconsole.com')
+      .set('X-Forwarded-Proto', 'https')
+      .send({ email: DEMO_USERS.member, password: DEMO_PASSWORD });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.message).toMatch(/missing origin/i);
+  });
+
   it('rejects an authenticated mutation without the CSRF header', async () => {
     const client = await signIn(context.app, DEMO_USERS.owner);
     const response = await client.agent.post('/api/funders').send({ name: 'No Token Foundation', type: 'CORPORATE' });

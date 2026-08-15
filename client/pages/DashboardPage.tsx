@@ -17,6 +17,7 @@ import { GRANT_STATUS_LABELS, HEALTH_LABELS, HORIZONS } from '../../shared/const
 import { formatIsoDate, relativeTimeLabel } from '../../shared/dates';
 import type { DashboardPayload } from '../../shared/types';
 import { api } from '../lib/api';
+import { attentionGrantHref, calendarGrantHref } from '../lib/grant-links';
 import { useCurrentSession } from '../lib/session';
 import { dueTone, formatCents, formatCentsCompact, formatPercent, pluralize } from '../lib/format';
 import { CHART_COLORS, DonutChart, StackedBar } from '../components/charts';
@@ -38,7 +39,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <header className="page-header">
+      <header className="page-header page-header--dashboard">
         <div className="page-header__text">
           <p className="page-header__eyebrow">{formatIsoDate(session.today, 'long')}</p>
           <h1 className="page-header__title">Good day, {firstName}</h1>
@@ -113,42 +114,67 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
 
   return (
     <div className="stack stack-6">
-      <section aria-labelledby="kpi-heading">
-        <h2 className="visually-hidden" id="kpi-heading">
-          Key portfolio figures
-        </h2>
-        <div className="grid grid--stats">
-          <StatTile
-            label="Active awarded value"
-            value={formatCents(totals.activeAwardedCents, currency)}
-            helper={`${totals.activeGrantCount} active ${pluralize(totals.activeGrantCount, 'award')} · ${formatCents(totals.awardedThisFiscalYearCents, currency)} awarded in ${data.fiscalYear.label}`}
-            icon={<Wallet size={14} aria-hidden="true" />}
-          />
-          <StatTile
-            label="Restricted funds remaining"
-            value={formatCents(totals.restrictedRemainingCents, currency)}
-            helper={`${formatCents(totals.restrictedSpentCents, currency)} spent of ${formatCents(totals.restrictedPlannedCents, currency)} (${formatPercent(totals.burnPercent)})`}
-            icon={<Wallet size={14} aria-hidden="true" />}
-          />
-          <StatTile
-            label="Reporting readiness"
-            value={formatPercent(totals.readinessPercent)}
-            helper={
-              totals.readinessOpenReports === 0
-                ? `No reports due in the next ${HORIZONS.readinessHorizonDays} days`
-                : `Across ${totals.readinessOpenReports} ${pluralize(totals.readinessOpenReports, 'report')} due within ${HORIZONS.readinessHorizonDays} days`
-            }
-            tone={totals.readinessPercent >= 70 ? 'positive' : totals.readinessPercent >= 40 ? 'attention' : 'risk'}
-            icon={<ClipboardList size={14} aria-hidden="true" />}
-          />
-          <StatTile
-            label="Grants at risk"
-            value={String(totals.atRiskCount)}
-            helper={`${totals.watchCount} on watch · ${totals.onTrackCount} on track`}
-            tone={totals.atRiskCount > 0 ? 'risk' : 'positive'}
-            icon={<TriangleAlert size={14} aria-hidden="true" />}
-          />
+      <section
+        className={`decision-strip${totals.atRiskCount > 0 ? ' decision-strip--attention' : ' decision-strip--clear'}`}
+        aria-labelledby="portfolio-signal-heading"
+      >
+        <div className="decision-strip__signal">
+          <p className="decision-strip__eyebrow">
+            <span className="decision-strip__pulse" aria-hidden="true" />
+            Portfolio signal
+          </p>
+          <h2 id="portfolio-signal-heading">
+            {totals.atRiskCount > 0
+              ? `${totals.atRiskCount} ${pluralize(totals.atRiskCount, 'grant')} need a decision`
+              : 'Your active portfolio is on course'}
+          </h2>
+          <p>
+            {totals.overdueCount > 0
+              ? `${totals.overdueCount} overdue ${pluralize(totals.overdueCount, 'obligation')} and ${totals.reportsDue30} ${pluralize(totals.reportsDue30, 'report')} due within ${HORIZONS.reportsDueDays} days.`
+              : `${totals.reportsDue30} ${pluralize(totals.reportsDue30, 'report')} due within ${HORIZONS.reportsDueDays} days, with no overdue work.`}
+          </p>
+          <Link to={totals.atRiskCount > 0 ? '/grants?health=AT_RISK' : '/grants'} className="decision-strip__link">
+            {totals.atRiskCount > 0 ? 'Review priority portfolio' : 'Review the portfolio'}
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </Link>
         </div>
+
+        <dl className="decision-strip__metrics" aria-label="Key portfolio figures">
+          <div className="decision-strip__metric">
+            <dt>
+              <Wallet size={14} aria-hidden="true" />
+              Active awarded value
+            </dt>
+            <dd>{formatCents(totals.activeAwardedCents, currency)}</dd>
+            <span>{totals.activeGrantCount} active awards</span>
+          </div>
+          <div className="decision-strip__metric">
+            <dt>
+              <Wallet size={14} aria-hidden="true" />
+              Restricted funds remaining
+            </dt>
+            <dd>{formatCents(totals.restrictedRemainingCents, currency)}</dd>
+            <span>{formatPercent(totals.burnPercent)} spent across the portfolio</span>
+          </div>
+          <div
+            className={`decision-strip__metric${totals.readinessPercent < 40 ? ' decision-strip__metric--risk' : ''}`}
+          >
+            <dt>
+              <ClipboardList size={14} aria-hidden="true" />
+              Reporting readiness
+            </dt>
+            <dd>{formatPercent(totals.readinessPercent)}</dd>
+            <span>{totals.readinessOpenReports} open within {HORIZONS.readinessHorizonDays} days</span>
+          </div>
+          <div className={`decision-strip__metric${totals.atRiskCount > 0 ? ' decision-strip__metric--risk' : ''}`}>
+            <dt>
+              <TriangleAlert size={14} aria-hidden="true" />
+              Grants at risk
+            </dt>
+            <dd>{totals.atRiskCount}</dd>
+            <span>{totals.watchCount} on watch · {totals.onTrackCount} on track</span>
+          </div>
+        </dl>
       </section>
 
       <div className="grid grid--main-side">
@@ -177,13 +203,13 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
                     <div className="attention__body">
                       <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                         <StatusPill tone={item.severity === 'RISK' ? 'risk' : 'amber'} label={item.severity === 'RISK' ? 'At risk' : 'Watch'} />
-                        <Link to={`/grants/${item.grantId}`} className="attention__headline link-plain">
+                        <Link to={attentionGrantHref(item)} className="attention__headline link-plain">
                           {item.headline}
                         </Link>
                       </div>
                       <p className="attention__reason">{item.reason}</p>
                       <p className="attention__meta">
-                        <Link to={`/grants/${item.grantId}`}>{item.grantTitle}</Link>
+                        <Link to={attentionGrantHref(item)}>{item.grantTitle}</Link>
                         <span aria-hidden="true">·</span>
                         <span>{item.funderName}</span>
                         <span aria-hidden="true">·</span>
@@ -319,7 +345,7 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
                 {data.upcoming.map((event) => {
                   const tone = dueTone(event.date, data.today, event.complete);
                   return (
-                    <Link key={event.id} to={`/grants/${event.grantId}`} className="deadline-row">
+                    <Link key={event.id} to={calendarGrantHref(event)} className="deadline-row">
                       <span className="deadline-row__date">
                         <span className="deadline-row__day numeric">{Number(event.date.slice(8, 10))}</span>
                         <span className="deadline-row__month">
@@ -380,13 +406,13 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
 }
 
 const STAGE_COLORS = [
-  '#a3aca7',
-  '#c9b98e',
-  '#2f5c75',
-  '#1c6b58',
-  '#2b6a4a',
-  '#b8891f',
-  '#8a6a2f',
-  '#6f7d76',
-  '#9c3227',
+  '#9ba8a2',
+  '#c4aa78',
+  '#32627a',
+  '#0f8a68',
+  '#24714f',
+  '#b47a20',
+  '#8b6a31',
+  '#6d7b76',
+  '#b13b32',
 ];

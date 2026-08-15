@@ -75,7 +75,7 @@ export function DonutChart({
     <div>
       <div className="row row-3" style={{ alignItems: 'center', gap: 'var(--space-6)', flexWrap: 'wrap' }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
-          {total === 0 && <circle cx={cx} cy={cy} r={(outer + inner) / 2} fill="none" stroke="#e5e0d6" strokeWidth={outer - inner} />}
+          {total === 0 && <circle cx={cx} cy={cy} r={(outer + inner) / 2} fill="none" stroke="var(--border)" strokeWidth={outer - inner} />}
           {segments.map(({ slice, start, end, isFull }) =>
             isFull ? (
               <circle
@@ -91,10 +91,10 @@ export function DonutChart({
               <path key={slice.key} d={arcPath(cx, cy, outer, inner, start, end)} fill={slice.color} />
             ),
           )}
-          <text x={cx} y={cy - 2} textAnchor="middle" fontSize="20" fontWeight="600" fill="#14231d">
+          <text x={cx} y={cy - 2} textAnchor="middle" fontSize="20" fontWeight="600" fill="var(--ink-900)">
             {centerValue}
           </text>
-          <text x={cx} y={cy + 16} textAnchor="middle" fontSize="10" fill="#63706a">
+          <text x={cx} y={cy + 16} textAnchor="middle" fontSize="10" fill="var(--ink-500)">
             {centerLabel}
           </text>
         </svg>
@@ -275,12 +275,12 @@ export function StackedBar({
 }
 
 export const CHART_COLORS = {
-  onTrack: '#2b6a4a',
-  watch: '#b8891f',
-  atRisk: '#9c3227',
-  accent: '#1c6b58',
-  accentSoft: '#63a690',
-  info: '#2f5c75',
-  neutral: '#a3aca7',
-  sand: '#c9b98e',
+  onTrack: '#24714f',
+  watch: '#b47a20',
+  atRisk: '#b13b32',
+  accent: '#0f8a68',
+  accentSoft: '#56b99a',
+  info: '#32627a',
+  neutral: '#9ba8a2',
+  sand: '#c4aa78',
 } as const;

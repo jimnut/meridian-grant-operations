@@ -1,4 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#16241e"/>
-  <text x="16" y="22" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="18" font-weight="600" fill="#4fae90">G</text>
+  <defs>
+    <linearGradient id="shell" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FFFC"/>
+      <stop offset="0.52" stop-color="#DDF7EE"/>
+      <stop offset="1" stop-color="#C9DDF7"/>
+    </linearGradient>
+    <linearGradient id="signal" x1="9" y1="7" x2="23" y2="25" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#43D3A3"/>
+      <stop offset="1" stop-color="#087153"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="9" fill="url(#shell)"/>
+  <rect x="1" y="1" width="30" height="30" rx="8" fill="none" stroke="white" stroke-opacity=".9"/>
+  <circle cx="10" cy="8" r="7" fill="white" fill-opacity=".42"/>
+  <text x="16" y="22" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="17" font-weight="750" fill="url(#signal)">G</text>
 </svg>

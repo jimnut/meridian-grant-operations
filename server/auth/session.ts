@@ -123,7 +123,9 @@ export function setSessionCookie(res: Response, sessionId: string): void {
   res.cookie(config.sessionCookieName, encodeCookie(sessionId), {
     httpOnly: true,
     sameSite: 'lax',
-    secure: config.isProduction,
+    // `req.secure` respects the trusted reverse proxy, so an HTTPS-hosted demo
+    // still gets a Secure cookie even if its host omitted NODE_ENV.
+    secure: config.isProduction || res.req.secure,
     path: '/',
     maxAge: config.sessionTtlHours * 3600_000,
   });
@@ -133,7 +135,7 @@ export function clearSessionCookie(res: Response): void {
   res.clearCookie(config.sessionCookieName, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: config.isProduction,
+    secure: config.isProduction || res.req.secure,
     path: '/',
   });
 }

@@ -15,6 +15,7 @@ import {
 } from '../../shared/dates';
 import type { CalendarEvent } from '../../shared/types';
 import { api, buildQuery } from '../lib/api';
+import { calendarGrantHref } from '../lib/grant-links';
 import { useCurrentSession } from '../lib/session';
 import { dueTone, formatIsoDate, relativeDueLabel } from '../lib/format';
 import { useLookups } from '../components/GrantFormDialog';
@@ -288,7 +289,7 @@ export function CalendarPage() {
                         {visibleEvents.map((event) => (
                           <Link
                             key={event.id}
-                            to={`/grants/${event.grantId}`}
+                            to={calendarGrantHref(event)}
                             className={`calendar__event${
                               event.complete
                                 ? ' calendar__event--done'
@@ -337,7 +338,7 @@ export function CalendarPage() {
             ) : (
               <div className="divider-y">
                 {agendaEvents.map((event) => (
-                  <Link key={event.id} to={`/grants/${event.grantId}`} className="list-row link-plain">
+                  <Link key={event.id} to={calendarGrantHref(event)} className="list-row link-plain">
                     <div style={{ width: 96, flex: 'none' }}>
                       <div style={{ fontWeight: 600 }}>{formatIsoDate(event.date)}</div>
                       <Badge tone={dueTone(event.date, today, event.complete)}>{relativeDueLabel(event.date, today)}</Badge>
