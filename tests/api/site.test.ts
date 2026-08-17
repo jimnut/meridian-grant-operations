@@ -68,7 +68,7 @@ describe('public marketing surface', () => {
     expect(response.text).toContain('Post-award grant management software for nonprofits');
     expect(response.text).toContain('Built for grant recipients, not grantmakers.');
     expect(response.text).toContain('alt="GrantConsole dashboard showing awarded value');
-    for (const destination of ['/about', '/contact', '/security', '/privacy', '/terms', '/signin']) {
+    for (const destination of ['/about', '/contact', '/security', '/privacy', '/terms', '/signin', '/resources']) {
       expect(response.text).toContain(`href="${destination}"`);
     }
   });
@@ -172,7 +172,9 @@ describe('public marketing surface', () => {
     for (const pagePath of ['/', '/about', '/contact', '/security', '/privacy', '/terms']) {
       expect(response.text).toContain(`<loc>https://grantconsole.com${pagePath}</loc>`);
     }
-    expect(response.text.match(/<url>/g)).toHaveLength(6);
+    // Six fixed pages plus the resources hub and every published article.
+    expect(response.text.match(/<url>/g)!.length).toBeGreaterThanOrEqual(6);
+    expect(response.text).toContain('<loc>https://grantconsole.com/resources</loc>');
     expect(response.text).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   });
 

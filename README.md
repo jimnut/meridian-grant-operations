@@ -57,6 +57,10 @@ Dana also holds a **Viewer** seat at Cascade Youth Collective, which exercises t
 
 ---
 
+## Public resources (articles)
+
+Indexable guides live in `content/articles/*.md` (Markdown + YAML front matter) and are rendered server-side at `/resources/<slug>` with the shared public chrome, Article/Breadcrumb/FAQ structured data, an RSS feed at `/resources/feed.xml` and automatic sitemap entries. `content/CONTENT_GUIDE.md` is the editorial standard and `content/editorial-plan.json` is the publishing queue; `server/lib/articles.ts` enforces the mechanical rules and `npm test` fails on any invalid article, so nothing broken can ship.
+
 ## Commands
 
 | Command | What it does |

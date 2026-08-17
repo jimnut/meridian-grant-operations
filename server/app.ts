@@ -10,6 +10,13 @@ import { attachContext, csrfProtection, loadSession, requireAuth } from './auth/
 import type { Db } from './db/connection';
 import { errorMiddleware, notFoundMiddleware } from './lib/http';
 import {
+  articleHtml,
+  findArticle,
+  RESOURCES_ROUTE,
+  resourcesFeedXml,
+  resourcesIndexHtml,
+} from './lib/articles';
+import {
   landingCsp,
   landingHtml,
   PUBLIC_INFO_PATHS,
@@ -120,6 +127,49 @@ export function createApp(options: AppOptions = {}): Express {
       res.type('html').send(publicInfoHtml(pagePath));
     });
   }
+  // Resource articles: Markdown in content/articles rendered with the same
+  // chrome, CSP and cache policy as the trust pages. Unknown slugs 404 honestly.
+  const sendPublicHtml = (res: Response, html: string): void => {
+    res.setHeader('Content-Security-Policy', landingCsp());
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.type('html').send(html);
+  };
+  app.get(RESOURCES_ROUTE, (_req, res) => {
+    sendPublicHtml(res, resourcesIndexHtml());
+  });
+  app.get(`${RESOURCES_ROUTE}/feed.xml`, (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=900');
+    res.type('application/rss+xml').send(resourcesFeedXml());
+  });
+  app.get(`${RESOURCES_ROUTE}/:slug`, (req, res, next) => {
+    const article = findArticle(req.path.replace(/\/+$/, ''));
+    if (!article) {
+      next();
+      return;
+    }
+    if (req.path !== article.path) {
+      res.redirect(301, article.path);
+      return;
+    }
+    sendPublicHtml(res, articleHtml(article));
+  });
+  // Articles may also declare a top-level path (e.g. a product use-case page).
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      next();
+      return;
+    }
+    const article = findArticle(req.path.replace(/\/+$/, '') || '/');
+    if (!article) {
+      next();
+      return;
+    }
+    if (req.path !== article.path) {
+      res.redirect(301, article.path);
+      return;
+    }
+    sendPublicHtml(res, articleHtml(article));
+  });
   app.get('/robots.txt', (_req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.type('text/plain').send(robotsTxt());
