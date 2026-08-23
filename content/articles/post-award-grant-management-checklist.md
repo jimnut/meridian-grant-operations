@@ -54,7 +54,10 @@ sources:
   - title: 2 CFR 200.501 — Audit requirements
     url: https://www.ecfr.gov/current/title-2/section-200.501
     checked: 2026-08-17
-related: []
+related:
+  - grant-reporting-calendar-template
+  - grant-closeout-checklist
+  - restricted-funds-management-for-nonprofits
 ---
 
 ## Who this checklist is for
@@ -93,7 +96,7 @@ Work through the eight stages in order for each new award, then use the monthly 
 - [ ] Set a tolerance for variance (for example ±15 percentage points between percent spent and percent of period elapsed) and decide who is told when a grant crosses it.
 - [ ] Confirm which budget changes need funder approval before you make them (see stage 6).
 
-*Why:* restricted funds that run out early stall the program; funds that sit unspent may have to be returned at closeout. Both problems are visible months in advance if you compare burn to elapsed period. Our guide to [restricted funds management](/resources) goes deeper on the calculation.
+*Why:* restricted funds that run out early stall the program; funds that sit unspent may have to be returned at closeout. Both problems are visible months in advance if you compare burn to elapsed period. Our guide to [restricted funds management](/resources/restricted-funds-management-for-nonprofits) goes deeper on the calculation.
 
 ### 4. Design the evidence system
 
@@ -135,7 +138,7 @@ For foundation grants, look for clauses on budget reallocation thresholds, use o
 - [ ] Complete equipment and property dispositions if the award funded them.
 - [ ] Record the closeout date and confirmation from the funder.
 
-The [grant closeout checklist](/resources) covers the federal and private branches in detail.
+The [grant closeout checklist](/resources/grant-closeout-checklist) covers the federal and private branches in detail.
 
 ### 8. Retain records and prepare for audit
 
@@ -181,4 +184,4 @@ What no software does: interpret your award for you, decide whether a cost is al
 - Letting a grant with no owner sit in "active" status for months.
 - Discarding files three years after the grant *ended* rather than three years after the *final financial report* was submitted.
 
-Print the checklist, adapt the foundation column to your funders' actual agreements, and review it on the rhythm above. The next resources in this series cover the [reporting calendar template](/resources) and the [closeout checklist](/resources) in depth.
+Print the checklist, adapt the foundation column to your funders' actual agreements, and review it on the rhythm above. The next resources in this series cover the [reporting calendar template](/resources/grant-reporting-calendar-template) and the [closeout checklist](/resources/grant-closeout-checklist) in depth.
