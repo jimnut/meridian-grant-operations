@@ -278,9 +278,9 @@ export const CHART_COLORS = {
   onTrack: '#24714f',
   watch: '#b47a20',
   atRisk: '#b13b32',
-  accent: '#0f8a68',
-  accentSoft: '#56b99a',
+  accent: '#ff4f00',
+  accentSoft: '#ff9c66',
   info: '#32627a',
-  neutral: '#9ba8a2',
+  neutral: '#a8a19a',
   sand: '#c4aa78',
 } as const;
