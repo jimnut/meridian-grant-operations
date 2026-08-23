@@ -4,9 +4,9 @@
   display: flex;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 23% -8%, rgba(67, 211, 163, 0.12), transparent 31rem),
+    radial-gradient(circle at 23% -8%, rgba(255, 79, 0, 0.10), transparent 31rem),
     radial-gradient(circle at 91% 4%, rgba(117, 143, 220, 0.13), transparent 34rem),
-    radial-gradient(circle at 68% 92%, rgba(125, 216, 210, 0.08), transparent 28rem),
+    radial-gradient(circle at 68% 92%, rgba(255, 212, 0, 0.07), transparent 28rem),
     var(--canvas);
 }
 
@@ -25,7 +25,7 @@
   -webkit-backdrop-filter: saturate(145%) blur(var(--glass-blur));
   backdrop-filter: saturate(145%) blur(var(--glass-blur));
   border-right: 1px solid var(--nav-border);
-  box-shadow: var(--glass-highlight-dark), 14px 0 44px rgba(13, 23, 32, 0.1);
+  box-shadow: var(--glass-highlight-dark), 14px 0 44px rgba(22, 18, 14, 0.1);
   isolation: isolate;
 }
 
@@ -47,7 +47,7 @@
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(30, 173, 130, 0.13), transparent 68%);
+  background: radial-gradient(circle, rgba(255, 79, 0, 0.12), transparent 68%);
   pointer-events: none;
 }
 
@@ -67,8 +67,8 @@
   border-radius: var(--radius-md);
   background:
     radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.34), transparent 34%),
-    linear-gradient(145deg, #34c999, #0b7358);
-  color: #f7fffb;
+    linear-gradient(145deg, #ff7a33, #d84300);
+  color: #fffdf8;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   font-family: var(--font-sans);
@@ -158,7 +158,7 @@
   background: rgba(255, 255, 255, 0.095);
   color: var(--nav-text-strong);
   font-weight: 600;
-  box-shadow: inset 2px 0 0 #43d3a3, var(--glass-highlight-dark), 0 10px 26px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 2px 0 0 #ff6a24, var(--glass-highlight-dark), 0 10px 26px rgba(0, 0, 0, 0.1);
 }
 
 .nav__item svg {
@@ -170,7 +170,7 @@
 .nav__item[aria-current='page'] svg,
 .nav__item:hover svg {
   opacity: 1;
-  color: #72dab9;
+  color: #ff9c66;
 }
 
 .nav__badge {
@@ -495,7 +495,7 @@
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: rgba(13, 23, 32, 0.46);
+  background: rgba(22, 18, 14, 0.46);
   -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
   border: 0;

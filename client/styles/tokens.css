@@ -8,39 +8,39 @@
 
 :root {
   /* Canvas and surfaces */
-  --canvas: #f5f7f4;
-  --canvas-deep: #e9eeea;
+  --canvas: #f7f5f1;
+  --canvas-deep: #ede9e2;
   --surface: #ffffff;
-  --surface-sunken: #f8faf8;
+  --surface-sunken: #f9f7f4;
   --surface-raised: #ffffff;
 
   /* Ink */
-  --ink-900: #111b18;
-  --ink-800: #1d2a26;
-  --ink-700: #31403b;
-  --ink-600: #4c5a55;
-  --ink-500: #68756f;
+  --ink-900: #171412;
+  --ink-800: #241f1b;
+  --ink-700: #3d3630;
+  --ink-600: #57504a;
+  --ink-500: #6f6862;
   /* Lightest ink used for small text — 4.5:1+ on every surface it sits on. */
-  --ink-400: #72807a;
-  --ink-300: #a6b0ab;
+  --ink-400: #7a736c;
+  --ink-300: #aca69f;
 
   /* Navigation shell */
-  --nav-bg: #0d1720;
-  --nav-bg-hover: #15242d;
-  --nav-bg-active: #1a2d34;
-  --nav-text: #c8d3d1;
-  --nav-text-strong: #f5f8f6;
-  --nav-text-dim: #81928f;
-  --nav-border: #20313b;
+  --nav-bg: #16120e;
+  --nav-bg-hover: #211b15;
+  --nav-bg-active: #2a2118;
+  --nav-text: #d3ccc4;
+  --nav-text-strong: #f8f5f1;
+  --nav-text-dim: #948b81;
+  --nav-border: #332a21;
 
-  /* Accent — sophisticated teal-green */
-  --accent: #0f8a68;
-  --accent-hover: #0b7559;
-  --accent-active: #085f49;
-  --accent-ink: #086148;
-  --accent-soft: #e7f6f0;
-  --accent-soft-strong: #d2eee4;
-  --accent-border: #b4dfd0;
+  /* Accent — international orange */
+  --accent: #ff4f00;
+  --accent-hover: #e64700;
+  --accent-active: #cc3f00;
+  --accent-ink: #b83a00;
+  --accent-soft: #ffece1;
+  --accent-soft-strong: #ffdcc9;
+  --accent-border: #ffc4a3;
 
   /* Attention — muted amber */
   --amber: #a76a13;
@@ -65,14 +65,14 @@
   --info-border: #c5dbe5;
 
   /* Lines */
-  --border: #dde4df;
-  --border-strong: #cad4ce;
-  --border-subtle: #e9eeeb;
+  --border: #e4ded5;
+  --border-strong: #d3ccc1;
+  --border-subtle: #ece7df;
 
   /* Control-state grammar — purpose-based rather than appearance-based. */
-  --control-hover: rgba(17, 27, 24, 0.055);
-  --control-pressed: rgba(17, 27, 24, 0.1);
-  --control-selected: rgba(15, 138, 104, 0.13);
+  --control-hover: rgba(23, 20, 18, 0.055);
+  --control-pressed: rgba(23, 20, 18, 0.1);
+  --control-selected: rgba(255, 79, 0, 0.12);
 
   /* Typography */
   --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
@@ -112,20 +112,20 @@
   --radius-full: 999px;
 
   /* Elevation */
-  --shadow-xs: 0 1px 2px rgba(13, 23, 32, 0.045);
-  --shadow-sm: 0 1px 2px rgba(13, 23, 32, 0.05), 0 4px 14px rgba(13, 23, 32, 0.055);
-  --shadow-md: 0 2px 4px rgba(13, 23, 32, 0.06), 0 14px 34px rgba(13, 23, 32, 0.09);
-  --shadow-lg: 0 4px 8px rgba(13, 23, 32, 0.08), 0 28px 80px rgba(13, 23, 32, 0.2);
+  --shadow-xs: 0 1px 2px rgba(26, 20, 14, 0.045);
+  --shadow-sm: 0 1px 2px rgba(26, 20, 14, 0.05), 0 4px 14px rgba(26, 20, 14, 0.055);
+  --shadow-md: 0 2px 4px rgba(26, 20, 14, 0.06), 0 14px 34px rgba(26, 20, 14, 0.09);
+  --shadow-lg: 0 4px 8px rgba(26, 20, 14, 0.08), 0 28px 80px rgba(26, 20, 14, 0.2);
 
   /* Material layer. Opaque defaults are upgraded when blur is supported. */
-  --glass-fill: #fbfdfb;
-  --glass-fill-strong: #f8faf8;
-  --glass-dark-fill: #0d1720;
+  --glass-fill: #fdfbf8;
+  --glass-fill-strong: #f9f7f4;
+  --glass-dark-fill: #16120e;
   --glass-border: rgba(255, 255, 255, 0.88);
   --glass-border-dark: rgba(255, 255, 255, 0.13);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 1px 0 0 rgba(255, 255, 255, 0.36);
   --glass-highlight-dark: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 1px 0 0 rgba(255, 255, 255, 0.035);
-  --glass-shadow: 0 2px 4px rgba(13, 23, 32, 0.06), 0 18px 48px rgba(13, 23, 32, 0.11);
+  --glass-shadow: 0 2px 4px rgba(26, 20, 14, 0.06), 0 18px 48px rgba(26, 20, 14, 0.11);
   --glass-blur: 22px;
 
   /* Layout */
@@ -142,17 +142,17 @@
 
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   :root {
-    --glass-fill: rgba(251, 253, 251, 0.72);
-    --glass-fill-strong: rgba(248, 250, 248, 0.84);
-    --glass-dark-fill: rgba(13, 23, 32, 0.88);
+    --glass-fill: rgba(253, 251, 248, 0.72);
+    --glass-fill-strong: rgba(249, 247, 244, 0.84);
+    --glass-dark-fill: rgba(22, 18, 14, 0.88);
   }
 }
 
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   :root {
     --glass-fill: #ffffff;
-    --glass-fill-strong: #f8faf8;
-    --glass-dark-fill: #0d1720;
+    --glass-fill-strong: #f9f7f4;
+    --glass-dark-fill: #16120e;
     --glass-blur: 0px;
   }
 }

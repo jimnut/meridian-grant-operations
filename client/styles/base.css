@@ -100,7 +100,7 @@ hr {
 
 .nav :focus-visible,
 .topbar :focus-visible {
-  outline-color: #7fd0b6;
+  outline-color: #ff7a33;
 }
 
 ::selection {
