@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <defs>
     <linearGradient id="shell" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F9FFFC"/>
-      <stop offset="0.52" stop-color="#DDF7EE"/>
-      <stop offset="1" stop-color="#C9DDF7"/>
+      <stop stop-color="#FFFDF9"/>
+      <stop offset="0.52" stop-color="#FFE9D9"/>
+      <stop offset="1" stop-color="#F7D8C2"/>
     </linearGradient>
     <linearGradient id="signal" x1="9" y1="7" x2="23" y2="25" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#43D3A3"/>
-      <stop offset="1" stop-color="#087153"/>
+      <stop stop-color="#FF7A33"/>
+      <stop offset="1" stop-color="#CC3F00"/>
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="9" fill="url(#shell)"/>
