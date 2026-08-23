@@ -466,7 +466,7 @@ function readingMinutes(wordCount: number): number {
 function articleStyles(): string {
   return `
     .crumbs { margin:0 0 22px; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:6px; color:var(--muted); font-size:13px; }
-    .crumbs li + li::before { content:"›"; margin-right:6px; color:#9aa8a2; }
+    .crumbs li + li::before { content:"›"; margin-right:6px; color:#aaa39b; }
     .crumbs a { color:var(--muted); text-decoration:none; font-weight:600; }
     .crumbs a:hover { color:var(--signal-deep); }
     .article-hero { max-width:820px; padding-bottom:36px; border-bottom:1px solid var(--edge); }
@@ -486,8 +486,8 @@ function articleStyles(): string {
     .article-body li > ul,.article-body li > ol { margin:6px 0 4px; }
     .article-body blockquote { margin:22px 0; padding:14px 20px; border-left:4px solid var(--edge); color:var(--muted); background:var(--card); border-radius:0 10px 10px 0; }
     .article-body blockquote p:last-child { margin-bottom:0; }
-    .article-body code { padding:2px 6px; background:#e7eee9; border-radius:6px; font:.92em var(--mono); }
-    .article-body pre { padding:16px 18px; overflow:auto; background:var(--night); color:#eff8f4; border-radius:12px; }
+    .article-body code { padding:2px 6px; background:#f0e9dc; border-radius:6px; font:.92em var(--mono); }
+    .article-body pre { padding:16px 18px; overflow:auto; background:var(--night); color:#f7f1e8; border-radius:12px; }
     .article-body pre code { padding:0; background:none; color:inherit; }
     .article-body hr { margin:36px 0; border:0; border-top:1px solid var(--edge); }
     .article-body img { max-width:100%; height:auto; border:1px solid var(--edge); border-radius:12px; }
@@ -496,7 +496,7 @@ function articleStyles(): string {
     .table-wrap { margin:20px 0 26px; overflow-x:auto; border:1px solid var(--edge); border-radius:12px; background:var(--card); }
     .article-body table { width:100%; border-collapse:collapse; font-size:15px; }
     .article-body th,.article-body td { padding:11px 14px; text-align:left; vertical-align:top; border-bottom:1px solid var(--edge); }
-    .article-body th { background:#e9efeb; font-weight:700; }
+    .article-body th { background:#f0e9dc; font-weight:700; }
     .article-body tr:last-child td { border-bottom:0; }
     .faq { max-width:760px; padding:8px 0 24px; }
     .faq h2 { margin:0 0 6px; font-size:28px; letter-spacing:-.025em; }
@@ -513,13 +513,58 @@ function articleStyles(): string {
     .related h2 { margin:0 0 16px; font-size:22px; letter-spacing:-.02em; }
     .card-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
     .card-grid a,.list-grid a { display:grid; align-content:start; gap:7px; padding:20px; border:1px solid var(--edge); border-radius:14px; color:var(--ink); background:var(--card); text-decoration:none; }
-    .card-grid a:hover,.list-grid a:hover { border-color:#b9d8cc; }
+    .card-grid a:hover,.list-grid a:hover { border-color:#ffc4a3; }
     .card-grid strong,.list-grid strong { font-size:17px; line-height:1.3; letter-spacing:-.01em; }
     .card-grid span,.list-grid span { color:var(--muted); font-size:14px; line-height:1.55; }
     .card-grid small,.list-grid small { color:var(--signal-deep); font:700 11px/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; }
     .list-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding:36px 0 20px; }
     .hub-count { color:var(--muted); font-size:14px; margin:14px 0 0; }
-    @media (max-width:820px) { .card-grid,.list-grid { grid-template-columns:1fr; } .article-hero h1 { font-size:clamp(34px,8vw,48px); } }
+
+    /* ——— Editorial newsletter treatment ——— */
+    .masthead { padding:26px 0 18px; text-align:center; border-bottom:3px double var(--ink); }
+    .masthead-rule { border:0; border-top:1px solid var(--ink); margin:0 0 3px; }
+    .masthead h1,.masthead .masthead-title { margin:0; max-width:none; font-family:var(--serif); font-size:clamp(40px,6vw,64px); font-weight:600; letter-spacing:-.02em; line-height:1.04; }
+    .masthead .masthead-title a { color:var(--ink); text-decoration:none; }
+    .masthead-tag { margin:10px 0 0; color:var(--muted); font:600 12px/1.5 var(--mono); letter-spacing:.16em; text-transform:uppercase; }
+    .issue-line { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:0; padding:12px 0; color:var(--muted); font:600 12px/1.5 var(--mono); letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--ink); }
+    .issue-line a { color:var(--signal-deep); text-decoration:none; }
+    .hub-deck { max-width:62ch; margin:30px auto 0; text-align:center; font-family:var(--serif); font-size:clamp(19px,2.4vw,23px); font-style:italic; line-height:1.5; color:var(--muted); }
+    .lead-story { display:block; padding:38px 0 34px; border-bottom:1px solid var(--edge); color:var(--ink); text-decoration:none; text-align:center; }
+    .lead-story small { display:block; color:var(--signal); font:700 12px/1.4 var(--mono); letter-spacing:.14em; text-transform:uppercase; }
+    .lead-story strong { display:block; max-width:24ch; margin:14px auto 0; font-family:var(--serif); font-size:clamp(32px,4.6vw,50px); font-weight:600; line-height:1.08; letter-spacing:-.025em; text-wrap:balance; }
+    .lead-story:hover strong { text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:6px; text-decoration-color:var(--signal); }
+    .lead-story span { display:block; max-width:60ch; margin:14px auto 0; color:var(--muted); font-size:17px; line-height:1.6; }
+    .lead-story time { display:block; margin-top:14px; color:var(--muted); font:600 12px/1.4 var(--mono); letter-spacing:.06em; text-transform:uppercase; }
+    .edition-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 44px; padding:6px 0 26px; }
+    .edition-grid a { display:grid; align-content:start; gap:8px; padding:26px 0; border-bottom:1px solid var(--edge); color:var(--ink); text-decoration:none; }
+    .edition-grid small { color:var(--signal-deep); font:700 11px/1.4 var(--mono); letter-spacing:.13em; text-transform:uppercase; }
+    .edition-grid strong { font-family:var(--serif); font-size:23px; font-weight:600; line-height:1.22; letter-spacing:-.015em; }
+    .edition-grid a:hover strong { text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:5px; text-decoration-color:var(--signal); }
+    .edition-grid span { color:var(--muted); font-size:15px; line-height:1.6; }
+    .edition-grid time { color:var(--muted); font:600 11.5px/1.4 var(--mono); letter-spacing:.05em; text-transform:uppercase; }
+    .editorial-cta { margin:44px auto 8px; max-width:640px; padding:28px 30px; text-align:center; border-top:3px double var(--ink); border-bottom:3px double var(--ink); background:transparent; display:grid; gap:10px; }
+    .editorial-cta strong { font-family:var(--serif); font-size:24px; font-weight:600; letter-spacing:-.015em; }
+    .editorial-cta span { color:var(--muted); }
+    .editorial-cta .button { justify-self:center; }
+
+    /* Article page as editorial feature */
+    .article-hero { max-width:720px; margin-inline:auto; text-align:center; border-bottom:0; padding-bottom:10px; }
+    .article-hero .eyebrow { color:var(--signal-deep); }
+    .article-hero h1 { max-width:none; margin-inline:auto; font-weight:600; }
+    .meta-row { justify-content:center; margin-top:22px; padding:14px 0; border-top:1px solid var(--ink); border-bottom:1px solid var(--edge); }
+    .lead { max-width:60ch; margin:26px auto 0; padding:0; border-left:0; background:transparent; border-radius:0; font-family:var(--serif); font-size:clamp(19px,2.4vw,22px); font-style:italic; line-height:1.55; color:var(--muted); }
+    .lead strong { display:none; }
+    .article-body { max-width:680px; margin-inline:auto; font-family:var(--serif); font-size:18.5px; line-height:1.75; }
+    .article-body h2,.article-body h3,.article-body h4 { font-family:var(--serif); font-weight:650; }
+    .article-body > p:first-of-type::first-letter { float:left; margin:6px 10px 0 0; color:var(--signal); font-family:var(--serif); font-size:64px; line-height:.78; font-weight:650; }
+    .article-body h2 { text-align:center; }
+    .article-body h2::after { content:""; display:block; width:64px; margin:14px auto 0; border-top:1px solid var(--ink); }
+    .faq,.sources,.article-cta,.disclaimer { margin-inline:auto; }
+    .faq,.sources { max-width:680px; }
+    .disclaimer { max-width:680px; }
+    .article-cta { max-width:640px; }
+
+    @media (max-width:820px) { .card-grid,.list-grid,.edition-grid { grid-template-columns:1fr; } .article-hero h1 { font-size:clamp(34px,8vw,48px); } .edition-grid a { padding:20px 0; } }
   `;
 }
 
@@ -674,7 +719,7 @@ ${publicHead(
     </header>
     <article class="article-body">${article.bodyHtml}</article>
     ${faqHtml}
-    <aside class="callout article-cta">
+    <aside class="editorial-cta article-cta">
       <strong>${escapeHtml(cta.label)}</strong>
       <span>${escapeHtml(cta.text ?? '')}</span>
       <a class="button" href="${escapeHtml(cta.href)}">${escapeHtml(cta.label)}</a>
@@ -725,12 +770,16 @@ export function resourcesIndexHtml(dir?: string): string {
       },
     ],
   });
+  const [leadStory, ...restStories] = articles;
+  const leadHtml = leadStory
+    ? `<a class="lead-story" href="${leadStory.path}"><small>${CATEGORY_LABELS[leadStory.category]}</small><strong>${escapeHtml(leadStory.title)}</strong><span>${escapeHtml(leadStory.description)}</span><time datetime="${leadStory.updatedAt}">${formatDate(leadStory.updatedAt)}</time></a>`
+    : '';
   const list =
     articles.length > 0
-      ? `<div class="list-grid">${articles
+      ? `${leadHtml}<div class="edition-grid">${restStories
           .map(
             (article) =>
-              `<a href="${article.path}"><small>${CATEGORY_LABELS[article.category]} · <time datetime="${article.updatedAt}">${formatDate(article.updatedAt)}</time></small><strong>${escapeHtml(article.title)}</strong><span>${escapeHtml(article.description)}</span></a>`,
+              `<a href="${article.path}"><small>${CATEGORY_LABELS[article.category]}</small><strong>${escapeHtml(article.title)}</strong><span>${escapeHtml(article.description)}</span><time datetime="${article.updatedAt}">${formatDate(article.updatedAt)}</time></a>`,
           )
           .join('')}</div>`
       : '<p class="intro">New guides are published regularly. Check back soon.</p>';
@@ -749,14 +798,17 @@ ${publicHead(
 <body>
   ${publicHeader()}
   <main class="page-shell">
-    <header class="page-hero">
-      <p class="eyebrow">Resources</p>
-      <h1>Post-award grant management, explained.</h1>
-      <p class="intro">Practical guides, checklists and templates for the work that starts after the award letter: deadlines, restricted budgets, evidence, compliance, funder reports and closeout. Written for nonprofit grant recipients, sourced to primary guidance, and fact-checked on the date shown.</p>
-      <p class="hub-count">${articles.length} ${articles.length === 1 ? 'resource' : 'resources'} · <a href="${RESOURCES_PATH}/feed.xml">RSS feed</a></p>
+    <header class="masthead">
+      <hr class="masthead-rule" aria-hidden="true" />
+      <h1 class="masthead-title">The Post-Award Brief</h1>
+      <p class="masthead-tag">Post-award grant management, explained · by GrantConsole</p>
     </header>
+    <p class="issue-line"><span>${escapeHtml(
+      new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+    )}</span><span>·</span><span>${articles.length} ${articles.length === 1 ? 'resource' : 'resources'}</span><span>·</span><a href="${RESOURCES_PATH}/feed.xml">RSS feed</a></p>
+    <p class="hub-deck">Practical guides, checklists and templates for the work that starts after the award letter — deadlines, restricted budgets, evidence, compliance, funder reports and closeout. Fact-checked on the date shown.</p>
     ${list}
-    <aside class="callout article-cta">
+    <aside class="editorial-cta">
       <strong>See the workflows in a real workspace.</strong>
       <span>The public demo opens a seeded nonprofit with active grants, deadlines, restricted budgets and evidence—no sales call required.</span>
       <a class="button" href="/signin">Open the live demo</a>

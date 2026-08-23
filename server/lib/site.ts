@@ -348,7 +348,7 @@ function renderPublicPage(pagePath: PublicInfoPath, page: PublicPage): string {
   <meta name="twitter:description" content="${escapeHtml(page.description)}" />
   <meta name="twitter:image" content="${config.siteUrl}/og-image-liquid-v3.png" />
   <meta name="twitter:image:alt" content="GrantConsole post-award grant operations dashboard" />
-  <meta name="theme-color" content="#07141a" />
+  <meta name="theme-color" content="#131110" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script type="application/ld+json">${structuredData}</script>
   <!--ANALYTICS-->
