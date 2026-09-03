@@ -57,6 +57,7 @@ sources:
 related:
   - grant-reporting-calendar-template
   - grant-closeout-checklist
+  - audit-ready-grant-file
   - restricted-funds-management-for-nonprofits
 ---
 

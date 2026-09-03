@@ -39,6 +39,8 @@ sources:
 related:
   - grant-reporting-software-for-nonprofits
   - grant-reporting-calendar-template
+  - grant-compliance-software
+  - track-grant-deadlines-without-spreadsheets
   - post-award-grant-management-checklist
 ---
 

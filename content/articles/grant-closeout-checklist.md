@@ -47,6 +47,7 @@ sources:
     checked: 2026-08-23
 related:
   - post-award-grant-management-checklist
+  - audit-ready-grant-file
   - grant-reporting-calendar-template
 ---
 

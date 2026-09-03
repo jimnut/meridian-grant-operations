@@ -42,6 +42,7 @@ sources:
 related:
   - grant-tracking-software-for-nonprofits
   - grant-reporting-calendar-template
+  - grant-compliance-software
   - grant-closeout-checklist
 ---
 

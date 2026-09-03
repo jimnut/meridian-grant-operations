@@ -330,7 +330,9 @@
     "/security",
     "/signin"
    ],
-   "status": "planned"
+   "status": "published",
+   "publishedAt": "2026-09-03",
+   "notes": "Catch-up publish. Written by the 2026-08-25 scheduled run but never pushed (git proxy denied the repository); rewritten with all sources re-verified 2026-09-03."
   },
   {
    "id": 8,
@@ -356,7 +358,9 @@
     "/grant-tracking-software-for-nonprofits",
     "/signin"
    ],
-   "status": "planned"
+   "status": "published",
+   "publishedAt": "2026-09-03",
+   "notes": "Catch-up publish for a scheduled run that could not push."
   },
   {
    "id": 9,
@@ -384,7 +388,9 @@
     "/grant-reporting-software-for-nonprofits",
     "/signin"
    ],
-   "status": "planned"
+   "status": "published",
+   "publishedAt": "2026-09-03",
+   "notes": "Catch-up publish for a scheduled run that could not push."
   },
   {
    "id": 10,
