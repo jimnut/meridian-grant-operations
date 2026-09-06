@@ -5,7 +5,7 @@ import { resetAuthThrottles } from '../../server/routes/auth';
 import { applyStripeEvent } from '../../server/routes/billing';
 import { assertStorageCapacity } from '../../server/lib/plans';
 import { signWebhookPayload } from '../../server/lib/stripe';
-import { computeWorkspaceStatus, PLANS, TRIAL_LIMITS } from '../../shared/plans';
+import { computeWorkspaceStatus, FOUNDING_OFFER, PLANS, TRIAL_LIMITS } from '../../shared/plans';
 import type { SessionPayload } from '../../shared/types';
 import { createTestContext, patch, post, seedContext, type Client, type TestContext } from '../helpers/context';
 
@@ -137,6 +137,18 @@ describe('plan limits and read-only enforcement', () => {
     const response = await post(client, '/api/billing/checkout').send({ plan: 'growth', interval: 'annual' });
     expect(response.status).toBe(409);
     expect(response.body.error.message).toContain('support@grantconsole.com');
+  });
+
+  it('reports the founding offer and the places left on it', async () => {
+    const client = await signUp();
+    const billing = await client.agent.get('/api/billing');
+    expect(billing.status).toBe(200);
+    expect(billing.body.foundingOffer.percentOff).toBe(FOUNDING_OFFER.percentOff);
+    expect(billing.body.foundingOffer.durationMonths).toBe(FOUNDING_OFFER.durationMonths);
+    const paid = context.db
+      .prepare(`SELECT COUNT(*) AS count FROM organizations WHERE is_demo = 0 AND plan IN ('starter', 'growth', 'scale')`)
+      .get() as { count: number };
+    expect(billing.body.foundingOffer.remaining).toBe(Math.max(0, FOUNDING_OFFER.organizations - paid.count));
   });
 
   it('refuses uploads beyond the storage allowance before writing anything', () => {

@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { config } from '../../server/config';
-import { createPortalSession, resetPortalConfigurationCache } from '../../server/lib/stripe';
+import { createCheckoutSession, createPortalSession, resetFoundingCouponCache, resetPortalConfigurationCache } from '../../server/lib/stripe';
 
 interface StripeCall {
   method: string;
   path: string;
   body: URLSearchParams;
+  version: string | undefined;
 }
 
 /** Fakes api.stripe.com: `respond` returns a JSON payload or an Error for a 400. */
@@ -20,6 +21,7 @@ function stubStripe(respond: (call: StripeCall) => unknown): StripeCall[] {
         method: init?.method ?? 'GET',
         path: url.replace('https://api.stripe.com/v1', ''),
         body: new URLSearchParams(typeof init?.body === 'string' ? init.body : ''),
+        version: (init?.headers as Record<string, string> | undefined)?.['Stripe-Version'],
       };
       calls.push(call);
       const payload = respond(call);
@@ -36,6 +38,7 @@ const originalPriceIds = { ...config.stripePriceIds };
 
 beforeEach(() => {
   resetPortalConfigurationCache();
+  resetFoundingCouponCache();
   for (const key of Object.keys(config.stripePriceIds)) config.stripePriceIds[key] = '';
 });
 
@@ -116,6 +119,99 @@ describe('customer portal configuration', () => {
 
     expect(portal.url).toBe('https://billing.stripe.com/session/default');
     expect(calls.find((call) => call.path === '/billing_portal/sessions')?.body.has('configuration')).toBe(false);
+    expect(error).toHaveBeenCalledOnce();
+  });
+});
+
+describe('checkout session', () => {
+  const input = {
+    orgId: 'org_1',
+    plan: 'growth' as const,
+    interval: 'monthly' as const,
+    customerId: null,
+    customerEmail: 'owner@example.org',
+    successUrl: 'https://grantconsole.com/settings/billing?checkout=success',
+    cancelUrl: 'https://grantconsole.com/settings/billing?checkout=canceled',
+  };
+
+  beforeEach(() => {
+    Object.assign(config.stripePriceIds, { growth_monthly: 'price_growth_m', growth_annual: 'price_growth_y', scale_monthly: 'price_scale_m' });
+  });
+
+  it('brands the page as GrantConsole and applies the founding coupon, creating it on first use', async () => {
+    const productFor: Record<string, string> = { price_growth_m: 'prod_growth', price_growth_y: 'prod_growth', price_scale_m: 'prod_scale' };
+    const calls = stubStripe((call) => {
+      if (call.method === 'GET' && call.path.startsWith('/coupons')) return { data: [{ id: 'cpn_old', valid: false, metadata: { app: 'grantconsole', offer: 'founding', revision: '1' } }] };
+      if (call.method === 'GET' && call.path.startsWith('/prices/')) return { product: productFor[call.path.slice('/prices/'.length)] };
+      if (call.method === 'POST' && call.path === '/coupons') return { id: 'cpn_founding' };
+      if (call.method === 'POST' && call.path === '/checkout/sessions') return { id: 'cs_1', url: 'https://checkout.stripe.com/c/pay/cs_1' };
+      return new Error(`unexpected ${call.method} ${call.path}`);
+    });
+
+    const result = await createCheckoutSession({ ...input, foundingOffer: true });
+
+    expect(result).toEqual({ id: 'cs_1', url: 'https://checkout.stripe.com/c/pay/cs_1', foundingOfferApplied: true });
+    const coupon = calls.find((call) => call.method === 'POST' && call.path === '/coupons')!;
+    expect(coupon.body.get('percent_off')).toBe('25');
+    expect(coupon.body.get('duration')).toBe('repeating');
+    expect(coupon.body.get('duration_in_months')).toBe('12');
+    expect(coupon.body.get('max_redemptions')).toBe('25');
+    expect(coupon.body.getAll('applies_to[products][0]')).toEqual(['prod_growth']);
+    expect(coupon.body.get('applies_to[products][1]')).toBe('prod_scale');
+    expect(coupon.body.get('metadata[offer]')).toBe('founding');
+
+    const session = calls.find((call) => call.path === '/checkout/sessions')!;
+    expect(session.version).toBe('2025-09-30.clover');
+    expect(session.body.get('mode')).toBe('subscription');
+    expect(session.body.get('line_items[0][price]')).toBe('price_growth_m');
+    expect(session.body.get('branding_settings[display_name]')).toBe('GrantConsole');
+    expect(session.body.get('discounts[0][coupon]')).toBe('cpn_founding');
+    expect(session.body.has('allow_promotion_codes')).toBe(false);
+    expect(session.body.get('subscription_data[description]')).toBe('GrantConsole Growth plan, billed monthly');
+    expect(session.body.get('subscription_data[metadata][orgId]')).toBe('org_1');
+    expect(session.body.get('customer_email')).toBe('owner@example.org');
+
+    // The coupon id is cached for the next checkout.
+    const before = calls.length;
+    await createCheckoutSession({ ...input, foundingOffer: true });
+    expect(calls.slice(before).map((call) => call.path)).toEqual(['/checkout/sessions']);
+  });
+
+  it('lets customers type promotion codes once the founding offer is used up', async () => {
+    const calls = stubStripe((call) => {
+      if (call.path === '/checkout/sessions') return { id: 'cs_2', url: 'https://checkout.stripe.com/c/pay/cs_2' };
+      return new Error(`unexpected ${call.method} ${call.path}`);
+    });
+
+    const result = await createCheckoutSession({ ...input, customerId: 'cus_9', foundingOffer: false });
+
+    expect(result.foundingOfferApplied).toBe(false);
+    const session = calls.find((call) => call.path === '/checkout/sessions')!;
+    expect(session.body.get('allow_promotion_codes')).toBe('true');
+    expect(session.body.has('discounts[0][coupon]')).toBe(false);
+    expect(session.body.get('customer')).toBe('cus_9');
+    expect(calls.some((call) => call.path.startsWith('/coupons'))).toBe(false);
+  });
+
+  it('retries plainly when Stripe rejects the branding or the coupon', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    let attempts = 0;
+    const calls = stubStripe((call) => {
+      if (call.method === 'GET' && call.path.startsWith('/coupons')) return { data: [{ id: 'cpn_founding', valid: true, metadata: { app: 'grantconsole', offer: 'founding', revision: '1' } }] };
+      if (call.path === '/checkout/sessions') {
+        attempts += 1;
+        return attempts === 1 ? new Error('Received unknown parameter: branding_settings') : { id: 'cs_3', url: 'https://checkout.stripe.com/c/pay/cs_3' };
+      }
+      return new Error(`unexpected ${call.method} ${call.path}`);
+    });
+
+    const result = await createCheckoutSession({ ...input, foundingOffer: true });
+
+    expect(result).toEqual({ id: 'cs_3', url: 'https://checkout.stripe.com/c/pay/cs_3', foundingOfferApplied: false });
+    const retry = calls.filter((call) => call.path === '/checkout/sessions')[1]!;
+    expect(retry.version).toBe('2024-06-20');
+    expect(retry.body.has('branding_settings[display_name]')).toBe(false);
+    expect(retry.body.get('allow_promotion_codes')).toBe('true');
     expect(error).toHaveBeenCalledOnce();
   });
 });

@@ -12,6 +12,13 @@ export type PlanId = (typeof PLAN_IDS)[number];
 /** Every workspace starts on a full-featured trial of this length. */
 export const TRIAL_DAYS = 14;
 
+/**
+ * Launch offer: the first organizations to take a paid plan get a discount on
+ * their first year. Checkout applies it automatically while places remain;
+ * invoiced customers get the same terms by asking.
+ */
+export const FOUNDING_OFFER = { percentOff: 25, durationMonths: 12, organizations: 25 } as const;
+
 export interface PlanLimits {
   /** Grants that are not closed, declined or archived. `null` means unlimited. */
   activeGrants: number | null;

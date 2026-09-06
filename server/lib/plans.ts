@@ -5,7 +5,7 @@
  */
 
 import type { Db } from '../db/connection';
-import { computeWorkspaceStatus, type OrganizationPlanRow, type WorkspaceStatus } from '../../shared/plans';
+import { computeWorkspaceStatus, FOUNDING_OFFER, type OrganizationPlanRow, type WorkspaceStatus } from '../../shared/plans';
 import type { GrantStatus } from '../../shared/constants';
 import type { WorkspaceUsage } from '../../shared/types';
 import { planLimit } from './errors';
@@ -39,6 +39,20 @@ export function workspaceStatusFor(db: Db, orgId: string, now: Date = new Date()
 }
 
 /** Grants that count toward the plan's active-grant allowance. */
+/** Organizations on a paid plan, online or invoiced; demo workspaces never count. */
+export function countSubscribedOrganizations(db: Db): number {
+  return (
+    db
+      .prepare(`SELECT COUNT(*) AS count FROM organizations WHERE is_demo = 0 AND plan IN ('starter', 'growth', 'scale')`)
+      .get() as { count: number }
+  ).count;
+}
+
+/** Places left on the founding-customer offer. */
+export function foundingOfferRemaining(db: Db): number {
+  return Math.max(0, FOUNDING_OFFER.organizations - countSubscribedOrganizations(db));
+}
+
 export function countsTowardLimit(status: GrantStatus): boolean {
   return status !== 'CLOSED' && status !== 'DECLINED';
 }

@@ -148,6 +148,8 @@ export const config = {
   /** Stripe billing. Checkout appears only when a secret key and at least one price id exist. */
   stripeSecretKey: envString('STRIPE_SECRET_KEY'),
   stripeWebhookSecret: envString('STRIPE_WEBHOOK_SECRET'),
+  /** Short note under the Checkout pay button, e.g. who issues receipts when the Stripe account is shared. */
+  checkoutNote: envString('STRIPE_CHECKOUT_NOTE'),
   stripePriceIds: {
     starter_monthly: envString('STRIPE_PRICE_STARTER_MONTHLY'),
     starter_annual: envString('STRIPE_PRICE_STARTER_ANNUAL'),

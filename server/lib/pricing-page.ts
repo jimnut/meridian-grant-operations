@@ -6,7 +6,7 @@
  */
 
 import { config } from '../config';
-import { annualSavingsPercent, formatUsd, PLAN_IDS, PLANS, TRIAL_DAYS, type PlanDefinition } from '../../shared/plans';
+import { annualSavingsPercent, formatUsd, FOUNDING_OFFER, PLAN_IDS, PLANS, TRIAL_DAYS, type PlanDefinition } from '../../shared/plans';
 import { entityGraphNodes, escapeHtml, injectAnalytics, publicFooter, publicHead, publicHeader } from './public-chrome';
 
 export const PRICING_FAQ: Array<{ q: string; a: string }> = [
@@ -204,7 +204,7 @@ ${publicHead({ title, description, canonical, structuredData }, styles)}
         ${plans.map(planCard).join('\n        ')}
       </div>
       <p class="trial-note">Prices in US dollars; annual billing is two months free. Annual plans can be invoiced and paid by ACH or check. Trials run at Growth-plan limits so a real portfolio fits.</p>
-      <p class="trial-note"><strong>Founding-customer offer:</strong> the first 25 organizations to subscribe lock in 25% off for their first year. Mention it when you choose a plan.</p>
+      <p class="trial-note"><strong>Founding-customer offer:</strong> the first ${FOUNDING_OFFER.organizations} organizations to subscribe lock in ${FOUNDING_OFFER.percentOff}% off for their first year, applied automatically at checkout. Paying by invoice? Mention it when you get in touch.</p>
     </section>
 
     <section class="included" aria-labelledby="included-heading">

@@ -14,7 +14,7 @@ import { logActivity } from '../lib/activity';
 import { conflict, notFound } from '../lib/errors';
 import { handler, parseBody } from '../lib/http';
 import { newId } from '../lib/ids';
-import { loadOrganizationBilling, usageFor } from '../lib/plans';
+import { foundingOfferRemaining, loadOrganizationBilling, usageFor } from '../lib/plans';
 import {
   createCheckoutSession,
   createPortalSession,
@@ -26,7 +26,7 @@ import {
   webhookConfigured,
 } from '../lib/stripe';
 import { billingEmailSchema, checkoutSchema } from '../lib/validation';
-import { computeWorkspaceStatus, PLAN_IDS, PLANS, type PlanId } from '../../shared/plans';
+import { computeWorkspaceStatus, FOUNDING_OFFER, PLAN_IDS, PLANS, type PlanId } from '../../shared/plans';
 import type { BillingSummary } from '../../shared/types';
 
 const router = Router();
@@ -49,6 +49,11 @@ router.get(
       billingEmail: org.billing_email,
       supportEmail: config.supportEmail,
       currentPlan: workspace.plan,
+      foundingOffer: {
+        percentOff: FOUNDING_OFFER.percentOff,
+        durationMonths: FOUNDING_OFFER.durationMonths,
+        remaining: foundingOfferRemaining(req.db),
+      },
     };
     res.json(summary);
   }),
@@ -91,6 +96,7 @@ router.post(
         customerEmail: org.billing_email ?? session.userEmail,
         successUrl: `${config.appUrl}/settings/billing?checkout=success`,
         cancelUrl: `${config.appUrl}/settings/billing?checkout=canceled`,
+        foundingOffer: foundingOfferRemaining(req.db) > 0,
       });
       logActivity(req.db, {
         orgId: session.orgId,
@@ -98,7 +104,7 @@ router.post(
         entityType: 'ORGANIZATION',
         entityId: session.orgId,
         action: 'CHECKOUT_STARTED',
-        summary: `${session.userName} started checkout for the ${PLANS[plan].name} plan (${interval})`,
+        summary: `${session.userName} started checkout for the ${PLANS[plan].name} plan (${interval}${checkout.foundingOfferApplied ? ', founding offer applied' : ''})`,
       });
       res.json({ url: checkout.url });
     } catch (error) {

@@ -6,7 +6,7 @@ import { CalendarPlus, Copy, CreditCard, ExternalLink, KeyRound, ShieldAlert, Tr
 import { BRAND } from '../../shared/brand';
 import { CURRENCIES, MONTH_NAMES, ROLE_LABELS } from '../../shared/constants';
 import { COMMON_TIMEZONES, fiscalYearFor, formatIsoDate } from '../../shared/dates';
-import { annualSavingsPercent, formatUsd, PLAN_IDS, PLANS, type PlanDefinition, type PlanId } from '../../shared/plans';
+import { annualSavingsPercent, formatUsd, FOUNDING_OFFER, PLAN_IDS, PLANS, type PlanDefinition, type PlanId } from '../../shared/plans';
 import type { BillingSummary, SessionOrganization, SessionPayload } from '../../shared/types';
 import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError } from '../lib/api';
@@ -459,7 +459,12 @@ function BillingPanel() {
           })}
         </div>
         <p className="muted small" style={{ marginTop: 'var(--space-4)' }}>
-          Founding-customer offer: the first 25 organizations lock in 25% off their first year — mention it when you choose a plan.
+          {data.foundingOffer.remaining > 0 && (
+            <>
+              Founding-customer offer: the first {FOUNDING_OFFER.organizations} organizations lock in {data.foundingOffer.percentOff}% off their first
+              year, applied automatically at checkout ({data.foundingOffer.remaining} {data.foundingOffer.remaining === 1 ? 'place' : 'places'} left).{' '}
+            </>
+          )}
           Cancel any time; your records stay exportable. <a href="/pricing" target="_blank" rel="noreferrer">Full pricing details ↗</a>
         </p>
       </Card>

@@ -8,7 +8,7 @@
 import crypto from 'node:crypto';
 
 import { config } from '../config';
-import { PLAN_IDS, type PlanId } from '../../shared/plans';
+import { FOUNDING_OFFER, PLAN_IDS, PLANS, type PlanId } from '../../shared/plans';
 import { timingSafeEqual } from './ids';
 
 export type BillingInterval = 'monthly' | 'annual';
@@ -66,13 +66,17 @@ export class StripeError extends Error {
   }
 }
 
-async function stripeRequest<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+const STRIPE_API_VERSION = '2024-06-20';
+/** Checkout branding (`branding_settings`) arrived with the 2025-09-30 API; only that call opts in, and it reads back just an id and a url. */
+const CHECKOUT_API_VERSION = '2025-09-30.clover';
+
+async function stripeRequest<T>(method: 'GET' | 'POST', path: string, body?: unknown, version: string = STRIPE_API_VERSION): Promise<T> {
   const response = await fetch(`https://api.stripe.com/v1${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${config.stripeSecretKey}`,
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Stripe-Version': '2024-06-20',
+      'Stripe-Version': version,
     },
     body: method === 'POST' ? encodeForm(body ?? {}) : undefined,
   });
@@ -83,6 +87,90 @@ async function stripeRequest<T>(method: 'GET' | 'POST', path: string, body?: unk
   return data;
 }
 
+function configuredPriceIds(): string[] {
+  return PLAN_IDS.flatMap((plan) =>
+    (['monthly', 'annual'] as const).map((interval) => priceIdFor(plan, interval)).filter((id): id is string => id !== null),
+  );
+}
+
+/** Groups the configured prices by product: the portal offers plan switches from it, the founding coupon is limited to it. */
+async function configuredProducts(): Promise<Array<{ product: string; prices: string[] }>> {
+  const byProduct = new Map<string, string[]>();
+  for (const priceId of configuredPriceIds()) {
+    const price = await stripeRequest<{ product: string | { id: string } }>('GET', `/prices/${encodeURIComponent(priceId)}`);
+    const productId = typeof price.product === 'string' ? price.product : price.product.id;
+    byProduct.set(productId, [...(byProduct.get(productId) ?? []), priceId]);
+  }
+  return [...byProduct.entries()].map(([product, prices]) => ({ product, prices }));
+}
+
+/* ---------------------------------------------------------- founding offer */
+
+/**
+ * The launch discount is a Stripe coupon the server finds by metadata or
+ * creates on first use, restricted to GrantConsole's own products because the
+ * Stripe account may be shared. Checkout applies it while places remain (the
+ * caller checks `foundingOfferRemaining`), so there is no code to type.
+ */
+const FOUNDING_COUPON_MARKER = { app: 'grantconsole', offer: 'founding', revision: '1' } as const;
+
+let foundingCouponLookup: Promise<string | null> | null = null;
+
+/** Tests reset this so each case starts without a cached coupon id. */
+export function resetFoundingCouponCache(): void {
+  foundingCouponLookup = null;
+}
+
+interface StripeCoupon {
+  id: string;
+  valid: boolean;
+  metadata?: Record<string, string>;
+}
+
+async function findFoundingCoupon(): Promise<string | null> {
+  const list = await stripeRequest<{ data: StripeCoupon[] }>('GET', '/coupons?limit=100');
+  const match = list.data.find(
+    (coupon) =>
+      coupon.valid &&
+      coupon.metadata?.app === FOUNDING_COUPON_MARKER.app &&
+      coupon.metadata?.offer === FOUNDING_COUPON_MARKER.offer &&
+      coupon.metadata?.revision === FOUNDING_COUPON_MARKER.revision,
+  );
+  return match?.id ?? null;
+}
+
+async function createFoundingCoupon(): Promise<string> {
+  const products = (await configuredProducts()).map((entry) => entry.product);
+  const created = await stripeRequest<{ id: string }>('POST', '/coupons', {
+    name: `Founding customer ${FOUNDING_OFFER.percentOff}% off first year`,
+    percent_off: FOUNDING_OFFER.percentOff,
+    duration: 'repeating',
+    duration_in_months: FOUNDING_OFFER.durationMonths,
+    max_redemptions: FOUNDING_OFFER.organizations,
+    ...(products.length > 0 ? { applies_to: { products } } : {}),
+    metadata: FOUNDING_COUPON_MARKER,
+  });
+  return created.id;
+}
+
+/** Resolves the founding coupon id, creating it the first time; null (logged) when Stripe refuses. */
+export async function foundingCouponId(): Promise<string | null> {
+  if (!foundingCouponLookup) {
+    foundingCouponLookup = (async () => {
+      try {
+        return (await findFoundingCoupon()) ?? (await createFoundingCoupon());
+      } catch (error) {
+        console.error('[billing] founding coupon unavailable:', error instanceof Error ? error.message : error);
+        foundingCouponLookup = null;
+        return null;
+      }
+    })();
+  }
+  return foundingCouponLookup;
+}
+
+/* ---------------------------------------------------------------- checkout */
+
 export interface CheckoutSessionInput {
   orgId: string;
   plan: PlanId;
@@ -91,24 +179,60 @@ export interface CheckoutSessionInput {
   customerEmail: string;
   successUrl: string;
   cancelUrl: string;
+  /** Apply the founding-customer coupon; the caller has checked that places remain. */
+  foundingOffer?: boolean;
 }
 
-export async function createCheckoutSession(input: CheckoutSessionInput): Promise<{ id: string; url: string }> {
+export interface CheckoutSessionResult {
+  id: string;
+  url: string;
+  foundingOfferApplied: boolean;
+}
+
+/**
+ * Starts hosted Checkout. The page is branded as GrantConsole even on a shared
+ * Stripe account, carries the founding discount when it applies, and, should
+ * Stripe reject any of those extras, is retried plainly so a customer is never
+ * turned away by decoration.
+ */
+export async function createCheckoutSession(input: CheckoutSessionInput): Promise<CheckoutSessionResult> {
   const priceId = priceIdFor(input.plan, input.interval);
   if (!priceId) throw new StripeError(400, 'That plan is not available for online checkout yet.');
-  const session = await stripeRequest<{ id: string; url: string }>('POST', '/checkout/sessions', {
+  const coupon = input.foundingOffer ? await foundingCouponId() : null;
+  const tracking = { orgId: input.orgId, plan: input.plan, interval: input.interval };
+  const base = {
     mode: 'subscription',
     client_reference_id: input.orgId,
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
-    allow_promotion_codes: 'true',
     billing_address_collection: 'auto',
     line_items: [{ price: priceId, quantity: 1 }],
-    metadata: { orgId: input.orgId, plan: input.plan, interval: input.interval },
-    subscription_data: { metadata: { orgId: input.orgId, plan: input.plan, interval: input.interval } },
+    metadata: tracking,
+    subscription_data: {
+      description: `GrantConsole ${PLANS[input.plan].name} plan, billed ${input.interval === 'annual' ? 'yearly' : 'monthly'}`,
+      metadata: tracking,
+    },
+    ...(config.checkoutNote ? { custom_text: { submit: { message: config.checkoutNote } } } : {}),
     ...(input.customerId ? { customer: input.customerId } : { customer_email: input.customerEmail }),
-  });
-  return { id: session.id, url: session.url };
+  };
+  try {
+    const session = await stripeRequest<{ id: string; url: string }>(
+      'POST',
+      '/checkout/sessions',
+      {
+        ...base,
+        branding_settings: { display_name: 'GrantConsole', button_color: '#ff4f00' },
+        ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: 'true' }),
+      },
+      CHECKOUT_API_VERSION,
+    );
+    return { id: session.id, url: session.url, foundingOfferApplied: coupon !== null };
+  } catch (error) {
+    if (!(error instanceof StripeError) || error.status !== 400) throw error;
+    console.error('[billing] checkout extras rejected, retrying without them:', error.message);
+    const session = await stripeRequest<{ id: string; url: string }>('POST', '/checkout/sessions', { ...base, allow_promotion_codes: 'true' });
+    return { id: session.id, url: session.url, foundingOfferApplied: false };
+  }
 }
 
 /* ------------------------------------------------ customer portal branding */
@@ -133,23 +257,6 @@ interface PortalConfiguration {
   metadata?: Record<string, string>;
 }
 
-function configuredPriceIds(): string[] {
-  return PLAN_IDS.flatMap((plan) =>
-    (['monthly', 'annual'] as const).map((interval) => priceIdFor(plan, interval)).filter((id): id is string => id !== null),
-  );
-}
-
-/** Groups the configured prices by product so the portal can offer plan switches. */
-async function portalProducts(): Promise<Array<{ product: string; prices: string[] }>> {
-  const byProduct = new Map<string, string[]>();
-  for (const priceId of configuredPriceIds()) {
-    const price = await stripeRequest<{ product: string | { id: string } }>('GET', `/prices/${encodeURIComponent(priceId)}`);
-    const productId = typeof price.product === 'string' ? price.product : price.product.id;
-    byProduct.set(productId, [...(byProduct.get(productId) ?? []), priceId]);
-  }
-  return [...byProduct.entries()].map(([product, prices]) => ({ product, prices }));
-}
-
 async function findPortalConfiguration(): Promise<string | null> {
   const list = await stripeRequest<{ data: PortalConfiguration[] }>('GET', '/billing_portal/configurations?active=true&limit=100');
   const match = list.data.find(
@@ -159,7 +266,7 @@ async function findPortalConfiguration(): Promise<string | null> {
 }
 
 async function createPortalConfiguration(): Promise<string> {
-  const products = await portalProducts();
+  const products = await configuredProducts();
   const created = await stripeRequest<{ id: string }>('POST', '/billing_portal/configurations', {
     business_profile: {
       headline: 'Manage your GrantConsole subscription',

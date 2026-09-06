@@ -85,6 +85,8 @@ export interface BillingSummary {
   billingEmail: string | null;
   supportEmail: string;
   currentPlan: PlanId | 'trial';
+  /** Launch discount for the first organizations to subscribe; `remaining` is 0 once it is used up. */
+  foundingOffer: { percentOff: number; durationMonths: number; remaining: number };
 }
 
 export interface OnboardingStatus {
