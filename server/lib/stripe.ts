@@ -111,10 +111,107 @@ export async function createCheckoutSession(input: CheckoutSessionInput): Promis
   return { id: session.id, url: session.url };
 }
 
+/* ------------------------------------------------ customer portal branding */
+
+/**
+ * The customer portal takes its headline, legal links and plan-switching
+ * options from a "configuration". The Stripe account may be shared with other
+ * products, so GrantConsole keeps a configuration of its own (found by
+ * metadata, created on first use) instead of leaning on the dashboard default.
+ */
+const PORTAL_CONFIGURATION_MARKER = { app: 'grantconsole', revision: '1' } as const;
+
+let portalConfigurationLookup: Promise<string | null> | null = null;
+
+/** Tests reset this so each case starts without a cached configuration id. */
+export function resetPortalConfigurationCache(): void {
+  portalConfigurationLookup = null;
+}
+
+interface PortalConfiguration {
+  id: string;
+  metadata?: Record<string, string>;
+}
+
+function configuredPriceIds(): string[] {
+  return PLAN_IDS.flatMap((plan) =>
+    (['monthly', 'annual'] as const).map((interval) => priceIdFor(plan, interval)).filter((id): id is string => id !== null),
+  );
+}
+
+/** Groups the configured prices by product so the portal can offer plan switches. */
+async function portalProducts(): Promise<Array<{ product: string; prices: string[] }>> {
+  const byProduct = new Map<string, string[]>();
+  for (const priceId of configuredPriceIds()) {
+    const price = await stripeRequest<{ product: string | { id: string } }>('GET', `/prices/${encodeURIComponent(priceId)}`);
+    const productId = typeof price.product === 'string' ? price.product : price.product.id;
+    byProduct.set(productId, [...(byProduct.get(productId) ?? []), priceId]);
+  }
+  return [...byProduct.entries()].map(([product, prices]) => ({ product, prices }));
+}
+
+async function findPortalConfiguration(): Promise<string | null> {
+  const list = await stripeRequest<{ data: PortalConfiguration[] }>('GET', '/billing_portal/configurations?active=true&limit=100');
+  const match = list.data.find(
+    (item) => item.metadata?.app === PORTAL_CONFIGURATION_MARKER.app && item.metadata?.revision === PORTAL_CONFIGURATION_MARKER.revision,
+  );
+  return match?.id ?? null;
+}
+
+async function createPortalConfiguration(): Promise<string> {
+  const products = await portalProducts();
+  const created = await stripeRequest<{ id: string }>('POST', '/billing_portal/configurations', {
+    business_profile: {
+      headline: 'Manage your GrantConsole subscription',
+      privacy_policy_url: `${config.appUrl}/privacy`,
+      terms_of_service_url: `${config.appUrl}/terms`,
+    },
+    default_return_url: `${config.appUrl}/settings/billing`,
+    features: {
+      customer_update: { enabled: 'true', allowed_updates: ['email', 'name', 'address', 'tax_id'] },
+      invoice_history: { enabled: 'true' },
+      payment_method_update: { enabled: 'true' },
+      subscription_cancel: {
+        enabled: 'true',
+        mode: 'at_period_end',
+        cancellation_reason: { enabled: 'true', options: ['too_expensive', 'missing_features', 'switched_service', 'unused', 'other'] },
+      },
+      subscription_update:
+        products.length > 0
+          ? { enabled: 'true', default_allowed_updates: ['price'], proration_behavior: 'create_prorations', products }
+          : { enabled: 'false' },
+    },
+    metadata: PORTAL_CONFIGURATION_MARKER,
+  });
+  return created.id;
+}
+
+/**
+ * Resolves the GrantConsole portal configuration id, creating it the first
+ * time. Returns null (and logs) when Stripe refuses, so the portal still opens
+ * with the account default rather than failing the customer.
+ */
+export async function portalConfigurationId(): Promise<string | null> {
+  if (!portalConfigurationLookup) {
+    portalConfigurationLookup = (async () => {
+      try {
+        return (await findPortalConfiguration()) ?? (await createPortalConfiguration());
+      } catch (error) {
+        console.error('[billing] portal configuration unavailable, using the account default:', error instanceof Error ? error.message : error);
+        portalConfigurationLookup = null;
+        return null;
+      }
+    })();
+  }
+  return portalConfigurationLookup;
+}
+
 export async function createPortalSession(customerId: string, returnUrl: string): Promise<{ url: string }> {
+  const configuration = await portalConfigurationId();
   const session = await stripeRequest<{ url: string }>('POST', '/billing_portal/sessions', {
     customer: customerId,
     return_url: returnUrl,
+    ...(configuration ? { configuration } : {}),
   });
   return { url: session.url };
 }
