@@ -23,6 +23,7 @@ import {
 } from '../../shared/constants';
 import { isIsoDate } from '../../shared/dates';
 import { MoneyParseError, parseAmountToCents } from '../../shared/money';
+import { PLAN_IDS } from '../../shared/plans';
 
 const trimmed = (max: number) => z.string().trim().max(max, `Keep this under ${max} characters.`);
 
@@ -332,4 +333,99 @@ export const calendarQuerySchema = z.object({
 
 export const searchQuerySchema = z.object({
   q: z.string().trim().min(1, 'Type something to search for.').max(120),
+});
+
+/* ---------------------------------------------------- accounts and access */
+
+
+const emailField = z.string().trim().toLowerCase().email('Enter a valid email address.').max(200);
+const passwordField = z.string().min(1, 'Enter a password.').max(200);
+/** Hidden form field that humans never fill in; a value means a bot. */
+const honeypot = z
+  .union([z.string(), z.undefined(), z.null()])
+  .transform((v) => (v ?? '').trim());
+const optionalEmail = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((v) => (v && v.trim() !== '' ? v.trim().toLowerCase() : null))
+  .refine((v) => v === null || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 200), {
+    message: 'Enter a valid email address.',
+  });
+
+export const signUpSchema = z.object({
+  name: requiredText('Your name', 120),
+  email: emailField,
+  password: passwordField,
+  organizationName: requiredText('Organization name', 160),
+  timezone: organizationSchema.shape.timezone.optional(),
+  fiscalYearStartMonth: organizationSchema.shape.fiscalYearStartMonth.optional(),
+  website: honeypot,
+});
+
+export const forgotPasswordSchema = z.object({ email: emailField });
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(16, 'That reset link is not valid.').max(300),
+  password: passwordField,
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: passwordField,
+  newPassword: passwordField,
+});
+
+export const profileSchema = z.object({
+  name: requiredText('Your name', 120),
+  title: optionalText(120),
+});
+
+export const inviteSchema = z.object({
+  email: optionalEmail,
+  role: z.enum(ROLES),
+});
+
+export const acceptInviteSchema = z.object({
+  name: optionalText(120),
+  email: optionalEmail,
+  password: z.union([z.string().max(200), z.undefined(), z.null()]).transform((v) => v ?? ''),
+});
+
+export const LEAD_SOURCES = ['contact', 'pricing', 'pilot', 'demo', 'security', 'import-help'] as const;
+
+export const leadSchema = z.object({
+  email: emailField,
+  name: optionalText(120),
+  organization: optionalText(160),
+  message: optionalText(2000),
+  source: z.enum(LEAD_SOURCES).default('contact'),
+  website: honeypot,
+});
+
+export const checkoutSchema = z.object({
+  plan: z.enum(PLAN_IDS),
+  interval: z.enum(['monthly', 'annual']),
+});
+
+export const billingEmailSchema = z.object({ billingEmail: emailField });
+
+export const adminPlanSchema = z.object({
+  organizationSlug: z.string().trim().min(1, 'Which organization?').max(80),
+  plan: z.union([z.enum(PLAN_IDS), z.literal('trial')]),
+  status: z.enum(['trialing', 'active', 'past_due', 'canceled', 'complimentary']),
+  validUntil: optionalDate,
+  trialEndsAt: optionalDate,
+});
+
+export const deleteOrganizationSchema = z.object({
+  password: passwordField,
+  confirmName: requiredText('Organization name', 160),
+});
+
+const importCell = z.union([z.string(), z.number(), z.null(), z.undefined()]);
+
+export const importSchema = z.object({
+  rows: z
+    .array(z.record(z.string(), importCell))
+    .min(1, 'Add at least one row.')
+    .max(500, 'Import up to 500 rows at a time.'),
+  createFunders: z.boolean().default(true),
 });

@@ -253,19 +253,41 @@ Copy `.env.example` to `.env` to override. Every value has a safe development de
 | `MAX_UPLOAD_MB` | `10` | Evidence upload cap |
 | `ALLOWED_ORIGINS` | — | Extra origins permitted to send mutations |
 | `SITE_URL` | `https://grantconsole.com` | Canonical origin for robots.txt / sitemap.xml |
-| `GA_MEASUREMENT_ID` | *(off)* | GA4 id; the landing page ships Google's tag only when set |
+| `APP_URL` | `SITE_URL` | Origin used in emails, invite links and Stripe redirects |
+| `GA_MEASUREMENT_ID` | *(off)* | GA4 id; public pages and the app shell load Google's tag only when set |
+| `SIGNUPS_ENABLED` | `true` | Pause self-serve sign-up without a deploy |
+| `TRIAL_DAYS` | `14` | Trial length for new workspaces |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | *(off)* | Transactional email; console fallback when unset |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*` | *(off)* | Online checkout, portal and webhook |
+| `ADMIN_TOKEN` | *(off)* | Bearer token for `/api/admin` |
+| `DEMO_RESET_HOUR_UTC` | `9` | Daily reset hour for the public demo |
 
 `data/`, `.test-data/` and `.e2e-data/` are git-ignored; no secrets or runtime data are committed.
 
 ---
 
+## Accounts, plans and billing
+
+Launched 2026-09-06. Real organizations live in the same database as the seeded demo, which is flagged `is_demo = 1` and reset daily; the demo account list on the sign-in page only ever shows demo organizations.
+
+- **Sign-up** (`/signup`, `POST /api/auth/sign-up`): creates a user, an organization and the owner membership atomically, starts a `TRIAL_DAYS` trial at Growth limits, and signs the person in. Honeypot field + per-IP throttle.
+- **Plans** (`shared/plans.ts`): Starter $79/mo ($65 annual) · 10 active grants · 3 editor seats · 2 GB; Growth $179 ($149) · 40 grants · 15 seats · 10 GB; Scale $349 ($290) · unlimited · 50 GB. Viewers are free everywhere. Prices are rendered from this one file on `/pricing`, in Settings and in Stripe metadata.
+- **Enforcement** (`server/lib/plans.ts`): active grants (not closed/declined/archived) on create, status change and restore; editor seats on invite and accept; storage on upload. Limits raise `402 PLAN_LIMIT`. An ended trial or subscription makes record edits `402 WORKSPACE_READ_ONLY` while reads, exports, team and billing keep working.
+- **Stripe** (`server/lib/stripe.ts`, `server/routes/billing.ts`): hosted Checkout in subscription mode, the customer portal, and a signature-verified webhook (`POST /api/billing/webhook`, raw body, idempotent per event id) that keeps `organizations.plan/subscription_status/plan_valid_until` in step. Everything is gated on env; without keys the billing page offers an email/invoice path.
+- **Founder admin** (`/api/admin/*`, bearer `ADMIN_TOKEN`): list organizations with usage, list leads, and set a plan/status/valid-until by slug for invoiced or complimentary customers.
+- **Invitations**: email or link, role-scoped, 14-day single-use hashed tokens, seat-checked; owner-assisted one-hour password reset links for teammates. **Password reset** by email when a provider is configured.
+- **Email** (`server/lib/mailer.ts`): Resend over plain fetch, console fallback. Welcome, invitation, reset, trial-ending/ended and a Monday deadline digest (`server/lib/scheduler.ts`, idempotent via `notification_log`).
+- **Calendar feed**: `POST /api/calendar/feed` mints a secret address; `GET /feeds/<token>.ics` serves every dated obligation as all-day events for Google/Outlook/Apple Calendar.
+- **Import**: `/grants/import` parses CSV in the browser, auto-maps columns, and `POST /api/grants/import` creates funders and grants (with a first report deliverable), skipping duplicates and reporting each row.
+- **Onboarding**: checklist on the Today page, a one-click sample portfolio (`is_sample` rows, removable), and organization deletion from Settings → Danger zone.
+- **Public site**: `/pricing` (Offer + FAQPage structured data), contact and pricing lead forms (`POST /api/public/leads`, stored, logged and emailed), customer-grade Terms, Privacy and Security pages.
+
 ## Honest limitations
 
-This is a local-first MVP. It is deliberately complete in the areas it covers and deliberately empty elsewhere.
+This is a single-instance product with deliberate gaps.
 
-- **No billing.** The pricing research supports a future $499/month plan; none of it is built.
-- **No email.** No invitations, reminders, or digests. Team membership is seeded; there is no invite flow, and users cannot be created or deactivated from the UI.
-- **No password management.** No self-service reset, change-password, or 2FA. The demo password is shared by design.
+- **Storage is only durable on a persistent disk.** Point `DATA_DIR` at a mounted disk in production; the free Render tier loses local files on restart.
+- **No 2FA or SSO yet.** Password reset needs an email provider or an owner-issued link.
 - **Single-process SQLite.** Fine for a team-sized workload on one machine; it is not clustered and there is no connection pool, read replica, or backup job.
 - **Sessions are database rows**, not a distributed store. Restarting with a generated dev secret invalidates cookies.
 - **Uploads are local files.** No virus scanning, no object storage, no content sniffing beyond the extension/MIME agreement — a valid-looking PDF is trusted to be one.

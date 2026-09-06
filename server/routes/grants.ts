@@ -6,7 +6,9 @@ import { describeChanges, logActivity } from '../lib/activity';
 import { conflict, notFound, validationError } from '../lib/errors';
 import { handler, parseBody, parseQuery } from '../lib/http';
 import { newId } from '../lib/ids';
-import { archiveSchema, grantQuerySchema, grantSchema, grantStatusSchema } from '../lib/validation';
+import { assertGrantCapacity, countsTowardLimit } from '../lib/plans';
+import { archiveSchema, grantQuerySchema, grantSchema, grantStatusSchema, importSchema } from '../lib/validation';
+import { importGrants, type ImportRow } from '../services/import';
 import { getGrantDetail, getGrantRow, loadPortfolio } from '../services/portfolio';
 import { buildReportingPacket, grantPacketCsv, portfolioCsv } from '../services/reports';
 import { csvFilename } from '../../shared/csv';
@@ -214,6 +216,9 @@ router.post(
     const currency = input.currency ?? session.currency;
     assertOrgCurrency(currency, session.currency);
 
+    // Closed and declined grants never count toward the plan's allowance.
+    if (countsTowardLimit(input.status)) assertGrantCapacity(req.db, session.orgId, session.workspace);
+
     const now = new Date().toISOString();
     const id = newId('gr');
 
@@ -245,6 +250,29 @@ router.post(
 
 /* ------------------------------------------------------------------ update */
 
+/** Spreadsheet import: rows already mapped to import fields by the client. */
+router.post(
+  '/import',
+  requireCapability('grants:write'),
+  handler((req, res) => {
+    const session = currentSession(req);
+    const { rows, createFunders } = parseBody(importSchema, req.body);
+    const result = importGrants(
+      req.db,
+      {
+        orgId: session.orgId,
+        userId: session.userId,
+        userName: session.userName,
+        currency: session.currency,
+        workspace: session.workspace,
+      },
+      rows as ImportRow[],
+      createFunders,
+    );
+    res.status(result.created > 0 ? 201 : 200).json(result);
+  }),
+);
+
 router.put(
   '/:grantId',
   requireCapability('grants:write'),
@@ -274,6 +302,9 @@ router.put(
         ...openObligations(req.db, session.orgId, grantId),
       });
       if (denial) throw conflict(denial);
+      if (!countsTowardLimit(existing.status) && countsTowardLimit(input.status)) {
+        assertGrantCapacity(req.db, session.orgId, session.workspace);
+      }
     }
 
     const now = new Date().toISOString();
@@ -333,6 +364,9 @@ router.patch(
       ...openObligations(req.db, session.orgId, grantId),
     });
     if (denial) throw conflict(denial);
+    if (!countsTowardLimit(existing.status) && countsTowardLimit(status)) {
+      assertGrantCapacity(req.db, session.orgId, session.workspace);
+    }
 
     const now = new Date().toISOString();
     req.db
@@ -364,7 +398,10 @@ router.patch(
     const existing = getGrantRow(req.db, session.orgId, grantId);
     const { archived } = parseBody(archiveSchema, req.body);
 
-    // Restoring is always safe; archiving must never hide live obligations.
+    // Restoring brings a grant back under the plan allowance; archiving must never hide live obligations.
+    if (!archived && existing.archived === 1 && countsTowardLimit(existing.status)) {
+      assertGrantCapacity(req.db, session.orgId, session.workspace);
+    }
     if (archived) {
       const denial = archiveDenialReason({
         status: existing.status,

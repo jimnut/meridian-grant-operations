@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CircleAlert, Landmark, LockKeyhole, ShieldCheck, Wallet } from 'lucide-react';
 
@@ -124,7 +125,7 @@ export function SignInPage() {
         <div className="signin__card">
           <h2 style={{ fontSize: 'var(--text-2xl)', letterSpacing: '-0.02em' }}>Sign in</h2>
           <p className="muted" style={{ marginTop: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
-            Use a demo account below, or enter credentials directly.
+            {demo ? 'Use a demo account below, or enter your own credentials.' : 'Enter the email and password for your workspace.'}
           </p>
 
           <form onSubmit={submit} noValidate className="stack stack-4">
@@ -166,6 +167,11 @@ export function SignInPage() {
               <LockKeyhole size={16} aria-hidden="true" />
               {busy && !pendingEmail ? 'Signing in…' : 'Sign in'}
             </button>
+            <p className="auth-links" style={{ marginTop: 0 }}>
+              <Link to="/forgot-password">Forgot your password?</Link>
+              {' · '}
+              New to GrantConsole? <Link to="/signup">Start a free trial</Link>
+            </p>
           </form>
 
           {demo && demo.accounts.length > 0 && (

@@ -124,7 +124,7 @@ export function publicHeader(): string {
   return `<header class="site-header-wrap">
     <div class="site-header">
       <a class="brand" href="/" aria-label="GrantConsole home"><img src="/favicon.svg" width="34" height="34" alt="" /><span><strong>GrantConsole</strong><small>Grant operations</small></span></a>
-      <nav aria-label="Primary"><a href="/resources">Resources</a><a href="/about">About</a><a href="/security">Security</a><a href="/contact">Contact</a><a class="nav-demo" href="/signin">Open live demo</a></nav>
+      <nav aria-label="Primary"><a href="/pricing">Pricing</a><a href="/resources">Resources</a><a href="/about">About</a><a href="/security">Security</a><a href="/contact">Contact</a><a class="nav-signin" href="/signin">Sign in</a><a class="nav-demo" href="/signup">Start free trial</a></nav>
     </div>
   </header>`;
 }
@@ -133,7 +133,7 @@ export function publicFooter(): string {
   return `<footer class="site-footer-wrap">
     <div class="site-footer">
       <span>© GrantConsole · post-award grant management for nonprofits</span>
-      <nav aria-label="Footer"><a href="/resources">Resources</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/security">Security</a><a href="/privacy">Privacy</a><a href="/terms">Demo terms</a></nav>
+      <nav aria-label="Footer"><a href="/pricing">Pricing</a><a href="/signup">Start free trial</a><a href="/signin">Live demo</a><a href="/resources">Resources</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/security">Security</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
     </div>
   </footer>`;
 }
@@ -157,6 +157,13 @@ export function publicPageStyles(): string {
     .site-header nav a { color:#b8ada0; text-decoration:none; font-size:14px; font-weight:650; }
     .site-header nav a:hover { color:#fff; }
     .site-header nav .nav-demo { color:#fff; background:var(--signal); padding:9px 14px; border-radius:10px; font-weight:800; }
+    .site-header nav .nav-signin { color:#fff; }
+    .contact-form { display:grid; gap:12px; max-width:560px; margin:8px 0 0; }
+    .contact-form label { display:grid; gap:5px; font:600 12px/1.4 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+    .contact-form input,.contact-form textarea { width:100%; padding:11px 12px; border:1px solid var(--edge); border-radius:10px; background:var(--card); color:var(--ink); font:15px/1.4 var(--sans); }
+    .contact-form textarea { min-height:110px; resize:vertical; }
+    .contact-form button { justify-self:start; padding:12px 17px; background:var(--signal); color:#fff; border:0; border-radius:11px; font:800 15px var(--sans); cursor:pointer; }
+    .contact-form .hp { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
     .page-shell { padding:84px 0 24px; }
     .page-hero { max-width:790px; padding-bottom:48px; border-bottom:1px solid var(--edge); }
     .eyebrow { margin:0 0 15px; color:var(--signal-deep); font:700 12px/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; }
@@ -183,6 +190,6 @@ export function publicPageStyles(): string {
     .error-page { min-height:62vh; display:flex; flex-direction:column; justify-content:center; }
     .actions { margin-top:28px; display:flex; align-items:center; gap:20px; }
     .text-link { font-weight:750; }
-    @media (max-width:700px) { .site-header { align-items:flex-start; padding:19px 0; } .site-header nav { justify-content:flex-end; gap:10px 14px; } .site-header nav a:not(.nav-demo) { display:none; } .page-shell { padding-top:56px; } .link-grid { grid-template-columns:1fr; } }
+    @media (max-width:700px) { .site-header { align-items:flex-start; padding:19px 0; } .site-header nav { justify-content:flex-end; gap:10px 14px; } .site-header nav a:not(.nav-demo):not(.nav-signin) { display:none; } .page-shell { padding-top:56px; } .link-grid { grid-template-columns:1fr; } }
   `;
 }

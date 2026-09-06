@@ -218,3 +218,59 @@ export const COMMON_TIMEZONES = [
   'Pacific/Honolulu',
   'UTC',
 ] as const;
+
+/* ------------------------------------------------------- flexible parsing */
+
+const MONTH_LOOKUP: Record<string, number> = {
+  jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, apr: 4, april: 4, may: 5, jun: 6, june: 6,
+  jul: 7, july: 7, aug: 8, august: 8, sep: 9, sept: 9, september: 9, oct: 10, october: 10,
+  nov: 11, november: 11, dec: 12, december: 12,
+};
+
+function assembleDate(year: number, month: number, day: number): IsoDate | null {
+  const candidate = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return isIsoDate(candidate) ? candidate : null;
+}
+
+/**
+ * Parses the date formats spreadsheets actually contain: ISO, US numeric
+ * (9/30/2026, 09-30-26), textual (Sep 30, 2026 · 30 September 2026) and Excel
+ * serial numbers. Returns null rather than guessing when the input is ambiguous
+ * or malformed; callers decide whether that is an error.
+ */
+export function parseFlexibleDate(input: unknown): IsoDate | null {
+  if (input === null || input === undefined) return null;
+  if (typeof input === 'number') {
+    // Excel serial date (days since 1899-12-30); plausible range only.
+    if (Number.isFinite(input) && input > 20_000 && input < 80_000) {
+      return new Date(Math.round((input - 25_569) * 86_400_000)).toISOString().slice(0, 10);
+    }
+    return null;
+  }
+  const raw = String(input).trim();
+  if (raw === '') return null;
+  if (isIsoDate(raw)) return raw;
+
+  const isoLike = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[T\s].*)?$/.exec(raw);
+  if (isoLike) return assembleDate(Number(isoLike[1]), Number(isoLike[2]), Number(isoLike[3]));
+
+  const us = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})$/.exec(raw);
+  if (us) {
+    const year = us[3]!.length === 2 ? 2000 + Number(us[3]) : Number(us[3]);
+    return assembleDate(year, Number(us[1]), Number(us[2]));
+  }
+
+  const monthFirst = /^([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})$/.exec(raw);
+  if (monthFirst) {
+    const month = MONTH_LOOKUP[monthFirst[1]!.toLowerCase()];
+    return month ? assembleDate(Number(monthFirst[3]), month, Number(monthFirst[2])) : null;
+  }
+
+  const dayFirst = /^(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})$/.exec(raw);
+  if (dayFirst) {
+    const month = MONTH_LOOKUP[dayFirst[2]!.toLowerCase()];
+    return month ? assembleDate(Number(dayFirst[3]), month, Number(dayFirst[1])) : null;
+  }
+
+  return null;
+}

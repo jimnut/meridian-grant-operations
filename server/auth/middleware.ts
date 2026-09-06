@@ -2,9 +2,9 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { config } from '../config';
 import { getDb, type Db } from '../db/connection';
-import { forbidden, unauthenticated, ApiError } from '../lib/errors';
+import { forbidden, unauthenticated, workspaceReadOnly, ApiError } from '../lib/errors';
 import { timingSafeEqual } from '../lib/ids';
-import { can, type Capability } from '../../shared/permissions';
+import { can, isRecordCapability, type Capability } from '../../shared/permissions';
 import { decodeCookie, resolveSession, type ResolvedSession } from './session';
 
 declare module 'express-serve-static-core' {
@@ -55,6 +55,12 @@ export function requireCapability(capability: Capability) {
     }
     if (!can(req.session.role, capability)) {
       next(forbidden(readOnlyMessage(req.session.role)));
+      return;
+    }
+    // An expired trial or ended subscription freezes record edits, never reads,
+    // exports, billing or team administration. The reason is spelled out.
+    if (isRecordCapability(capability) && req.session.workspace.readOnly) {
+      next(workspaceReadOnly(req.session.workspace.readOnlyReason ?? 'This workspace is read-only.'));
       return;
     }
     next();

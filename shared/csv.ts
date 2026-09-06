@@ -72,3 +72,66 @@ export function csvFilename(parts: readonly string[], isoDate: string): string {
     .join('-');
   return `${slug || 'export'}-${isoDate}.csv`;
 }
+
+/**
+ * RFC 4180 parser for spreadsheet exports: quoted fields, doubled quotes,
+ * CRLF or LF line endings, a leading BOM, and a trailing newline. Empty lines
+ * are dropped. Never throws — a malformed trailing quote simply ends the field.
+ */
+export function parseCsv(text: string, delimiter = ','): string[][] {
+  const source = text.startsWith(UTF8_BOM) ? text.slice(1) : text;
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let quoted = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i]!;
+    if (quoted) {
+      if (char === '"') {
+        if (source[i + 1] === '"') {
+          field += '"';
+          i += 1;
+        } else {
+          quoted = false;
+        }
+      } else {
+        field += char;
+      }
+      continue;
+    }
+    if (char === '"') {
+      quoted = true;
+    } else if (char === delimiter) {
+      row.push(field);
+      field = '';
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && source[i + 1] === '\n') i += 1;
+      row.push(field);
+      field = '';
+      if (row.some((cell) => cell.trim() !== '')) rows.push(row);
+      row = [];
+    } else {
+      field += char;
+    }
+  }
+  row.push(field);
+  if (row.some((cell) => cell.trim() !== '')) rows.push(row);
+  return rows;
+}
+
+/** Picks the delimiter a spreadsheet export used, from the header line. */
+export function detectDelimiter(text: string): string {
+  const firstLine = text.split(/\r?\n/, 1)[0] ?? '';
+  const candidates = [',', ';', '\t'];
+  let best = ',';
+  let bestCount = -1;
+  for (const candidate of candidates) {
+    const count = firstLine.split(candidate).length - 1;
+    if (count > bestCount) {
+      best = candidate;
+      bestCount = count;
+    }
+  }
+  return best;
+}

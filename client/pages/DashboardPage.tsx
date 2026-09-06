@@ -21,6 +21,7 @@ import { attentionGrantHref, calendarGrantHref } from '../lib/grant-links';
 import { useCurrentSession } from '../lib/session';
 import { dueTone, formatCents, formatCentsCompact, formatPercent, pluralize } from '../lib/format';
 import { CHART_COLORS, DonutChart, StackedBar } from '../components/charts';
+import { OnboardingCard } from '../components/OnboardingCard';
 import { Card, EmptyState, ErrorState, LoadingState, Progress, StatTile, StatusPill } from '../components/ui';
 
 export function DashboardPage() {
@@ -59,6 +60,8 @@ export function DashboardPage() {
           </Link>
         </div>
       </header>
+
+      <OnboardingCard />
 
       {isLoading && (
         <div className="card">

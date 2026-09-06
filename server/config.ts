@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 
 import { loadEnvFile } from './env';
+import { TRIAL_DAYS } from '../shared/plans';
 
 // A `.env` in the working directory is loaded before anything else reads config.
 // Real environment variables always win.
@@ -134,6 +135,31 @@ export const config = {
   siteUrl: envString('SITE_URL', 'https://grantconsole.com').replace(/\/+$/, ''),
   /** GA4 measurement id (G-XXXXXXXX). Analytics is off unless this is set. */
   gaMeasurementId: envString('GA_MEASUREMENT_ID'),
+  /** Public origin the app is reached at; used in emails and Stripe redirects. */
+  appUrl: envString('APP_URL', envString('SITE_URL', 'https://grantconsole.com')).replace(/\/+$/, ''),
+  supportEmail: 'support@grantconsole.com',
+  /** Self-serve workspace creation. On by default; flip off to pause launches. */
+  signupsEnabled: envBool('SIGNUPS_ENABLED', true),
+  trialDays: envInt('TRIAL_DAYS', TRIAL_DAYS),
+  /** Transactional email (Resend). Off unless the key is set; the app degrades gracefully. */
+  resendApiKey: envString('RESEND_API_KEY'),
+  emailFrom: envString('EMAIL_FROM', 'GrantConsole <support@grantconsole.com>'),
+  emailReplyTo: envString('EMAIL_REPLY_TO', 'support@grantconsole.com'),
+  /** Stripe billing. Checkout appears only when a secret key and at least one price id exist. */
+  stripeSecretKey: envString('STRIPE_SECRET_KEY'),
+  stripeWebhookSecret: envString('STRIPE_WEBHOOK_SECRET'),
+  stripePriceIds: {
+    starter_monthly: envString('STRIPE_PRICE_STARTER_MONTHLY'),
+    starter_annual: envString('STRIPE_PRICE_STARTER_ANNUAL'),
+    growth_monthly: envString('STRIPE_PRICE_GROWTH_MONTHLY'),
+    growth_annual: envString('STRIPE_PRICE_GROWTH_ANNUAL'),
+    scale_monthly: envString('STRIPE_PRICE_SCALE_MONTHLY'),
+    scale_annual: envString('STRIPE_PRICE_SCALE_ANNUAL'),
+  } as Record<string, string>,
+  /** Bearer token for the founder-only plan override endpoint (invoiced customers). */
+  adminToken: envString('ADMIN_TOKEN'),
+  /** Daily reset of the public demo workspaces when demo mode is on. */
+  demoResetHourUtc: envInt('DEMO_RESET_HOUR_UTC', 9),
 } as const;
 
 function buildAllowedOrigins(): string[] {

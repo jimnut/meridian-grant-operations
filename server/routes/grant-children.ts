@@ -22,6 +22,7 @@ import {
 import { assertContentMatchesType } from '../lib/file-contents';
 import { handler, parseBody } from '../lib/http';
 import { newId } from '../lib/ids';
+import { assertStorageCapacity } from '../lib/plans';
 import {
   budgetLineSchema,
   commentSchema,
@@ -618,6 +619,9 @@ router.post(
         .get(grant.orgId, grant.id, meta.milestoneId);
       if (!milestone) throw notFound('Deliverable');
     }
+
+    // Plan storage allowance, checked before a single byte reaches disk.
+    assertStorageCapacity(req.db, grant.orgId, session.workspace, file.size);
 
     const storageKey = buildStorageKey(grant.orgId, file.originalname);
     writeUpload(storageKey, file.buffer, req.uploadsDir);

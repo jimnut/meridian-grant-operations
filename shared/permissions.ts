@@ -72,6 +72,23 @@ export function can(role: Role | null | undefined, capability: Capability): bool
   return ROLE_CAPABILITIES[role]?.includes(capability) ?? false;
 }
 
+/** Capabilities that change grant records; these are frozen when a workspace is read-only. */
+export const RECORD_CAPABILITIES: readonly Capability[] = [
+  'grants:write',
+  'grants:archive',
+  'funders:write',
+  'tasks:write',
+  'milestones:write',
+  'budget:write',
+  'documents:write',
+  'documents:delete',
+  'comments:write',
+];
+
+export function isRecordCapability(capability: Capability): boolean {
+  return RECORD_CAPABILITIES.includes(capability);
+}
+
 /** True when the role may change any record at all — used for read-only banners. */
 export function isReadOnly(role: Role | null | undefined): boolean {
   return !can(role, 'grants:write');

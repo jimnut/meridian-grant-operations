@@ -2,6 +2,9 @@ import { BRAND } from '../shared/brand';
 import { createApp } from './app';
 import { config } from './config';
 import { ensureDataDirs, getDb } from './db/connection';
+import { startScheduler } from './lib/scheduler';
+import { mailerConfigured } from './lib/mailer';
+import { stripeConfigured, webhookConfigured } from './lib/stripe';
 
 function main(): void {
   ensureDataDirs();
@@ -13,6 +16,7 @@ function main(): void {
   }
 
   const app = createApp({ db, serveStatic: true });
+  const stopScheduler = startScheduler(db);
 
   // Bind to loopback unless HOST is set explicitly; see server/config.ts.
   const server = app.listen(config.port, config.host, () => {
@@ -31,10 +35,16 @@ function main(): void {
     if (config.demoMode) {
       console.warn('[startup] DEMO_MODE is on: seeded accounts and the shared demo password are exposed at sign-in.');
     }
+    console.info(
+      `  Sign-ups: ${config.signupsEnabled ? 'open' : 'paused'} · Email: ${mailerConfigured() ? 'configured' : 'console only'} · Stripe: ${
+        stripeConfigured() ? (webhookConfigured() ? 'checkout + webhook' : 'checkout (no webhook secret)') : 'not configured'
+      }`,
+    );
   });
 
   const shutdown = (signal: string) => {
     console.info(`\n[${signal}] shutting down…`);
+    stopScheduler();
     server.close(() => {
       db.close();
       process.exit(0);

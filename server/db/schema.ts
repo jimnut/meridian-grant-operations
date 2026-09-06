@@ -6,7 +6,7 @@
  * never taken from client input.
  */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   title         TEXT,
   is_active     INTEGER NOT NULL DEFAULT 1,
+  last_sign_in_at TEXT,
   created_at    TEXT NOT NULL
 );
 
@@ -33,6 +34,16 @@ CREATE TABLE IF NOT EXISTS organizations (
   timezone                TEXT NOT NULL DEFAULT 'America/Los_Angeles',
   currency                TEXT NOT NULL DEFAULT 'USD',
   fiscal_year_start_month INTEGER NOT NULL DEFAULT 1,
+  plan                    TEXT NOT NULL DEFAULT 'trial',
+  subscription_status     TEXT NOT NULL DEFAULT 'trialing',
+  trial_ends_at           TEXT,
+  plan_valid_until        TEXT,
+  stripe_customer_id      TEXT,
+  stripe_subscription_id  TEXT,
+  billing_email           TEXT,
+  is_demo                 INTEGER NOT NULL DEFAULT 0,
+  calendar_token          TEXT,
+  onboarding_dismissed_at TEXT,
   created_at              TEXT NOT NULL,
   updated_at              TEXT NOT NULL
 );
@@ -66,6 +77,7 @@ CREATE TABLE IF NOT EXISTS funders (
   website     TEXT,
   notes       TEXT,
   archived    INTEGER NOT NULL DEFAULT 0,
+  is_sample   INTEGER NOT NULL DEFAULT 0,
   created_at  TEXT NOT NULL,
   updated_at  TEXT NOT NULL
 );
@@ -109,6 +121,7 @@ CREATE TABLE IF NOT EXISTS grants (
   renewal_date     TEXT,
   closeout_date    TEXT,
   archived         INTEGER NOT NULL DEFAULT 0,
+  is_sample        INTEGER NOT NULL DEFAULT 0,
   created_at       TEXT NOT NULL,
   updated_at       TEXT NOT NULL
 );
@@ -209,4 +222,81 @@ CREATE TABLE IF NOT EXISTS activities (
 );
 CREATE INDEX IF NOT EXISTS idx_activities_org_created ON activities(org_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activities_grant ON activities(grant_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS invites (
+  id           TEXT PRIMARY KEY,
+  org_id       TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  email        TEXT,
+  role         TEXT NOT NULL CHECK (role IN ('OWNER','MANAGER','MEMBER','VIEWER')),
+  token_hash   TEXT NOT NULL UNIQUE,
+  created_by   TEXT REFERENCES users(id) ON DELETE SET NULL,
+  expires_at   TEXT NOT NULL,
+  accepted_at  TEXT,
+  accepted_by  TEXT REFERENCES users(id) ON DELETE SET NULL,
+  revoked_at   TEXT,
+  created_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_invites_org ON invites(org_id);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         TEXT PRIMARY KEY,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  used_at    TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+
+CREATE TABLE IF NOT EXISTS leads (
+  id           TEXT PRIMARY KEY,
+  email        TEXT NOT NULL,
+  name         TEXT,
+  organization TEXT,
+  message      TEXT,
+  source       TEXT NOT NULL DEFAULT 'contact',
+  created_at   TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS billing_events (
+  id           TEXT PRIMARY KEY,
+  org_id       TEXT REFERENCES organizations(id) ON DELETE SET NULL,
+  stripe_event_id TEXT UNIQUE,
+  type         TEXT NOT NULL,
+  summary      TEXT NOT NULL,
+  payload      TEXT,
+  created_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_billing_events_org ON billing_events(org_id);
+
+CREATE TABLE IF NOT EXISTS notification_log (
+  id         TEXT PRIMARY KEY,
+  org_id     TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  kind       TEXT NOT NULL,
+  period_key TEXT NOT NULL,
+  sent_to    TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  UNIQUE (org_id, kind, period_key)
+);
 `;
+
+/**
+ * Additive column migrations for databases created before a column existed.
+ * `CREATE TABLE IF NOT EXISTS` never alters an existing table, so each entry is
+ * applied idempotently by inspecting `PRAGMA table_info` at startup.
+ */
+export const COLUMN_MIGRATIONS: ReadonlyArray<{ table: string; column: string; ddl: string }> = [
+  { table: 'users', column: 'last_sign_in_at', ddl: 'TEXT' },
+  { table: 'organizations', column: 'plan', ddl: "TEXT NOT NULL DEFAULT 'trial'" },
+  { table: 'organizations', column: 'subscription_status', ddl: "TEXT NOT NULL DEFAULT 'trialing'" },
+  { table: 'organizations', column: 'trial_ends_at', ddl: 'TEXT' },
+  { table: 'organizations', column: 'plan_valid_until', ddl: 'TEXT' },
+  { table: 'organizations', column: 'stripe_customer_id', ddl: 'TEXT' },
+  { table: 'organizations', column: 'stripe_subscription_id', ddl: 'TEXT' },
+  { table: 'organizations', column: 'billing_email', ddl: 'TEXT' },
+  { table: 'organizations', column: 'is_demo', ddl: 'INTEGER NOT NULL DEFAULT 0' },
+  { table: 'organizations', column: 'calendar_token', ddl: 'TEXT' },
+  { table: 'organizations', column: 'onboarding_dismissed_at', ddl: 'TEXT' },
+  { table: 'funders', column: 'is_sample', ddl: 'INTEGER NOT NULL DEFAULT 0' },
+  { table: 'grants', column: 'is_sample', ddl: 'INTEGER NOT NULL DEFAULT 0' },
+];

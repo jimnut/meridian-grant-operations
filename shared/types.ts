@@ -15,6 +15,7 @@ import type {
   TaskStatus,
 } from './constants';
 import type { IsoDate } from './dates';
+import type { PlanDefinition, PlanId, WorkspaceStatus } from './plans';
 
 export interface SessionUser {
   id: string;
@@ -40,6 +41,77 @@ export interface SessionPayload {
   /** Today's date resolved in the organization timezone. */
   today: IsoDate;
   memberships: Array<{ organizationId: string; organizationName: string; role: Role }>;
+  /** Plan, trial and read-only state of the active organization. */
+  workspace: WorkspaceStatus;
+}
+
+export interface Invite {
+  id: string;
+  email: string | null;
+  role: Role;
+  createdByName: string | null;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  /** Only present in the creation response; the token is never stored in clear. */
+  url?: string;
+}
+
+export interface InvitePreview {
+  organizationName: string;
+  role: Role;
+  email: string | null;
+  invitedBy: string | null;
+  expiresAt: string;
+  /** True when a signed-in user should simply join rather than register. */
+  requiresAccount: boolean;
+}
+
+export interface WorkspaceUsage {
+  activeGrants: number;
+  members: number;
+  pendingInvites: number;
+  storageBytes: number;
+}
+
+export interface BillingSummary {
+  workspace: WorkspaceStatus;
+  usage: WorkspaceUsage;
+  plans: PlanDefinition[];
+  /** Stripe Checkout is wired up and can start a subscription online. */
+  checkoutAvailable: boolean;
+  /** A Stripe customer exists, so the self-service portal can be opened. */
+  portalAvailable: boolean;
+  billingEmail: string | null;
+  supportEmail: string;
+  currentPlan: PlanId | 'trial';
+}
+
+export interface OnboardingStatus {
+  funders: number;
+  grants: number;
+  members: number;
+  milestones: number;
+  documents: number;
+  calendarConnected: boolean;
+  hasSampleData: boolean;
+  dismissed: boolean;
+}
+
+export interface ImportRowResult {
+  row: number;
+  title: string;
+  outcome: 'created' | 'skipped' | 'error';
+  message: string | null;
+  grantId: string | null;
+}
+
+export interface ImportResult {
+  created: number;
+  skipped: number;
+  errors: number;
+  fundersCreated: number;
+  rows: ImportRowResult[];
 }
 
 export interface TeamMember {

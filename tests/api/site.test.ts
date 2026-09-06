@@ -112,7 +112,7 @@ describe('public marketing surface', () => {
     const visibleFaq = [...response.text.matchAll(/<details>\s*<summary>([^<]+)<\/summary>\s*<p>([^<]+)<\/p>\s*<\/details>/g)].map(
       (match) => [match[1]!.trim(), match[2]!.trim()],
     );
-    expect(visibleFaq).toHaveLength(5);
+    expect(visibleFaq).toHaveLength(6);
     expect(structuredFaq).toEqual(visibleFaq);
   });
 

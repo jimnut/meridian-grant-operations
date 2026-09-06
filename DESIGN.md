@@ -123,7 +123,7 @@ Every public-page edit must preserve:
 - crawlable links to About, Contact, Security, Privacy, and Demo Terms;
 - robots.txt, the public XML sitemap, and true 404 responses;
 - descriptive image alternative text;
-- no fake reviews, ratings, prices, customers, certifications, integrations, founder facts, or usage claims.
+- no fake reviews, ratings, customers, certifications, integrations, founder facts, or usage claims; prices only from shared/plans.ts.
 
 The visible FAQ and FAQPage JSON-LD must remain exactly aligned. Structured data describes the page; it is not a ranking shortcut.
 
@@ -137,7 +137,7 @@ Current public proof is the product itself:
 - exact budget/date/activity mechanics;
 - verified application-security behavior.
 
-GrantConsole is pre-launch. Do not publish customer logos, testimonials, pilot claims, pricing, growth metrics, or third-party certifications until there is real evidence and permission.
+GrantConsole launched self-serve trials and published pricing on 6 September 2026 (see shared/plans.ts; the pricing page renders from it). Do not publish customer logos, testimonials, pilot claims, growth metrics, or third-party certifications until there is real evidence and permission.
 
 ## Accessibility
 

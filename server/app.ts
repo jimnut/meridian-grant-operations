@@ -9,6 +9,10 @@ import { config } from './config';
 import { attachContext, csrfProtection, loadSession, requireAuth } from './auth/middleware';
 import type { Db } from './db/connection';
 import { errorMiddleware, notFoundMiddleware } from './lib/http';
+import { GA_ID_PATTERN } from './lib/public-chrome';
+import { loadCalendarEvents } from './services/calendar';
+import { buildIcs } from './services/ics';
+import { addDays, todayInTimezone } from '../shared/dates';
 import {
   articleHtml,
   findArticle,
@@ -17,8 +21,10 @@ import {
   resourcesIndexHtml,
 } from './lib/articles';
 import {
+  contactThanksHtml,
   landingCsp,
   landingHtml,
+  pricingHtml,
   PUBLIC_INFO_PATHS,
   publicDir,
   publicInfoHtml,
@@ -26,10 +32,14 @@ import {
   robotsTxt,
   sitemapXml,
 } from './lib/site';
+import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth';
+import billingRoutes, { stripeWebhookHandler } from './routes/billing';
 import funderRoutes from './routes/funders';
 import grantChildRoutes from './routes/grant-children';
 import grantRoutes from './routes/grants';
+import publicRoutes from './routes/public';
+import teamRoutes from './routes/team';
 import workspaceRoutes from './routes/workspace';
 
 export interface AppOptions {
@@ -45,12 +55,18 @@ export interface AppOptions {
 const SPA_PATHS = [
   /^\/$/,
   /^\/signin\/?$/,
+  /^\/signup\/?$/,
+  /^\/forgot-password\/?$/,
+  /^\/reset-password\/?$/,
+  /^\/invite\/[^/]+\/?$/,
   /^\/grants\/?$/,
+  /^\/grants\/import\/?$/,
   /^\/grants\/[^/]+\/?$/,
   /^\/grants\/[^/]+\/packet\/?$/,
   /^\/funders\/?$/,
   /^\/funders\/[^/]+\/?$/,
-  /^\/(?:calendar|reports|team|settings)\/?$/,
+  /^\/(?:calendar|reports|team)\/?$/,
+  /^\/settings(?:\/[a-z-]+)?\/?$/,
 ];
 
 export function isSpaPath(pathname: string): boolean {
@@ -72,6 +88,14 @@ export function createApp(options: AppOptions = {}): Express {
   app.set('trust proxy', 'loopback');
   app.disable('x-powered-by');
 
+  // GA4 in the app shell (sign-up funnel, trial activation). Only admitted when
+  // a valid measurement id is configured; otherwise the CSP stays first-party.
+  const gaOn = Boolean(config.gaMeasurementId && GA_ID_PATTERN.test(config.gaMeasurementId));
+  const gaScriptHosts = gaOn ? ['https://www.googletagmanager.com'] : [];
+  const gaConnectHosts = gaOn
+    ? ['https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://www.googletagmanager.com']
+    : [];
+
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -81,17 +105,19 @@ export function createApp(options: AppOptions = {}): Express {
           baseUri: ["'self'"],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
-          formAction: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'blob:'],
+          formAction: ["'self'", 'https://checkout.stripe.com', 'https://billing.stripe.com'],
+          imgSrc: ["'self'", 'data:', 'blob:', ...gaConnectHosts],
           // The client is a bundled SPA; styles are emitted by Vite as a stylesheet,
           // with a small inline style block for the initial paint.
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc:
             config.isProduction || servesBuiltClient
-              ? ["'self'"]
-              : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+              ? ["'self'", ...gaScriptHosts]
+              : ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...gaScriptHosts],
           connectSrc:
-            config.isProduction || servesBuiltClient ? ["'self'"] : ["'self'", 'ws:', 'http://localhost:5173'],
+            config.isProduction || servesBuiltClient
+              ? ["'self'", ...gaConnectHosts]
+              : ["'self'", 'ws:', 'http://localhost:5173', ...gaConnectHosts],
           fontSrc: ["'self'", 'data:'],
         },
       },
@@ -100,11 +126,18 @@ export function createApp(options: AppOptions = {}): Express {
     }),
   );
 
-  app.use(express.json({ limit: '1mb' }));
-  app.use(express.urlencoded({ extended: false, limit: '1mb' }));
   app.use(cookieParser());
   app.use(attachContext({ db: options.db, uploadsDir: options.uploadsDir }));
   app.use(loadSession);
+
+  // Stripe signs the raw body, so its webhook is parsed as bytes and mounted
+  // ahead of the JSON parser and the CSRF gate; the signature is its auth.
+  app.post('/api/billing/webhook', express.raw({ type: '*/*', limit: '1mb' }), stripeWebhookHandler);
+  // Founder operations are called from a terminal with a bearer token.
+  app.use('/api/admin', express.json({ limit: '256kb' }), adminRoutes);
+
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', version: 1 });
@@ -127,6 +160,38 @@ export function createApp(options: AppOptions = {}): Express {
       res.type('html').send(publicInfoHtml(pagePath));
     });
   }
+  app.get('/pricing', (_req, res) => {
+    res.setHeader('Content-Security-Policy', landingCsp());
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.type('html').send(pricingHtml());
+  });
+  app.get('/contact/thanks', (_req, res) => {
+    res.setHeader('Content-Security-Policy', landingCsp());
+    res.setHeader('Cache-Control', 'no-store');
+    res.type('html').send(contactThanksHtml());
+  });
+  // Secret-address calendar feed. The token is the credential; no session.
+  app.get('/feeds/:token.ics', (req, res) => {
+    const token = String(req.params.token ?? '');
+    const org = /^[A-Za-z0-9]{16,64}$/.test(token)
+      ? (req.db
+          .prepare('SELECT id, name, timezone FROM organizations WHERE calendar_token = ?')
+          .get(token) as { id: string; name: string; timezone: string } | undefined)
+      : undefined;
+    if (!org) {
+      res.status(404).type('text/plain').send('Calendar feed not found.');
+      return;
+    }
+    const today = todayInTimezone(org.timezone);
+    const events = loadCalendarEvents(req.db, org.id, {
+      from: addDays(today, -90),
+      to: addDays(today, 540),
+      includeComplete: true,
+    });
+    res.setHeader('Cache-Control', 'private, max-age=900');
+    res.setHeader('Content-Disposition', 'inline; filename="grantconsole-deadlines.ics"');
+    res.type('text/calendar; charset=utf-8').send(buildIcs(events, { organizationName: org.name, siteUrl: config.appUrl }));
+  });
   // Resource articles: Markdown in content/articles rendered with the same
   // chrome, CSP and cache policy as the trust pages. Unknown slugs 404 honestly.
   const sendPublicHtml = (res: Response, html: string): void => {
@@ -185,17 +250,32 @@ export function createApp(options: AppOptions = {}): Express {
   app.use('/api', csrfProtection);
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/public', publicRoutes);
 
   // Everything below requires a session.
   app.use('/api/grants/:grantId', requireAuth, grantChildRoutes);
   app.use('/api/grants', requireAuth, grantRoutes);
   app.use('/api/funders', requireAuth, funderRoutes);
+  app.use('/api/team', requireAuth, teamRoutes);
+  app.use('/api/billing', requireAuth, billingRoutes);
   app.use('/api', requireAuth, workspaceRoutes);
 
   app.use('/api', notFoundMiddleware);
 
   if (options.serveStatic) {
     const clientDir = options.clientDir ?? path.resolve(process.cwd(), 'dist/client');
+    // The shell is read once and, when analytics is configured, told which
+    // measurement id to load; the bundle itself decides what to send.
+    let shellHtml: string | null = null;
+    const appShell = (): string => {
+      if (shellHtml === null) {
+        const raw = fs.readFileSync(path.join(clientDir, 'index.html'), 'utf8');
+        shellHtml = gaOn
+          ? raw.replace('</head>', `  <meta name="grantconsole-ga" content="${config.gaMeasurementId}" />\n  </head>`)
+          : raw;
+      }
+      return shellHtml;
+    };
     if (fs.existsSync(clientDir)) {
       app.use(
         express.static(clientDir, {
@@ -216,7 +296,7 @@ export function createApp(options: AppOptions = {}): Express {
           return;
         }
         res.setHeader('Cache-Control', 'no-store');
-        res.sendFile(path.join(clientDir, 'index.html'));
+        res.type('html').send(appShell());
       });
     } else {
       app.get('*', (req, res) => {

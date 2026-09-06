@@ -6,6 +6,7 @@
  * it does nothing when an organization already exists.
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { hashPassword } from '../auth/password';
@@ -86,7 +87,9 @@ export async function seedDemoData(
   db: Db,
   options: { force?: boolean; uploadsDir?: string; now?: Date } = {},
 ): Promise<SeedResult> {
-  const existing = (db.prepare('SELECT COUNT(*) AS count FROM organizations').get() as { count: number }).count;
+  // Only the demo workspaces are ever seeded; real customer organizations in
+  // the same database are left untouched.
+  const existing = (db.prepare('SELECT COUNT(*) AS count FROM organizations WHERE is_demo = 1').get() as { count: number }).count;
   if (existing > 0 && !options.force) {
     return { ...countRows(db), seeded: false };
   }
@@ -122,10 +125,11 @@ export async function seedDemoData(
   const run = db.transaction(() => {
     /* ------------------------------------------------------- organizations */
     const upsertOrg = db.prepare(
-      `INSERT INTO organizations (id, name, slug, timezone, currency, fiscal_year_start_month, created_at, updated_at)
-       VALUES (@id, @name, @slug, @timezone, @currency, @fiscalYearStartMonth, @createdAt, @updatedAt)
+      `INSERT INTO organizations (id, name, slug, timezone, currency, fiscal_year_start_month, plan, subscription_status,
+          is_demo, created_at, updated_at)
+       VALUES (@id, @name, @slug, @timezone, @currency, @fiscalYearStartMonth, 'trial', 'trialing', 1, @createdAt, @updatedAt)
        ON CONFLICT(id) DO UPDATE SET name = excluded.name, slug = excluded.slug, timezone = excluded.timezone,
-         currency = excluded.currency, fiscal_year_start_month = excluded.fiscal_year_start_month,
+         currency = excluded.currency, fiscal_year_start_month = excluded.fiscal_year_start_month, is_demo = 1,
          updated_at = excluded.updated_at`,
     );
     for (const org of DEMO_ORGS) {
@@ -393,7 +397,7 @@ export async function seedDemoData(
     }
 
     /* -------------------------------------------------------------- activity */
-    db.prepare('DELETE FROM activities').run();
+    db.prepare('DELETE FROM activities WHERE org_id IN (SELECT id FROM organizations WHERE is_demo = 1)').run();
     const insertActivity = db.prepare(
       `INSERT INTO activities (id, org_id, actor_user_id, entity_type, entity_id, grant_id, action, summary,
           metadata, created_at)
@@ -485,3 +489,26 @@ function countRows(db: Db): Omit<SeedResult, 'seeded'> {
 
 /** Stable id builders, exported for tests that assert seed determinism. */
 export const DEMO_SEED_IDS = { orgId, userId, funderId, grantId };
+
+/**
+ * Puts the public demo back to its seeded state without touching any other
+ * organization: demo organizations (and, by cascade, their records, sessions
+ * and memberships) are removed along with their uploaded files, then reseeded.
+ */
+export async function resetDemoWorkspaces(
+  db: Db,
+  options: { uploadsDir?: string; now?: Date } = {},
+): Promise<SeedResult> {
+  const uploadsDir = options.uploadsDir ?? config.uploadsDir;
+  const demoOrgs = db.prepare('SELECT id FROM organizations WHERE is_demo = 1').all() as Array<{ id: string }>;
+  db.transaction(() => {
+    for (const org of demoOrgs) {
+      db.prepare('DELETE FROM organizations WHERE id = ?').run(org.id);
+    }
+  })();
+  for (const org of demoOrgs) {
+    const folder = path.join(uploadsDir, org.id.replace(/[^A-Za-z0-9_-]/g, ''));
+    fs.rmSync(folder, { recursive: true, force: true });
+  }
+  return seedDemoData(db, { force: true, uploadsDir, now: options.now });
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Columns3, Download, LayoutList, Plus, Search, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Columns3, Download, LayoutList, Plus, Search, Upload, X } from 'lucide-react';
 
 import { BRAND } from '../../shared/brand';
 import {
@@ -263,6 +263,12 @@ export function PortfolioPage() {
             <Download size={16} aria-hidden="true" />
             Export CSV
           </button>
+          {can('grants:write') && (
+            <Link to="/grants/import" className="btn">
+              <Upload size={16} aria-hidden="true" />
+              Import
+            </Link>
+          )}
           {can('grants:write') && (
             <button type="button" className="btn btn--primary" onClick={() => setCreateOpen(true)}>
               <Plus size={16} aria-hidden="true" />

@@ -5,6 +5,7 @@ import { config } from '../config';
 import type { Db } from '../db/connection';
 import { newToken } from '../lib/ids';
 import type { Role } from '../../shared/constants';
+import { computeWorkspaceStatus, type WorkspaceStatus } from '../../shared/plans';
 
 export interface SessionRecord {
   id: string;
@@ -23,6 +24,8 @@ export interface ResolvedSession extends SessionRecord {
   timezone: string;
   currency: string;
   fiscalYearStartMonth: number;
+  /** Plan, trial and read-only state, derived from the organization row on every request. */
+  workspace: WorkspaceStatus;
 }
 
 /**
@@ -76,7 +79,9 @@ export function resolveSession(db: Db, sessionId: string): ResolvedSession | nul
       `SELECT s.id, s.user_id AS userId, s.org_id AS orgId, s.csrf_token AS csrfToken, s.expires_at AS expiresAt,
               m.role AS role, u.name AS userName, u.email AS userEmail, u.is_active AS isActive,
               o.name AS orgName, o.slug AS orgSlug, o.timezone AS timezone, o.currency AS currency,
-              o.fiscal_year_start_month AS fiscalYearStartMonth
+              o.fiscal_year_start_month AS fiscalYearStartMonth,
+              o.plan AS plan, o.subscription_status AS subscription_status, o.trial_ends_at AS trial_ends_at,
+              o.plan_valid_until AS plan_valid_until, o.is_demo AS is_demo
          FROM sessions s
          JOIN users u ON u.id = s.user_id
          JOIN organizations o ON o.id = s.org_id
@@ -94,6 +99,11 @@ export function resolveSession(db: Db, sessionId: string): ResolvedSession | nul
         timezone: string;
         currency: string;
         fiscalYearStartMonth: number;
+        plan: string;
+        subscription_status: string;
+        trial_ends_at: string | null;
+        plan_valid_until: string | null;
+        is_demo: number;
       })
     | undefined;
 
@@ -103,8 +113,11 @@ export function resolveSession(db: Db, sessionId: string): ResolvedSession | nul
     db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
     return null;
   }
-  const { isActive: _isActive, ...rest } = row;
-  return rest;
+  const { isActive: _isActive, plan, subscription_status, trial_ends_at, plan_valid_until, is_demo, ...rest } = row;
+  return {
+    ...rest,
+    workspace: computeWorkspaceStatus({ plan, subscription_status, trial_ends_at, plan_valid_until, is_demo }),
+  };
 }
 
 export function destroySession(db: Db, sessionId: string): void {

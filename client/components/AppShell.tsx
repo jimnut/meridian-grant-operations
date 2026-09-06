@@ -26,6 +26,7 @@ import { Avatar } from './ui';
 import { CommandPalette, useModalFocus } from './CommandPalette';
 import { Dialog } from './Dialog';
 import { Menu } from './Menu';
+import { WorkspaceBanner } from './WorkspaceBanner';
 
 /** Must match the breakpoint at which layout.css turns the sidebar into a drawer. */
 const MOBILE_NAV_QUERY = '(max-width: 900px)';
@@ -286,6 +287,8 @@ export function AppShell() {
             )}
           />
         </header>
+
+        <WorkspaceBanner />
 
         <main className="content" id="main-content" tabIndex={-1}>
           <Outlet />

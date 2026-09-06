@@ -10,6 +10,12 @@ export default defineConfig({
     env: {
       DATA_DIR: './.test-data',
       SESSION_SECRET: 'test-session-secret-not-used-in-production',
+      // Billing under test: the webhook can be exercised with signed payloads,
+      // but no price ids means checkout never reaches the network.
+      STRIPE_SECRET_KEY: 'sk_test_not_a_real_key',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test_secret_for_vitest',
+      ADMIN_TOKEN: 'admin-token-for-vitest-only-0123456789',
+      APP_URL: 'https://grantconsole.com',
     },
     pool: 'forks',
     poolOptions: {

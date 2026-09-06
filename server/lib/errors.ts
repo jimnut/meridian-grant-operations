@@ -16,6 +16,8 @@ export type ErrorCode =
   | 'PAYLOAD_TOO_LARGE'
   | 'UNSUPPORTED_MEDIA'
   | 'RATE_LIMITED'
+  | 'PLAN_LIMIT'
+  | 'WORKSPACE_READ_ONLY'
   | 'INTERNAL';
 
 const STATUS: Record<ErrorCode, number> = {
@@ -28,6 +30,8 @@ const STATUS: Record<ErrorCode, number> = {
   PAYLOAD_TOO_LARGE: 413,
   UNSUPPORTED_MEDIA: 415,
   RATE_LIMITED: 429,
+  PLAN_LIMIT: 402,
+  WORKSPACE_READ_ONLY: 402,
   INTERNAL: 500,
 };
 
@@ -62,3 +66,9 @@ export const forbidden = (message = 'Your role does not allow this action.') => 
 export const notFound = (what = 'Record') => new ApiError('NOT_FOUND', `${what} not found.`);
 
 export const conflict = (message: string) => new ApiError('CONFLICT', message);
+
+/** The workspace hit a plan limit; the message says which one and how to lift it. */
+export const planLimit = (message: string) => new ApiError('PLAN_LIMIT', message);
+
+/** Writes are refused until the workspace subscribes; reads and exports continue. */
+export const workspaceReadOnly = (message: string) => new ApiError('WORKSPACE_READ_ONLY', message);

@@ -15,11 +15,11 @@ GrantConsole — a post-award grant operations workspace for nonprofit teams. Re
 
 - Wedge: post-award operations (competitors: Instrumentl, Fluxx, Grantable, GrantVantage, AmpliFund — mostly discovery- or enterprise-oriented).
 - Differentiating mechanism: a transparent rule engine. Every risk signal states the rule that produced it ("'Monthly expenditure report' was due 12 days ago") — no opaque health scores. Money is integer cents; budget burn is measured against elapsed grant period, not the calendar.
-- Research target (2026-08 sheet): ~$8K MRR ≈ 17 customers; future pricing hypothesis ~$499/mo. None of this is published on the site.
+- Pricing (published 2026-09-06 after competitor/buyer research): Starter $79/mo ($65 annual, 10 active grants), Growth $179 ($149, 40 grants, most popular), Scale $349 ($290, unlimited). 14-day no-card trial. Anchors: GrantHub (~$95/mo, sunset Jan 2026), GrantCue $109–$229, MonkeyPod $167–$199, GrantHub Pro $349, Instrumentl post-award only at $999/mo. ~$8K MRR ≈ 45 customers at a 50/40/10 mix.
 
 ## Truthful proof status (confirmed 2026-08-10)
 
-Pre-launch. Demo only. No customers, pilots, testimonials, logos, or usage numbers may be claimed. The product itself and the live seeded demo are the only proof. The demo is one click, no sign-up, at /signin (demo mode).
+Launched for self-serve trials 2026-09-06. Still no customers, pilots, testimonials, logos, or usage numbers may be claimed. The product, the live seeded demo (/signin, demo mode) and the free trial (/signup) are the proof.
 
 ## Durable facts and constraints
 
