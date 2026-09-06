@@ -160,6 +160,25 @@ function findOrg(db: Db, by: { orgId?: unknown; customerId?: unknown; subscripti
   return null;
 }
 
+/**
+ * Stripe API versions from 2025-03-31 onwards moved `current_period_end` from
+ * the subscription to each subscription item; accept both shapes.
+ */
+function periodEndOf(object: Record<string, unknown>): string | null {
+  const direct = object.current_period_end;
+  if (typeof direct === 'number') return new Date(direct * 1000).toISOString();
+  const items = object.items as { data?: Array<{ current_period_end?: unknown }> } | undefined;
+  const fromItem = items?.data?.map((item) => item.current_period_end).find((value) => typeof value === 'number');
+  return typeof fromItem === 'number' ? new Date(fromItem * 1000).toISOString() : null;
+}
+
+/** Invoices carry their subscription at `subscription` (older API) or `parent.subscription_details.subscription` (2025+). */
+function invoiceSubscriptionId(object: Record<string, unknown>): unknown {
+  if (typeof object.subscription === 'string') return object.subscription;
+  const parent = object.parent as { subscription_details?: { subscription?: unknown } } | undefined;
+  return parent?.subscription_details?.subscription;
+}
+
 function mapSubscriptionStatus(stripeStatus: unknown): 'active' | 'past_due' | 'canceled' {
   switch (stripeStatus) {
     case 'active':
@@ -234,7 +253,7 @@ export function applyStripeEvent(db: Db, event: StripeEvent): { applied: boolean
       if (!org) return { applied: false, summary: 'subscription event for unknown organization' };
       const status = event.type === 'customer.subscription.deleted' ? 'canceled' : mapSubscriptionStatus(object.status);
       const plan = planFromSubscription(object);
-      const periodEnd = typeof object.current_period_end === 'number' ? new Date(object.current_period_end * 1000).toISOString() : null;
+      const periodEnd = periodEndOf(object);
       const cancelAtPeriodEnd = object.cancel_at_period_end === true;
       const validUntil = status === 'canceled' || cancelAtPeriodEnd ? periodEnd : null;
       const summary =
@@ -263,7 +282,7 @@ export function applyStripeEvent(db: Db, event: StripeEvent): { applied: boolean
     }
     case 'invoice.payment_failed':
     case 'invoice.paid': {
-      const org = findOrg(db, { subscriptionId: object.subscription, customerId: object.customer });
+      const org = findOrg(db, { subscriptionId: invoiceSubscriptionId(object), customerId: object.customer });
       if (!org) return { applied: false, summary: 'invoice event for unknown organization' };
       const failed = event.type === 'invoice.payment_failed';
       const summary = failed ? 'An invoice payment failed' : 'Invoice paid';

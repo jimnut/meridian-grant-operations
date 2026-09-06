@@ -217,6 +217,26 @@ describe('stripe webhook', () => {
   });
 });
 
+describe('stripe 2025+ payload shapes', () => {
+  function event(type: string, object: Record<string, unknown>) {
+    return { id: `evt_${Math.random().toString(36).slice(2)}`, type, data: { object } };
+  }
+
+  it('reads the period end from subscription items and the invoice subscription from parent', async () => {
+    const client = await signUp();
+    const orgId = client.session.organization.id;
+    applyStripeEvent(context.db, event('checkout.session.completed', { client_reference_id: orgId, customer: 'cus_new', subscription: 'sub_new', metadata: { orgId, plan: 'growth' } }));
+    applyStripeEvent(context.db, event('invoice.payment_failed', { customer: 'cus_new', parent: { subscription_details: { subscription: 'sub_new' } } }));
+    expect((await client.agent.get('/api/auth/session')).body.workspace.status).toBe('past_due');
+    const periodEnd = Math.floor(Date.now() / 1000) + 20 * 86400;
+    applyStripeEvent(context.db, event('customer.subscription.deleted', { id: 'sub_new', customer: 'cus_new', status: 'canceled', items: { data: [{ price: { id: 'price_x' }, current_period_end: periodEnd }] }, metadata: { orgId } }));
+    const ws = (await client.agent.get('/api/auth/session')).body.workspace;
+    expect(ws.status).toBe('canceled');
+    expect(ws.readOnly).toBe(false);
+    expect(ws.validUntil?.slice(0, 10)).toBe(new Date(periodEnd * 1000).toISOString().slice(0, 10));
+  });
+});
+
 describe('admin plan override', () => {
   it('requires the bearer token and sets a complimentary plan by slug', async () => {
     const client = await signUp();
