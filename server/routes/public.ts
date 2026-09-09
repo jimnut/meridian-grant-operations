@@ -57,7 +57,7 @@ router.post(
     );
 
     void sendMail({
-      to: config.supportEmail,
+      to: config.leadNotificationEmail,
       subject: `New ${input.source} lead: ${input.organization ?? input.email}`,
       text: [`Email: ${input.email}`, `Name: ${input.name ?? '—'}`, `Organization: ${input.organization ?? '—'}`, `Source: ${input.source}`, '', input.message ?? '(no message)'].join('\n'),
     });
