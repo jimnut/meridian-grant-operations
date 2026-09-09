@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
 
+import { z } from 'zod';
+
 import { loadEnvFile } from './env';
 import { TRIAL_DAYS } from '../shared/plans';
 
@@ -111,6 +113,19 @@ function resolveDemoMode(): boolean {
   return enabled;
 }
 
+const supportEmail = 'support@grantconsole.com';
+
+/** Internal alerts may go to a monitored inbox without changing public support. */
+export function resolveLeadNotificationEmail(env: NodeJS.ProcessEnv = process.env): string {
+  const value = env.LEAD_NOTIFICATION_EMAIL?.trim();
+  if (!value) return supportEmail;
+  const parsed = z.string().toLowerCase().email().max(200).safeParse(value);
+  if (!parsed.success) {
+    throw new Error('LEAD_NOTIFICATION_EMAIL must be one valid email address, at most 200 characters.');
+  }
+  return parsed.data;
+}
+
 export const config = {
   nodeEnv,
   isProduction,
@@ -137,7 +152,8 @@ export const config = {
   gaMeasurementId: envString('GA_MEASUREMENT_ID'),
   /** Public origin the app is reached at; used in emails and Stripe redirects. */
   appUrl: envString('APP_URL', envString('SITE_URL', 'https://grantconsole.com')).replace(/\/+$/, ''),
-  supportEmail: 'support@grantconsole.com',
+  supportEmail,
+  leadNotificationEmail: resolveLeadNotificationEmail(),
   /** Self-serve workspace creation. On by default; flip off to pause launches. */
   signupsEnabled: envBool('SIGNUPS_ENABLED', true),
   trialDays: envInt('TRIAL_DAYS', TRIAL_DAYS),

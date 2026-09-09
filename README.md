@@ -258,6 +258,7 @@ Copy `.env.example` to `.env` to override. Every value has a safe development de
 | `SIGNUPS_ENABLED` | `true` | Pause self-serve sign-up without a deploy |
 | `TRIAL_DAYS` | `14` | Trial length for new workspaces |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | *(off)* | Transactional email; console fallback when unset |
+| `LEAD_NOTIFICATION_EMAIL` | `support@grantconsole.com` | Internal lead-alert recipient; one valid email address, at most 200 characters. Does not change public support links, sender or Reply-To. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*` | *(off)* | Online checkout, portal and webhook |
 | `STRIPE_CHECKOUT_NOTE` | *(none)* | Optional line under the Checkout pay button, e.g. who issues receipts when the Stripe account is shared |
 | `ADMIN_TOKEN` | *(off)* | Bearer token for `/api/admin` |
