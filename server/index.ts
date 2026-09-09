@@ -5,6 +5,7 @@ import { ensureDataDirs, getDb } from './db/connection';
 import { startScheduler } from './lib/scheduler';
 import { mailerConfigured } from './lib/mailer';
 import { stripeConfigured, webhookConfigured } from './lib/stripe';
+import { buildCommercialSummary } from './services/commercial-summary';
 
 function main(): void {
   ensureDataDirs();
@@ -26,6 +27,7 @@ function main(): void {
     console.info(`  Bound to: ${config.host}${config.host === '127.0.0.1' ? ' (loopback only)' : ''}`);
     console.info(`  Environment: ${config.nodeEnv}${config.demoMode ? ' · DEMO MODE' : ''}`);
     console.info(`  Data directory: ${config.dataDir}\n`);
+    console.info(`[commercial-summary] ${JSON.stringify(buildCommercialSummary(db))}`);
 
     if (config.host !== '127.0.0.1' && config.host !== 'localhost') {
       console.warn(

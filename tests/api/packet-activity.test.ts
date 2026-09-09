@@ -18,7 +18,7 @@ let grantId: string;
 let totalEntries: number;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   owner = await signIn(context.app, DEMO_USERS.owner);
   grantId = grantIdByTitle(context.db, 'Family Stability Navigators');

@@ -96,7 +96,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
       'Everything in Growth',
       'Evidence library (50 GB)',
       'Onboarding call and portfolio import assistance',
-      'Invoice or ACH billing and a countersigned data-processing addendum on request',
+      'Contact us about invoicing and data-processing requirements',
     ],
   },
 };

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { createServer, type Server } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -12,23 +13,44 @@ import { DEMO_PASSWORD } from '../../server/db/demo-accounts';
 import type { SessionPayload } from '../../shared/types';
 
 export interface TestContext {
-  app: Express;
+  app: Server;
   db: Db;
   uploadsDir: string;
-  cleanup: () => void;
+  serve: (app: Express) => Promise<Server>;
+  cleanup: () => Promise<void>;
 }
 
 /** Fresh in-memory database + isolated uploads directory per test file. */
-export function createTestContext(): TestContext {
+export async function createTestContext(): Promise<TestContext> {
   const db = openDatabase(':memory:');
   const uploadsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'meridian-test-'));
+  const servers: Server[] = [];
+  const serve = async (app: Express): Promise<Server> => {
+    const server = createServer(app);
+    // Supertest connects to 127.0.0.1, but its automatic listen(0) binds IPv6.
+    // On macOS that port can already belong to another IPv4 service. Bind the
+    // same address family explicitly so every request reaches this test app.
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', () => {
+        server.off('error', reject);
+        resolve();
+      });
+    });
+    servers.push(server);
+    return server;
+  };
   // Uploads are written to a temp dir, never the real data directory.
-  const app = createApp({ db, uploadsDir });
+  const app = await serve(createApp({ db, uploadsDir }));
   return {
     app,
     db,
     uploadsDir,
-    cleanup: () => {
+    serve,
+    cleanup: async () => {
+      await Promise.all(servers.map((server) => new Promise<void>((resolve, reject) => {
+        server.close((error) => error ? reject(error) : resolve());
+      })));
       db.close();
       fs.rmSync(uploadsDir, { recursive: true, force: true });
     },
@@ -56,7 +78,7 @@ export const DEMO_USERS = {
 } as const;
 
 /** Signs in and returns a cookie-persisting agent plus the CSRF token. */
-export async function signIn(app: Express, email: string, password = DEMO_PASSWORD): Promise<Client> {
+export async function signIn(app: Server, email: string, password = DEMO_PASSWORD): Promise<Client> {
   const agent = request.agent(app);
   const response = await agent.post('/api/auth/sign-in').send({ email, password });
   if (response.status !== 200) {

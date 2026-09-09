@@ -36,17 +36,17 @@ function upload(client: Client, file: Buffer, filename: string, mime: string, fi
 }
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   owner = await signIn(context.app, DEMO_USERS.owner);
   member = await signIn(context.app, DEMO_USERS.member);
   grantId = grantIdByTitle(context.db, 'Early Literacy Home Visits');
 });
 
-afterAll(() => {
+afterAll(async () => {
   // Uploads land in the injected per-test temp root; cleanup removes it. The
   // real data directory is never touched by this suite.
-  context.cleanup();
+  await context.cleanup();
 });
 
 describe('uploading evidence', () => {

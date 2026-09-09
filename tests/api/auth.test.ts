@@ -7,7 +7,7 @@ import { createTestContext, DEMO_USERS, patch, post, seedContext, signIn, type T
 let context: TestContext;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
 });
 

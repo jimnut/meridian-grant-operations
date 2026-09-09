@@ -55,9 +55,23 @@ import { formatCents } from '../../shared/money';
 
 const router = Router({ mergeParams: true });
 
+// Evidence metadata uses scalar fields only. These Multer 2.3 limits stop
+// bracketed field names from allocating nested objects or huge sparse arrays.
+// @types/multer 2.0 does not yet declare the two newer parser limits.
+const uploadLimits: NonNullable<multer.Options['limits']> & {
+  fieldNestingDepth: number;
+  fieldArrayIndexLimit: number;
+} = {
+  fileSize: config.maxUploadBytes,
+  files: 1,
+  fields: 10,
+  fieldNestingDepth: 0,
+  fieldArrayIndexLimit: 0,
+};
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: config.maxUploadBytes, files: 1, fields: 10 },
+  limits: uploadLimits,
 });
 
 interface GrantRef {

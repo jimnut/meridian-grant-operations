@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
   <title>GrantConsole — Post-Award Grant Management Software for Nonprofits</title>
-  <meta name="description" content="Track grant deadlines, restricted budgets, evidence, compliance and funder reports in one post-award workspace built for nonprofit teams. Try the live demo." />
+  <meta name="description" content="Track grant deadlines, restricted budgets, evidence, compliance and funder reports in one post-award workspace built for nonprofit teams. Start a 14-day free trial, no card required." />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="https://grantconsole.com/" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -142,7 +142,7 @@
             "name": "How much does GrantConsole cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Plans start at $65 per month billed annually ($79 month-to-month) for up to 10 active grants, with Growth and Scale plans for larger portfolios. Every plan includes the whole product; see the pricing page for limits."
+              "text": "Plans start at $65 per month billed annually ($79 month-to-month) for up to 10 active grants, with Growth and Scale plans for larger portfolios. Every plan includes the core grant workflow; see the pricing page for limits and support."
             }
           }
         ]
@@ -325,6 +325,48 @@
       font-size: 14px;
       font-weight: 800;
       text-decoration: none;
+    }
+    .skip-link { position:fixed; left:16px; top:-80px; z-index:100; padding:10px 16px; background:var(--paper); color:var(--ink); }
+    .skip-link:focus { top:16px; }
+    .hero-layout { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:40px; align-items:center; padding:64px 0 30px; }
+    .hero-layout .hero-copy { min-width:0; width:100%; padding:0; text-align:left; }
+    .hero .hero-layout h1 { font-size:clamp(48px,5.2vw,76px); line-height:1.03; }
+    .hero-layout .hero-lede { font-size:19px; text-wrap:pretty; }
+    .hero-layout .hero-actions,.hero-layout .hero-facts { justify-content:flex-start; }
+    .hero-layout .hero-facts { font:500 12px/1.6 var(--sans); }
+    .hero-layout .console-wrap { min-width:0; width:100%; padding:0; }
+    .hero-layout .console-note { left:-14px; bottom:18px; width:220px; }
+    .hero-layout .console-note strong { font-size:24px; }
+    .hero-pricing { margin:18px 0 0; color:#b8ada0; font-size:13px; }
+    .hero-pricing a { color:#f8f2e9; text-underline-offset:4px; }
+    .start-path { padding:48px 0; border-bottom:1px solid var(--edge); }
+    .start-path-inner { display:grid; grid-template-columns:1fr 1.6fr; align-items:center; gap:40px; }
+    .start-path h2 { margin:0 0 10px; font:500 clamp(28px,3vw,38px)/1.12 var(--serif); letter-spacing:-.025em; }
+    .start-path p { margin:0; color:var(--ink-soft); font-size:15px; }
+    .start-path ol { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:0; padding:0; list-style:none; counter-reset:setup; }
+    .start-path li { counter-increment:setup; border-left:1px solid var(--edge); padding-left:20px; }
+    .start-path li::before { content:"0" counter(setup); display:block; margin-bottom:12px; color:var(--signal-deep); font:700 12px var(--mono); }
+    .start-path strong { display:block; margin-bottom:6px; font-size:15px; }
+    .start-path a { text-underline-offset:4px; }
+    .mobile-links { display:none; }
+    @media (max-width:1050px) {
+      .hero-layout { grid-template-columns:minmax(0,1fr); max-width:820px; margin:auto; padding-top:48px; }
+      .hero-layout .hero-copy { text-align:center; }
+      .hero-layout .hero-actions,.hero-layout .hero-facts { justify-content:center; }
+      .hero-layout .console-wrap { max-width:760px; }
+      .start-path-inner { grid-template-columns:1fr; gap:28px; }
+    }
+    @media (max-width:700px) {
+      .hero-layout { padding-top:32px; gap:28px; }
+      .hero .hero-layout h1 { font-size:clamp(42px,11vw,65px); }
+      .hero-layout .hero-lede { font-size:17px; }
+      .hero-layout .hero-facts { width:auto; }
+      .hero-layout .console-note { display:none; }
+      .mobile-links { display:flex; justify-content:center; flex-wrap:wrap; gap:12px 24px; padding:14px 0; color:#b8ada0; font-size:13px; }
+      .mobile-links a { text-underline-offset:4px; }
+      .start-path ol { grid-template-columns:1fr; gap:20px; }
+      .start-path li { padding-left:16px; }
+      .start-path li::before { margin-bottom:6px; }
     }
     .hero-copy {
       max-width: 1000px;
@@ -758,6 +800,7 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <header class="hero">
     <div class="shell">
       <nav class="site-nav" aria-label="Primary">
@@ -779,13 +822,16 @@
           <a class="nav-demo" href="/signup">Start free trial</a>
         </div>
       </nav>
-
+      <nav class="mobile-links" aria-label="Explore GrantConsole">
+        <a href="/pricing">Pricing</a><a href="/resources">Resources</a><a href="/signin">Sign in</a>
+      </nav>
+      <div class="hero-layout">
       <div class="hero-copy">
         <p class="eyebrow">Post-award grant management software for nonprofits</p>
-        <h1>Every grant obligation, <span class="h1-accent">accounted for.</span></h1>
+        <h1>Stay ahead of <span class="h1-accent">every grant deadline.</span></h1>
         <p class="hero-lede">
-          GrantConsole turns deadlines, restricted budgets, evidence and funder reports into
-          <strong>one clear operating rhythm</strong>—and names the rule behind every warning.
+          For nonprofit teams managing awarded grants. Bring deadlines, restricted budgets and reporting evidence
+          into <strong>one shared workspace</strong>, with a clear reason behind every warning.
         </p>
         <div class="hero-actions">
           <a class="button button--primary" href="/signup">Start your free trial <span aria-hidden="true">↗</span></a>
@@ -793,15 +839,16 @@
         </div>
         <ul class="hero-facts" aria-label="Trial facts">
           <li>14-day trial, no card</li>
-          <li>Live demo with a seeded nonprofit workspace</li>
+          <li>Import your grant spreadsheet</li>
           <li>Every signal is explainable</li>
         </ul>
+        <p class="hero-pricing">Start with one grant. Choose a plan when you are ready. <a href="/pricing">See pricing →</a></p>
       </div>
 
       <div class="console-wrap">
         <div class="console">
           <div class="console-bar">
-            <span class="console-live">Live product</span>
+            <span class="console-live">Product preview</span>
             <span>Riverbend Community Alliance · seeded workspace</span>
           </div>
           <div class="console-screen">
@@ -809,22 +856,33 @@
           </div>
         </div>
         <div class="console-note">
-          <small>Monday priority</small>
+          <small>Example workspace</small>
           <strong>5 grants need a decision</strong>
           <span>Six overdue obligations and seven reports due within 30 days.</span>
         </div>
       </div>
+      </div>
     </div>
   </header>
 
-  <div class="proof-strip" aria-label="Product proof">
-    <div><strong>$1.955M active awarded</strong><span>Every grant, funder and owner in one portfolio view.</span></div>
+  <div class="proof-strip" aria-label="Product capabilities and example data">
+    <div><strong>One shared grant portfolio</strong><span>Every grant, funder and owner in one view.</span></div>
     <div><strong>11 explicit risk rules</strong><span>No opaque health score. Every flag names its reason.</span></div>
     <div><strong>Restricted budgets to the cent</strong><span>Spend measured against each grant's own period.</span></div>
     <div><strong>Audit-ready activity history</strong><span>Records, evidence and decisions stay connected.</span></div>
-  </div></div>
+  </div>
 
-  <main>
+  <main id="main-content">
+    <section class="start-path" aria-labelledby="start-path-heading">
+      <div class="shell start-path-inner">
+        <div><p class="eyebrow">From spreadsheet to a shared plan</p><h2 id="start-path-heading">Start with your next funder report.</h2><p>Use the trial to test a real workflow with your team.</p></div>
+        <ol>
+          <li><strong>Bring in one active grant</strong><p>Add it by hand or use the spreadsheet import in your private trial workspace.</p></li>
+          <li><strong>Give each deadline an owner</strong><p>Keep the due date and required evidence together. <a href="/grant-tracking-software-for-nonprofits">Explore grant tracking</a>.</p></li>
+          <li><strong>Review the reporting packet</strong><p>See what is ready and what is still missing. <a href="/grant-reporting-software-for-nonprofits">Explore funder reporting</a>.</p></li>
+        </ol>
+      </div>
+    </section>
     <section class="intro-section" id="product">
       <div class="shell intro-grid">
         <div>
@@ -1018,7 +1076,7 @@
           </details>
           <details>
             <summary>How much does GrantConsole cost?</summary>
-            <p>Plans start at $65 per month billed annually ($79 month-to-month) for up to 10 active grants, with Growth and Scale plans for larger portfolios. Every plan includes the whole product; see the pricing page for limits.</p>
+            <p>Plans start at $65 per month billed annually ($79 month-to-month) for up to 10 active grants, with Growth and Scale plans for larger portfolios. Every plan includes the core grant workflow; see the pricing page for limits and support.</p>
           </details>
         </div>
       </div>

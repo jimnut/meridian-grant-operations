@@ -24,7 +24,7 @@ export const PRICING_FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'Can we pay by invoice or ACH instead of a card?',
-    a: 'Yes. Annual plans can be invoiced and paid by ACH or check. Email support@grantconsole.com with your organization name and the plan you want; we will send a W-9 and an invoice the same business day.',
+    a: 'Contact support@grantconsole.com with your organization name, preferred plan and purchasing requirements. We will confirm the available invoicing, payment and vendor-documentation options before you commit.',
   },
   {
     q: 'What happens to our data if we cancel?',
@@ -48,7 +48,7 @@ function planCard(plan: PlanDefinition): string {
   const savings = annualSavingsPercent(plan);
   const cta = `/signup?plan=${plan.id}`;
   return `<article class="plan${plan.recommended ? ' plan--featured' : ''}" aria-labelledby="plan-${plan.id}">
-      ${plan.recommended ? '<p class="plan__flag">Most teams start here</p>' : ''}
+      ${plan.recommended ? '<p class="plan__flag">For growing portfolios</p>' : ''}
       <h2 id="plan-${plan.id}">${escapeHtml(plan.name)}</h2>
       <p class="plan__tagline">${escapeHtml(plan.tagline)}</p>
       <p class="plan__price"><span class="plan__amount">${formatUsd(plan.priceMonthlyUsd)}</span><span class="plan__per">/month</span></p>
@@ -203,13 +203,13 @@ ${publicHead({ title, description, canonical, structuredData }, styles)}
       <div class="plans">
         ${plans.map(planCard).join('\n        ')}
       </div>
-      <p class="trial-note">Prices in US dollars; annual billing is two months free. Annual plans can be invoiced and paid by ACH or check. Trials run at Growth-plan limits so a real portfolio fits.</p>
+      <p class="trial-note">Prices in US dollars; annual billing saves about two months. Contact us to confirm invoice and payment options. Trials run at Growth-plan limits so a real portfolio fits.</p>
       <p class="trial-note"><strong>Founding-customer offer:</strong> the first ${FOUNDING_OFFER.organizations} organizations to subscribe lock in ${FOUNDING_OFFER.percentOff}% off for their first year, applied automatically at checkout. Paying by invoice? Mention it when you get in touch.</p>
     </section>
 
     <section class="included" aria-labelledby="included-heading">
-      <h2 id="included-heading">Every plan includes the whole product.</h2>
-      <p style="margin:0;color:var(--muted)">Plans differ only in how much you can put in and how many people can work on it.</p>
+      <h2 id="included-heading">The core grant workflow is in every plan.</h2>
+      <p style="margin:0;color:var(--muted)">Compare grant limits, editor seats, storage and the support included with each plan.</p>
       <ul>
         <li>Deadlines, deliverables, tasks and a subscribable calendar feed</li>
         <li>Restricted budgets tracked to the cent against the grant period</li>
@@ -244,7 +244,7 @@ ${publicHead({ title, description, canonical, structuredData }, styles)}
     <section class="lead" aria-labelledby="lead-heading">
       <div>
         <h2 id="lead-heading">Prefer an invoice, or want a walkthrough first?</h2>
-        <p>Tell us a little about your grants and we will reply within one business day with a W-9, an annual invoice, or a 25-minute walkthrough of your own portfolio in the product — whichever you ask for.</p>
+        <p>Tell us how many grants you manage and what your team needs. We can discuss the product, spreadsheet imports and your purchasing requirements. Please use example data for an initial walkthrough.</p>
         <p style="margin-top:14px">Or skip the form: <a href="mailto:${config.supportEmail}?subject=GrantConsole%20plan" style="color:#ffb089">${config.supportEmail}</a></p>
       </div>
       <form class="lead-form" method="post" action="/api/public/leads">

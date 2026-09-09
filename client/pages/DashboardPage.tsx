@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -7,22 +7,26 @@ import {
   CircleCheck,
   ClipboardList,
   Clock,
+  FolderOpen,
   RefreshCw,
   TriangleAlert,
   Wallet,
 } from 'lucide-react';
 
 import { BRAND } from '../../shared/brand';
+import { TRIAL_DAYS } from '../../shared/plans';
 import { GRANT_STATUS_LABELS, HEALTH_LABELS, HORIZONS } from '../../shared/constants';
 import { formatIsoDate, relativeTimeLabel } from '../../shared/dates';
 import type { DashboardPayload } from '../../shared/types';
 import { api } from '../lib/api';
 import { attentionGrantHref, calendarGrantHref } from '../lib/grant-links';
-import { useCurrentSession } from '../lib/session';
+import { useCurrentSession, useSession } from '../lib/session';
+import { trackEvent } from '../lib/analytics';
 import { dueTone, formatCents, formatCentsCompact, formatPercent, pluralize } from '../lib/format';
 import { CHART_COLORS, DonutChart, StackedBar } from '../components/charts';
 import { OnboardingCard } from '../components/OnboardingCard';
 import { Card, EmptyState, ErrorState, LoadingState, Progress, StatTile, StatusPill } from '../components/ui';
+import '../styles/dashboard.css';
 
 export function DashboardPage() {
   const session = useCurrentSession();
@@ -61,7 +65,7 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <OnboardingCard />
+      {session.workspace.isDemo ? <DemoGuide data={data} /> : <OnboardingCard />}
 
       {isLoading && (
         <div className="card">
@@ -84,6 +88,53 @@ export function DashboardPage() {
   );
 }
 
+/** The public demo has a session, so signup must explicitly leave it first. */
+function DemoGuide({ data }: { data?: DashboardPayload }) {
+  const { signOut } = useSession();
+  const [leavingDemo, setLeavingDemo] = useState(false);
+  const [leaveError, setLeaveError] = useState(false);
+  const exampleGrantId = data?.attention[0]?.grantId ?? data?.upcoming[0]?.grantId;
+
+  const startTrial = async () => {
+    setLeavingDemo(true);
+    setLeaveError(false);
+    try {
+      // signOut clears the mutation cache too, so this must not depend on a
+      // mutation's onSuccess. Reloading also discards all demo query observers.
+      await signOut();
+      trackEvent('demo_trial_clicked', { location: 'dashboard' });
+      window.location.replace('/signup');
+    } catch {
+      setLeaveError(true);
+      setLeavingDemo(false);
+    }
+  };
+
+  return (
+    <section className="dashboard-demo" aria-labelledby="demo-guide-heading">
+      <div className="dashboard-demo__copy">
+        <p className="dashboard-kicker">Public demo · sample nonprofit data</p>
+        <h2 id="demo-guide-heading">See how a grant moves from risk to ready.</h2>
+        <nav className="dashboard-demo__links" aria-label="Explore the demo">
+          <a href="#attention-heading">1. Review a risk</a>
+          <a href="#burn-heading">2. Check restricted funds</a>
+          <Link to={exampleGrantId ? `/grants/${encodeURIComponent(exampleGrantId)}/packet` : '/reports'}>
+            {exampleGrantId ? '3. Open a reporting packet' : '3. Explore reporting'}
+          </Link>
+        </nav>
+      </div>
+      <div className="dashboard-demo__action">
+        <button className="btn btn--primary" type="button" onClick={() => void startTrial()} disabled={leavingDemo}>
+          {leavingDemo ? 'Leaving demo…' : 'Leave demo & start free trial'}
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </button>
+        <p>{TRIAL_DAYS} days · no card · your own workspace</p>
+        {leaveError && <p className="dashboard-demo__error" role="alert">Could not leave the demo. Please try again.</p>}
+      </div>
+    </section>
+  );
+}
+
 function summarySentence(data: DashboardPayload): string {
   const { totals } = data;
   const risk =
@@ -95,6 +146,9 @@ function summarySentence(data: DashboardPayload): string {
 
 function DashboardBody({ data }: { data: DashboardPayload }) {
   const { totals, currency } = data;
+  const { can, session } = useSession();
+  const canAddGrants = can('grants:write') && !session?.workspace.readOnly;
+  const hasGrants = data.stageBreakdown.some((entry) => entry.count > 0);
 
   const healthSlices = data.healthBreakdown.map((entry) => ({
     key: entry.level,
@@ -115,6 +169,21 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
 
   const activeTotal = data.healthBreakdown.reduce((sum, e) => sum + e.count, 0);
 
+  if (!hasGrants) {
+    return (
+      <section className="dashboard-empty" aria-labelledby="empty-portfolio-heading">
+        <FolderOpen size={24} aria-hidden="true" />
+        <div>
+          <h2 id="empty-portfolio-heading">Your portfolio is ready for its first grant</h2>
+          <p>Health signals, reporting deadlines and restricted-budget totals will appear here as you add your awards and obligations.</p>
+          <Link to={canAddGrants ? '/grants/import' : '/grants'}>
+            {canAddGrants ? 'Import your grant spreadsheet' : 'View the portfolio'} →
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="stack stack-6">
       <section
@@ -128,16 +197,23 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
           </p>
           <h2 id="portfolio-signal-heading">
             {totals.atRiskCount > 0
-              ? `${totals.atRiskCount} ${pluralize(totals.atRiskCount, 'grant')} need a decision`
-              : 'Your active portfolio is on course'}
+              ? `${totals.atRiskCount} ${pluralize(totals.atRiskCount, 'grant')} ${totals.atRiskCount === 1 ? 'needs' : 'need'} a decision`
+              : totals.watchCount > 0
+                ? `${totals.watchCount} ${pluralize(totals.watchCount, 'grant')} on watch`
+                : totals.activeGrantCount === 0
+                  ? 'No active awards to assess yet'
+                  : 'Your active portfolio is on course'}
           </h2>
           <p>
             {totals.overdueCount > 0
               ? `${totals.overdueCount} overdue ${pluralize(totals.overdueCount, 'obligation')} and ${totals.reportsDue30} ${pluralize(totals.reportsDue30, 'report')} due within ${HORIZONS.reportsDueDays} days.`
               : `${totals.reportsDue30} ${pluralize(totals.reportsDue30, 'report')} due within ${HORIZONS.reportsDueDays} days, with no overdue work.`}
           </p>
-          <Link to={totals.atRiskCount > 0 ? '/grants?health=AT_RISK' : '/grants'} className="decision-strip__link">
-            {totals.atRiskCount > 0 ? 'Review priority portfolio' : 'Review the portfolio'}
+          <Link
+            to={data.attention[0] ? attentionGrantHref(data.attention[0]) : '/grants'}
+            className="decision-strip__link"
+          >
+            {data.attention.length > 0 ? 'Open the first priority' : 'Review the portfolio'}
             <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
         </div>
@@ -160,14 +236,18 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
             <span>{formatPercent(totals.burnPercent)} spent across the portfolio</span>
           </div>
           <div
-            className={`decision-strip__metric${totals.readinessPercent < 40 ? ' decision-strip__metric--risk' : ''}`}
+            className={`decision-strip__metric${totals.readinessOpenReports > 0 && totals.readinessPercent < 40 ? ' decision-strip__metric--risk' : ''}`}
           >
             <dt>
               <ClipboardList size={14} aria-hidden="true" />
               Reporting readiness
             </dt>
-            <dd>{formatPercent(totals.readinessPercent)}</dd>
-            <span>{totals.readinessOpenReports} open within {HORIZONS.readinessHorizonDays} days</span>
+            <dd>{totals.readinessOpenReports > 0 ? formatPercent(totals.readinessPercent) : '—'}</dd>
+            <span>
+              {totals.readinessOpenReports > 0
+                ? `${totals.readinessOpenReports} open within ${HORIZONS.readinessHorizonDays} days`
+                : `No open reports in the next ${HORIZONS.readinessHorizonDays} days`}
+            </span>
           </div>
           <div className={`decision-strip__metric${totals.atRiskCount > 0 ? ' decision-strip__metric--risk' : ''}`}>
             <dt>

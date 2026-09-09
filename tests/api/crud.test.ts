@@ -20,7 +20,7 @@ let owner: Client;
 let funderId: string;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   owner = await signIn(context.app, DEMO_USERS.owner);
   funderId = (
@@ -181,7 +181,7 @@ describe('grant lifecycle', () => {
   });
 
   it('persists across a brand new app instance on the same database', async () => {
-    const secondApp = createApp({ db: context.db });
+    const secondApp = await context.serve(createApp({ db: context.db }));
     const secondClient = await signIn(secondApp, DEMO_USERS.owner);
     const response = await secondClient.agent.get(`/api/grants/${createdId}`);
     expect(response.status).toBe(200);
