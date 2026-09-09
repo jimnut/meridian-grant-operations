@@ -96,6 +96,10 @@ export function errorMiddleware(err: unknown, _req: Request, res: Response, _nex
     respond(res, 400, 'BAD_REQUEST', 'That upload contains too many parts.');
     return;
   }
+  if (code === 'LIMIT_FIELD_NESTING' || code === 'LIMIT_FIELD_ARRAY_INDEX' || code === 'INVALID_FIELD_NAME') {
+    respond(res, 400, 'BAD_REQUEST', 'Upload metadata must use plain field names without nested values.');
+    return;
+  }
 
   // Anything unrecognised is a bug: log it in full, tell the user nothing specific.
   console.error('[unhandled]', err);

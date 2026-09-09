@@ -52,7 +52,7 @@ function parseCsv(body: string): string[][] {
 }
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   owner = await signIn(context.app, DEMO_USERS.owner);
   viewer = await signIn(context.app, DEMO_USERS.viewer);

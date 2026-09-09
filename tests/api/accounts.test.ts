@@ -10,7 +10,7 @@ let context: TestContext;
 const outbox: MailMessage[] = [];
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   setMailTransport(async (message) => {
     outbox.push(message);
@@ -18,9 +18,9 @@ beforeAll(async () => {
   });
 });
 
-afterAll(() => {
+afterAll(async () => {
   setMailTransport(null);
-  context.cleanup();
+  await context.cleanup();
 });
 
 beforeEach(() => {

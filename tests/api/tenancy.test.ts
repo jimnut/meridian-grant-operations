@@ -27,7 +27,7 @@ let foreignBudgetLineId: string;
 let foreignUserId: string;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   riverbend = await signIn(context.app, DEMO_USERS.member); // Riverbend only
   cascade = await signIn(context.app, DEMO_USERS.otherOrgMember); // Cascade only

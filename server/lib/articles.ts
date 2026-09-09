@@ -19,6 +19,7 @@ import path from 'node:path';
 import yaml from 'js-yaml';
 import { Marked, type Tokens } from 'marked';
 
+import { TRIAL_DAYS } from '../../shared/plans';
 import { config } from '../config';
 import {
   entityGraphNodes,
@@ -546,6 +547,15 @@ function articleStyles(): string {
     .editorial-cta strong { font-family:var(--serif); font-size:24px; font-weight:600; letter-spacing:-.015em; }
     .editorial-cta span { color:var(--muted); }
     .editorial-cta .button { justify-self:center; }
+    .resource-actions { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px 20px; margin-top:8px; }
+    .resource-actions .secondary-link { color:var(--signal-deep); font-weight:650; text-underline-offset:4px; }
+    .trial-note { display:block; margin-top:4px; color:var(--muted); font-size:13px; }
+    .product-evaluation { max-width:720px; margin:28px auto 36px; padding:24px; border:1px solid var(--edge); border-radius:14px; background:var(--card); }
+    .product-evaluation h2 { margin:0 0 10px; font-family:var(--serif); font-size:25px; letter-spacing:-.015em; }
+    .product-evaluation ol { margin:0 0 18px; padding-left:22px; }
+    .product-evaluation li { margin:8px 0; }
+    .product-evaluation .resource-actions { justify-content:flex-start; }
+    .product-evaluation .trial-note { margin-top:14px; }
 
     /* Article page as editorial feature */
     .article-hero { max-width:720px; margin-inline:auto; text-align:center; border-bottom:0; padding-bottom:10px; }
@@ -641,6 +651,43 @@ function cardHtml(article: Article): string {
   return `<a href="${article.path}"><small>${CATEGORY_LABELS[article.category]}</small><strong>${escapeHtml(article.title)}</strong><span>${escapeHtml(article.description)}</span></a>`;
 }
 
+/** Connect the next step to the workflow the reader just learned. */
+function articleNextStep(article: Article): { title: string; text: string } {
+  const steps: Record<string, { title: string; text: string }> = {
+    'grant-reporting-software-for-nonprofits': {
+      title: 'Prepare your next funder report in one workspace.',
+      text: 'Add one awarded grant, list its next report and attach the evidence it needs. Review the reporting packet against your funder’s requirements.',
+    },
+    'grant-tracking-software-for-nonprofits': {
+      title: 'Give your next grant deadline an owner.',
+      text: 'Bring an awarded grant into your workspace, add its deadlines and budget, and see which obligations need attention and why.',
+    },
+    'grant-reporting-calendar-template': {
+      title: 'Ready to put your reporting calendar to work?',
+      text: 'Keep the free template, or create a workspace to connect your reporting dates with owners, evidence and the grant each report belongs to.',
+    },
+    'grant-closeout-checklist': {
+      title: 'Track the work still open before closeout.',
+      text: 'Add your grant’s closing dates, final deliverables and required evidence so your team can review the remaining work together.',
+    },
+    'restricted-funds-management-for-nonprofits': {
+      title: 'See restricted spending against each grant’s own clock.',
+      text: 'Enter an awarded grant’s dates, budget and spending to review budget burn alongside its deadlines and evidence.',
+    },
+  };
+  return steps[article.slug] ?? {
+    title: 'Bring your next grant obligation into one workspace.',
+    text: 'Start with one awarded grant and connect its deadlines, owners, restricted budget and supporting evidence.',
+  };
+}
+
+function resourceActions(secondary: ArticleCta = { label: 'Explore the sample workspace', href: '/signin' }): string {
+  const secondaryLink = secondary.href === '/signup'
+    ? { label: 'Explore the sample workspace', href: '/signin' }
+    : secondary;
+  return `<div class="resource-actions"><a class="button" href="/signup">Start your free trial</a><a class="secondary-link" href="${escapeHtml(secondaryLink.href)}">${escapeHtml(secondaryLink.label)}</a></div>`;
+}
+
 /** Full HTML for one article. Cached per path for the process lifetime. */
 export function articleHtml(article: Article, dir?: string): string {
   const cached = renderedCache.get(article.path);
@@ -649,11 +696,10 @@ export function articleHtml(article: Article, dir?: string): string {
   const canonical = `${config.siteUrl}${article.path}`;
   const all = listArticles(dir);
   const related = relatedArticles(article, all);
-  const cta: ArticleCta = article.cta ?? {
-    label: 'Open the live demo',
-    href: '/signin',
-    text: 'See how GrantConsole tracks deadlines, restricted budgets, evidence and funder reports in a seeded nonprofit workspace—no sales call required.',
-  };
+  const nextStep = articleNextStep(article);
+  const productEvaluation = article.category === 'product'
+    ? `<section class="product-evaluation" aria-labelledby="evaluate-workflow"><h2 id="evaluate-workflow">Try this with one awarded grant.</h2><ol><li>Add the award’s dates and name the person responsible.</li><li>Enter the next report, its due date and the evidence it requires.</li><li>Review open obligations and the reporting packet with your team.</li></ol>${resourceActions()}<small class="trial-note">${TRIAL_DAYS}-day trial · No card required · <a href="/pricing">Compare plans and limits</a></small></section>`
+    : '';
 
   const meta = [
     `<li><strong>${CATEGORY_LABELS[article.category]}</strong></li>`,
@@ -717,12 +763,15 @@ ${publicHead(
       <ul class="meta-row">${meta}</ul>
       <div class="lead"><strong>Direct answer</strong><p>${escapeHtml(article.summary)}</p></div>
     </header>
+    ${productEvaluation}
     <article class="article-body">${article.bodyHtml}</article>
     ${faqHtml}
     <aside class="editorial-cta article-cta">
-      <strong>${escapeHtml(cta.label)}</strong>
-      <span>${escapeHtml(cta.text ?? '')}</span>
-      <a class="button" href="${escapeHtml(cta.href)}">${escapeHtml(cta.label)}</a>
+      <strong>${escapeHtml(nextStep.title)}</strong>
+      <span>${escapeHtml(nextStep.text)}</span>
+      ${article.cta?.text ? `<span>${escapeHtml(article.cta.text)}</span>` : ''}
+      ${resourceActions(article.cta)}
+      <small class="trial-note">${TRIAL_DAYS}-day trial · No card required · <a href="/pricing">See plans and limits</a></small>
     </aside>
     ${sourcesHtml}
     <p class="disclaimer">This resource is general information for nonprofit grant recipients, not legal, accounting or audit advice. Verify obligations against the award agreement, funder guidance and current regulations, and consult a qualified professional for your situation.</p>
@@ -809,9 +858,10 @@ ${publicHead(
     <p class="hub-deck">Practical guides, checklists and templates for the work that starts after the award letter — deadlines, restricted budgets, evidence, compliance, funder reports and closeout. Fact-checked on the date shown.</p>
     ${list}
     <aside class="editorial-cta">
-      <strong>See the workflows in a real workspace.</strong>
-      <span>The public demo opens a seeded nonprofit with active grants, deadlines, restricted budgets and evidence—no sales call required.</span>
-      <a class="button" href="/signin">Open the live demo</a>
+      <strong>Turn the next report into a shared plan.</strong>
+      <span>Start with one awarded grant and connect its deadlines, owners, restricted budget and evidence. Or explore the sample workspace first.</span>
+      ${resourceActions()}
+      <small class="trial-note">${TRIAL_DAYS}-day trial · No card required · <a href="/pricing">See plans and limits</a></small>
     </aside>
   </main>
   ${publicFooter()}

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { expectNoHorizontalOverflow } from './helpers';
+import { ACCOUNTS, expectNoHorizontalOverflow, signIn } from './helpers';
 
 const STAMP = Date.now();
 const EMAIL = `e2e-owner-${STAMP}@example.org`;
@@ -16,6 +16,35 @@ async function signInAsOwner(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('navigation', { name: 'Primary' })).toBeAttached({ timeout: 20_000 });
 }
+
+test('a demo visitor can leave the shared session and start their own trial', async ({ page }) => {
+  await signIn(page, ACCOUNTS.owner);
+  await expect(page.getByText('Public demo · sample nonprofit data')).toBeVisible();
+  await page.getByRole('button', { name: 'Leave demo & start free trial' }).click();
+  await expect(page).toHaveURL(/\/signup$/);
+  await expect(page.getByRole('heading', { name: 'Create your workspace' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+  expect((await page.request.get('/api/auth/session')).status()).toBe(401);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Create your workspace' })).toBeVisible();
+});
+
+test('a failed demo sign-out preserves the session and the trial action can retry', async ({ page }) => {
+  await signIn(page, ACCOUNTS.owner);
+  await page.route('**/api/auth/sign-out', async (route) => {
+    await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: { message: 'Try again', code: 'UNAVAILABLE', fields: {} } }) });
+  });
+  const startTrial = page.getByRole('button', { name: 'Leave demo & start free trial' });
+  await startTrial.click();
+  await expect(page.getByRole('alert')).toContainText('Could not leave the demo');
+  await expect(page.getByRole('heading', { name: 'Good day, Dana' })).toBeVisible();
+  await expect(startTrial).toBeEnabled();
+  expect((await page.request.get('/api/auth/session')).status()).toBe(200);
+  await page.unroute('**/api/auth/sign-out');
+  await startTrial.click();
+  await expect(page).toHaveURL(/\/signup$/);
+  await expect(page.getByRole('heading', { name: 'Create your workspace' })).toBeVisible();
+});
 
 test('the pricing page leads into a working sign-up that lands on an empty workspace with onboarding', async ({ page }) => {
   await page.goto('/pricing');
@@ -43,7 +72,7 @@ test('the sample portfolio, trial status, plan cards and calendar feed all work'
   await signInAsOwner(page);
   await page.getByRole('button', { name: 'Load a sample portfolio' }).click();
   await expect(page.getByText('Sample portfolio loaded', { exact: false })).toBeVisible();
-  await expect(page.getByText(/need a decision/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/needs? a decision/)).toBeVisible({ timeout: 15_000 });
 
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Settings' }).click();
   await page.getByRole('tab', { name: 'Plan & billing' }).click();

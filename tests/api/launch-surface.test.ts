@@ -16,7 +16,7 @@ import { createTestContext, del, post, seedContext, signIn, DEMO_USERS, type Cli
 let context: TestContext;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
 });
 afterAll(() => context.cleanup());
@@ -79,7 +79,7 @@ describe('pricing page', () => {
     const clientDir = fs.mkdtempSync(path.join(os.tmpdir(), 'grantconsole-shell-'));
     fs.writeFileSync(path.join(clientDir, 'index.html'), '<!doctype html><html><head></head><body>shell</body></html>');
     try {
-      const app = createApp({ db: context.db, serveStatic: true, clientDir, uploadsDir: context.uploadsDir });
+      const app = await context.serve(createApp({ db: context.db, serveStatic: true, clientDir, uploadsDir: context.uploadsDir }));
       for (const spaPath of ['/signup', '/forgot-password', '/reset-password', '/invite/abc123', '/settings/billing', '/grants/import']) {
         const response = await request(app).get(spaPath);
         expect(response.status, spaPath).toBe(200);

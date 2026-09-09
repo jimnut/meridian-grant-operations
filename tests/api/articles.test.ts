@@ -16,14 +16,14 @@ let clientDir: string;
 
 beforeAll(async () => {
   resetArticleCache();
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   clientDir = fs.mkdtempSync(path.join(os.tmpdir(), 'grantconsole-client-'));
   fs.writeFileSync(path.join(clientDir, 'index.html'), '<!doctype html><html><body>client shell</body></html>');
 });
 
-afterAll(() => {
-  context.cleanup();
+afterAll(async () => {
+  await context.cleanup();
   fs.rmSync(clientDir, { recursive: true, force: true });
 });
 
@@ -129,7 +129,7 @@ describe('published resource articles', () => {
   });
 
   it('returns the branded 404 for unknown resource slugs', async () => {
-    const productionApp = createApp({ db: context.db, uploadsDir: context.uploadsDir, serveStatic: true, clientDir });
+    const productionApp = await context.serve(createApp({ db: context.db, uploadsDir: context.uploadsDir, serveStatic: true, clientDir }));
     const response = await request(productionApp).get('/resources/this-article-does-not-exist');
     expect(response.status).toBe(404);
     expect(response.text).toContain('Page not found');

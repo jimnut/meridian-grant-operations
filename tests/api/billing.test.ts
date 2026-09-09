@@ -12,7 +12,7 @@ import { createTestContext, patch, post, seedContext, type Client, type TestCont
 let context: TestContext;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
 });
 afterAll(() => context.cleanup());

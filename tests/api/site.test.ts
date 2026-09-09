@@ -12,7 +12,7 @@ let context: TestContext;
 let clientDir: string;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   clientDir = fs.mkdtempSync(path.join(os.tmpdir(), 'grantconsole-client-'));
   fs.writeFileSync(
@@ -21,8 +21,8 @@ beforeAll(async () => {
   );
 });
 
-afterAll(() => {
-  context.cleanup();
+afterAll(async () => {
+  await context.cleanup();
   fs.rmSync(clientDir, { recursive: true, force: true });
 });
 
@@ -128,7 +128,7 @@ describe('public marketing surface', () => {
   });
 
   it('locks down the built app bundle even when a demo host omits NODE_ENV', async () => {
-    const builtApp = createApp({ db: context.db, uploadsDir: context.uploadsDir, serveStatic: true });
+    const builtApp = await context.serve(createApp({ db: context.db, uploadsDir: context.uploadsDir, serveStatic: true }));
     const response = await request(builtApp).get('/api/health');
     const csp = response.headers['content-security-policy'];
 
@@ -179,12 +179,12 @@ describe('public marketing surface', () => {
   });
 
   it('returns a real branded 404 while preserving known SPA routes', async () => {
-    const productionApp = createApp({
+    const productionApp = await context.serve(createApp({
       db: context.db,
       uploadsDir: context.uploadsDir,
       serveStatic: true,
       clientDir,
-    });
+    }));
 
     const knownRoute = await request(productionApp).get('/signin');
     expect(knownRoute.status).toBe(200);

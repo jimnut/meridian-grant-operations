@@ -23,7 +23,7 @@ let viewer: Client;
 let grantId: string;
 
 beforeAll(async () => {
-  context = createTestContext();
+  context = await createTestContext();
   await seedContext(context);
   [owner, manager, member, viewer] = await Promise.all([
     signIn(context.app, DEMO_USERS.owner),
