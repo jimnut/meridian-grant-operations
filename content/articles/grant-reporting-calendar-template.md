@@ -39,6 +39,7 @@ sources:
     url: https://www.grants.gov/learn-grants/grants-101/post-award-phase
     checked: 2026-08-23
 related:
+  - grant-management-spreadsheet-template
   - post-award-grant-management-checklist
   - track-grant-deadlines-without-spreadsheets
   - grant-closeout-checklist
@@ -90,6 +91,10 @@ A calendar nobody reads is a list of surprises. The workable rhythm for a team m
 3. **After every submission:** record the date and file the confirmation. On-time submission you cannot prove is indistinguishable from a miss three years later.
 
 ## Where a static spreadsheet fails
+
+If you need awards, grant-period budgets and evidence alongside the calendar,
+the [free five-tab grant management workbook](/resources/grant-management-spreadsheet-template)
+connects those records and includes clearly labeled examples.
 
 The template is deliberately honest about its own limits. Three failure modes recur in every spreadsheet-run portfolio:
 

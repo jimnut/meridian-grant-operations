@@ -6,6 +6,16 @@ Program (15 August 2026) and the Sprint 1 content pack. Read it fully before
 writing. `npm test` enforces the mechanical rules in `server/lib/articles.ts`;
 the editorial rules below are enforced by you.
 
+### September 2026 supplied content program
+
+The user authorized one new article daily from a supplied twelve-brief pack on
+10 September 2026. This finite queue takes priority over the older topic plan
+and section 7 below. Work in brief order, retain prepared drafts privately,
+recheck sources on publication day, and stop after those twelve are live.
+Do not create another article when any new article is already live on the
+same Asia/Amman date. A pushed commit is not publication: verify the live page,
+download, feed and sitemap before marking a queue entry published.
+
 ## 1. Why we publish
 
 GrantConsole is **post-award grant management software for nonprofit grant
@@ -78,8 +88,12 @@ one of those places, do not write it.
 
 ### Forbidden (no verified basis today)
 
-- Pricing, plans, free tiers, trials, discounts, "affordable" as a claim about
-  GrantConsole's price. If a reader asks, point to `/contact`.
+- Unverified or stale pricing, plans, free tiers, trials or discounts, and
+  unsupported "affordable" claims. Current prices and trial terms may be quoted
+  only after checking `/pricing`, with currency, billing basis and check date.
+  Annual totals must not be presented as monthly charges. Prefer a link to
+  `/pricing` when the exact number is not needed. Legacy phrase checks remain
+  conservative; use clear source-supported annual totals in comparison copy.
 - Customers, pilots, logos, testimonials, case studies, usage numbers,
   "trusted by", "teams love", awards, rankings, "leading", "#1", "best".
 - Founder biographies, company legal name/location, team size, funding.
@@ -194,15 +208,19 @@ comparisons need at least one `https` source. Slug must equal the file name.
    link is genuinely useful (this is how the cluster interlinks). If an earlier
    article links to `/resources` as a placeholder for this topic (for example
    "the closeout checklist"), point that link at the new path.
-6. Update the plan entry: `status: published`, `publishedAt`, `path`, and any
-   `notes`.
+6. Keep the plan entry pending publication; do not mark it published yet.
 7. `npm ci` (or `npm install`) then `npm run verify` (lint, typecheck, tests,
    build). Fix problems until it is green. Never publish with failing tests.
-8. Commit with the message `content: publish <slug>` and push to `main`.
-   Production deploys automatically from `main`.
+8. Review the exact diff, commit only the intended content changes, and verify
+   the current Render deployment branch before pushing. As checked on
+   10 September 2026, Render `meridian-demo` deploys `main`. Confirm whether
+   auto-deploy starts; otherwise use that existing service's manual deployment
+   for the validated commit. Never force-push or publish unrelated changes.
 9. Confirm the live URL returns the new page (fetch it and check the title),
    confirm `/sitemap.xml` includes it, then report: URL, primary keyword, word
-   count, sources used, what is queued next, and anything blocked.
+   count, sources used, what is queued next, and anything blocked. Only then
+   record `status: published`, the actual date, path and verification evidence
+   in the active queue. Also verify the feed and any downloadable assets.
 
 If anything upstream is broken (tests failing before your change, deploy not
 updating, credentials missing), stop, do not force-push or work around

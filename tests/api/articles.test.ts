@@ -34,6 +34,24 @@ function jsonLd(html: string): { '@graph': Array<Record<string, unknown>> } {
 }
 
 describe('published resource articles', () => {
+  it('serves the ungated grant workbook as an Excel file', async () => {
+    const response = await request(context.app)
+      .get('/downloads/grant-management-spreadsheet-template.xlsx')
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+        res.on('error', (error: Error) => callback(error, null));
+      });
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    expect(Buffer.isBuffer(response.body)).toBe(true);
+    expect(response.body.subarray(0, 2).toString()).toBe('PK');
+    expect(response.body.length).toBeGreaterThan(10000);
+    expect(response.body).toEqual(fs.readFileSync(path.resolve('server/public/downloads/grant-management-spreadsheet-template.xlsx')));
+  });
+
   it('every file in content/articles passes the publication rules', () => {
     const { articles, problems } = loadArticlesFrom(CONTENT_DIR);
     expect(problems.map((problem) => `${path.basename(problem.file)}: ${problem.message}`)).toEqual([]);
