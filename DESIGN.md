@@ -168,3 +168,11 @@ GrantConsole launched self-serve trials and published pricing on 6 September 202
 - Hide essential content inside imagery or client-only rendering.
 - Add external fonts or trackers without an explicit product/privacy decision.
 - Create thin SEO pages for keyword variants.
+
+## Marketing homepage refresh
+
+The homepage uses a light, product-first SaaS presentation while the authenticated application keeps its operational night-and-paper system. The public landing surface uses a floating white navigation bar, a dotted daylight canvas, an oversized centered product promise, a device-framed application view, modular feature panels, a dark live-demo block, and a lime closing action.
+
+Homepage-only tokens are `#f7f8f5` background, `#ffffff` surface, `#111512` ink, `#626962` supporting text, `#dde2dc` hairline, `#57a546` brand green, `#2f6f2b` deep green, `#eaf5e5` soft green, and `#d8ff75` highlight lime. Archivo remains embedded locally; no third-party font request is introduced.
+
+Trial, pricing, sign-in, resources, trust, analytics, structured-data, and crawlability contracts remain part of the page. Product examples and numbers must come from implemented behavior or seeded records; the homepage must not invent customers, outcomes, integrations, certifications, or usage claims.

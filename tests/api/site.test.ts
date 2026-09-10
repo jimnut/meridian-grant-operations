@@ -6,6 +6,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createApp } from '../../server/app';
+import { DEMO_GRANTS } from '../../server/db/demo-data';
 import { createTestContext, DEMO_USERS, seedContext, signIn, type TestContext } from '../helpers/context';
 
 let context: TestContext;
@@ -86,6 +87,13 @@ describe('public marketing surface', () => {
     const visibleQuestions = [...response.text.matchAll(/<summary>([^<]+)<\/summary>/g)].map((match) => match[1]);
 
     expect(structuredQuestions).toEqual(visibleQuestions);
+  });
+
+  it('keeps the visible seeded-grant count aligned with demo data', async () => {
+    const response = await request(context.app).get('/');
+    expect(response.text).toContain(
+      `<strong>${DEMO_GRANTS.length}</strong><span>seeded grants across the demo portfolio</span>`,
+    );
   });
 
   it('locks the landing page down with its own CSP', async () => {
