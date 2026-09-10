@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/archivo-latin.woff2') format('woff2');
+}
+
 *,
 *::before,
 *::after {
@@ -37,7 +45,7 @@ h6 {
 h1 {
   font-size: var(--text-2xl);
   letter-spacing: -0.02em;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 600;
 }
 h2 {
@@ -100,7 +108,7 @@ hr {
 
 .nav :focus-visible,
 .topbar :focus-visible {
-  outline-color: #ff7a33;
+  outline-color: var(--accent);
 }
 
 ::selection {

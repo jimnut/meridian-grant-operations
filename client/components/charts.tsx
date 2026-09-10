@@ -53,11 +53,11 @@ export function DonutChart({
   valueHeading?: string;
 }) {
   const total = slices.reduce((sum, s) => sum + s.value, 0);
-  const size = 168;
+  const size = 184;
   const cx = size / 2;
   const cy = size / 2;
-  const outer = 74;
-  const inner = 50;
+  const outer = 82;
+  const inner = 62;
 
   let cursor = 0;
   const segments = slices
@@ -72,9 +72,9 @@ export function DonutChart({
     });
 
   return (
-    <div>
-      <div className="row row-3" style={{ alignItems: 'center', gap: 'var(--space-6)', flexWrap: 'wrap' }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
+    <div className="donut-chart">
+      <div className="donut-chart__content row row-3" style={{ alignItems: 'center', gap: 'var(--space-6)', flexWrap: 'wrap' }}>
+        <svg className="donut-chart__graphic" width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
           {total === 0 && <circle cx={cx} cy={cy} r={(outer + inner) / 2} fill="none" stroke="var(--border)" strokeWidth={outer - inner} />}
           {segments.map(({ slice, start, end, isFull }) =>
             isFull ? (
@@ -88,18 +88,18 @@ export function DonutChart({
                 strokeWidth={outer - inner}
               />
             ) : (
-              <path key={slice.key} d={arcPath(cx, cy, outer, inner, start, end)} fill={slice.color} />
+              <path key={slice.key} d={arcPath(cx, cy, outer, inner, start, end)} fill={slice.color} stroke="var(--surface)" strokeWidth="3" />
             ),
           )}
-          <text x={cx} y={cy - 2} textAnchor="middle" fontSize="20" fontWeight="600" fill="var(--ink-900)">
+          <text x={cx} y={cy + 1} textAnchor="middle" fontFamily="var(--font-sans)" fontSize="30" fontWeight="600" letterSpacing="-1" fill="var(--ink-900)">
             {centerValue}
           </text>
-          <text x={cx} y={cy + 16} textAnchor="middle" fontSize="10" fill="var(--ink-500)">
+          <text x={cx} y={cy + 22} textAnchor="middle" fontFamily="var(--font-sans)" fontSize="11" fill="var(--ink-500)">
             {centerLabel}
           </text>
         </svg>
 
-        <ul className="chart-legend" style={{ flexDirection: 'column', flex: 1, minWidth: 180, gap: 'var(--space-2)' }}>
+        <ul className="chart-legend donut-chart__legend" style={{ flexDirection: 'column', flex: 1, minWidth: 180, gap: 'var(--space-2)' }}>
           {slices.map((slice) => (
             <li key={slice.key} className="chart-legend__item">
               <span className="chart-legend__swatch" style={{ background: slice.color }} aria-hidden="true" />
@@ -216,12 +216,14 @@ export function StackedBar({
   const total = slices.reduce((sum, s) => sum + s.value, 0);
 
   return (
-    <div>
+    <div className="stacked-chart">
       <div
+        className="stacked-chart__bar"
         aria-hidden="true"
         style={{
           display: 'flex',
-          height: 14,
+          height: 18,
+          gap: 3,
           borderRadius: 'var(--radius-full)',
           overflow: 'hidden',
           background: 'var(--canvas-deep)',
@@ -237,11 +239,11 @@ export function StackedBar({
           ))}
       </div>
 
-      <ul className="chart-legend">
+      <ul className="chart-legend stacked-chart__legend">
         {slices.map((slice) => (
           <li key={slice.key} className="chart-legend__item">
             <span className="chart-legend__swatch" style={{ background: slice.color }} aria-hidden="true" />
-            {slice.label}
+            <span className="stacked-chart__label">{slice.label}</span>
             <span className="numeric" style={{ color: 'var(--ink-800)', fontWeight: 600 }}>
               {slice.display ?? slice.value}
             </span>
@@ -275,12 +277,12 @@ export function StackedBar({
 }
 
 export const CHART_COLORS = {
-  onTrack: '#24714f',
-  watch: '#b47a20',
-  atRisk: '#b13b32',
-  accent: '#ff4f00',
-  accentSoft: '#ff9c66',
-  info: '#32627a',
-  neutral: '#a8a19a',
-  sand: '#c4aa78',
+  onTrack: '#397b3c',
+  watch: '#d49c35',
+  atRisk: '#c55d4b',
+  accent: '#4f9244',
+  accentSoft: '#b9dc90',
+  info: '#568b82',
+  neutral: '#acb7a5',
+  sand: '#c9b780',
 } as const;

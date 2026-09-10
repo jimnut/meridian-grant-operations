@@ -114,7 +114,7 @@ function DemoGuide({ data }: { data?: DashboardPayload }) {
     <section className="dashboard-demo" aria-labelledby="demo-guide-heading">
       <div className="dashboard-demo__copy">
         <p className="dashboard-kicker">Public demo · sample nonprofit data</p>
-        <h2 id="demo-guide-heading">See how a grant moves from risk to ready.</h2>
+        <h2 id="demo-guide-heading">A closer look at your next clear move.</h2>
         <nav className="dashboard-demo__links" aria-label="Explore the demo">
           <a href="#attention-heading">1. Review a risk</a>
           <a href="#burn-heading">2. Check restricted funds</a>
@@ -137,11 +137,7 @@ function DemoGuide({ data }: { data?: DashboardPayload }) {
 
 function summarySentence(data: DashboardPayload): string {
   const { totals } = data;
-  const risk =
-    totals.atRiskCount > 0
-      ? `${totals.atRiskCount} ${pluralize(totals.atRiskCount, 'grant')} ${totals.atRiskCount === 1 ? 'needs' : 'need'} attention`
-      : 'no grants are flagged at risk';
-  return `${totals.activeGrantCount} active ${pluralize(totals.activeGrantCount, 'award')} worth ${formatCents(totals.activeAwardedCents, data.currency)} — ${risk}, and ${totals.reportsDue30} ${pluralize(totals.reportsDue30, 'report')} fall due in the next ${HORIZONS.reportsDueDays} days.`;
+  return `Here is where your ${totals.activeGrantCount} active ${pluralize(totals.activeGrantCount, 'award')} ${totals.activeGrantCount === 1 ? 'stands' : 'stand'} today. Every priority, deadline and dollar in view.`;
 }
 
 function DashboardBody({ data }: { data: DashboardPayload }) {
@@ -185,7 +181,7 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
   }
 
   return (
-    <div className="stack stack-6">
+    <div className="dashboard-body stack stack-6">
       <section
         className={`decision-strip${totals.atRiskCount > 0 ? ' decision-strip--attention' : ' decision-strip--clear'}`}
         aria-labelledby="portfolio-signal-heading"
@@ -260,12 +256,13 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
         </dl>
       </section>
 
-      <div className="grid grid--main-side">
+      <div className="dashboard-columns grid grid--main-side">
         <div className="stack stack-6">
           <Card
             id="attention-heading"
             title="Attention needed"
-            subtitle="Ranked by severity, then by the next date that matters. Every item states its reason."
+            subtitle="Your priorities, ordered by severity and next date."
+            actions={<span className="dashboard-count">{data.attention.length} {pluralize(data.attention.length, 'item')}</span>}
             flush
           >
             {data.attention.length === 0 ? (
@@ -279,15 +276,15 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
               <ul className="attention">
                 {data.attention.map((item) => (
                   <li key={item.id} className="attention__item">
-                    <span
-                      className={`attention__rail${item.severity === 'RISK' ? ' attention__rail--risk' : ''}`}
-                      aria-hidden="true"
-                    />
+                    <span className={`attention__icon${item.severity === 'RISK' ? ' attention__icon--risk' : ''}`} aria-hidden="true">
+                      <TriangleAlert size={17} />
+                    </span>
                     <div className="attention__body">
-                      <div className="row" style={{ gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                      <div className="attention__heading">
                         <StatusPill tone={item.severity === 'RISK' ? 'risk' : 'amber'} label={item.severity === 'RISK' ? 'At risk' : 'Watch'} />
                         <Link to={attentionGrantHref(item)} className="attention__headline link-plain">
                           {item.headline}
+                          <ArrowUpRight size={15} aria-hidden="true" />
                         </Link>
                       </div>
                       <p className="attention__reason">{item.reason}</p>
@@ -299,8 +296,10 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
                         <span>{item.ownerName ?? 'Unassigned'}</span>
                         {item.dueDate && (
                           <>
-                            <span aria-hidden="true">·</span>
-                            <span>Next date {formatIsoDate(item.dueDate)}</span>
+                            <span className="attention__due">
+                              <CalendarClock size={12} aria-hidden="true" />
+                              Next date {formatIsoDate(item.dueDate)}
+                            </span>
                           </>
                         )}
                       </p>
@@ -317,7 +316,7 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
             <h2 className="visually-hidden" id="kpi2-heading">
               Deadlines and renewals
             </h2>
-            <div className="grid grid--stats">
+            <div className="dashboard-secondary-stats grid grid--stats">
               <StatTile
                 small
                 label={`Reports due in ${HORIZONS.reportsDueDays} days`}
@@ -397,14 +396,12 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
 
         <div className="stack stack-6">
           <Card id="burn-heading" title="Restricted budget burn" subtitle="Spend against plan across active awards">
-            <div className="stack stack-3">
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span className="numeric" style={{ fontSize: 'var(--text-2xl)', fontWeight: 600 }}>
+            <div className="dashboard-budget stack stack-4">
+              <div className="dashboard-budget__headline">
+                <span className="dashboard-budget__value numeric">
                   {formatPercent(totals.burnPercent)}
                 </span>
-                <span className="muted small">
-                  {formatCents(totals.restrictedSpentCents, currency)} of {formatCents(totals.restrictedPlannedCents, currency)}
-                </span>
+                <span className="dashboard-budget__label">of restricted budget spent</span>
               </div>
               <Progress
                 value={totals.burnPercent}
@@ -412,10 +409,22 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
                 label="Restricted budget spent"
                 tone={totals.burnPercent > 90 ? 'risk' : totals.burnPercent > 75 ? 'amber' : 'accent'}
               />
-              <p className="muted small">
-                {formatCents(totals.restrictedRemainingCents, currency)} of restricted funding remains unspent across{' '}
-                {totals.activeGrantCount} active {pluralize(totals.activeGrantCount, 'award')}. Individual grants are
-                checked against their own period elapsed, so a portfolio figure alone never triggers a risk flag.
+              <dl className="dashboard-budget__figures">
+                <div>
+                  <dt>Spent</dt>
+                  <dd>{formatCents(totals.restrictedSpentCents, currency)}</dd>
+                </div>
+                <div>
+                  <dt>Planned</dt>
+                  <dd>{formatCents(totals.restrictedPlannedCents, currency)}</dd>
+                </div>
+              </dl>
+              <div className="dashboard-budget__remaining">
+                <Wallet size={16} aria-hidden="true" />
+                <p><strong>{formatCents(totals.restrictedRemainingCents, currency)}</strong> remaining across {totals.activeGrantCount} active {pluralize(totals.activeGrantCount, 'award')}</p>
+              </div>
+              <p className="dashboard-budget__note">
+                Risk is assessed against each grant’s own timeline, not this portfolio total.
               </p>
             </div>
           </Card>
@@ -439,8 +448,8 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
                         </span>
                       </span>
                       <span className="deadline-row__body">
-                        <span className="deadline-row__title truncate">{event.title}</span>
-                        <span className="deadline-row__meta truncate">
+                        <span className="deadline-row__title">{event.title}</span>
+                        <span className="deadline-row__meta">
                           {event.grantTitle} · {event.funderName}
                         </span>
                       </span>
@@ -489,13 +498,13 @@ function DashboardBody({ data }: { data: DashboardPayload }) {
 }
 
 const STAGE_COLORS = [
-  '#9ba8a2',
-  '#c4aa78',
-  '#32627a',
-  '#ff4f00',
-  '#24714f',
-  '#b47a20',
-  '#8b6a31',
-  '#6d7b76',
-  '#b13b32',
+  '#b7c5af',
+  '#c9b780',
+  '#568b82',
+  '#9ccc62',
+  '#397b3c',
+  '#d49c35',
+  '#827945',
+  '#708275',
+  '#c55d4b',
 ];

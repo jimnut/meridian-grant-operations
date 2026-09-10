@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Building2,
   CalendarDays,
+  ArrowUpRight,
   ChevronRight,
   FileBarChart,
   FolderOpen,
@@ -27,6 +28,7 @@ import { CommandPalette, useModalFocus } from './CommandPalette';
 import { Dialog } from './Dialog';
 import { Menu } from './Menu';
 import { WorkspaceBanner } from './WorkspaceBanner';
+import { BrandMark } from './BrandMark';
 
 /** Must match the breakpoint at which layout.css turns the sidebar into a drawer. */
 const MOBILE_NAV_QUERY = '(max-width: 900px)';
@@ -157,13 +159,10 @@ export function AppShell() {
       */}
       <div className="sidebar" data-open={navOpen} ref={sidebarRef} onKeyDown={onDrawerKeyDown}>
         <div className="sidebar__brand">
-          <span className="brandmark" aria-hidden="true">
-            {BRAND.monogram}
-          </span>
-          <span className="sidebar__wordmark">
+          <Link to="/" className="sidebar__brand-link" aria-label={`${BRAND.name} home`}>
+            <BrandMark />
             <span className="sidebar__name">{BRAND.name}</span>
-            <span className="sidebar__descriptor">{BRAND.descriptor}</span>
-          </span>
+          </Link>
           <button
             type="button"
             ref={drawerCloseRef}
@@ -176,7 +175,8 @@ export function AppShell() {
         </div>
 
         <nav className="nav" aria-label="Primary">
-          <ul>
+          <p className="nav__group-label" id="nav-workspace-label">Workspace</p>
+          <ul aria-labelledby="nav-workspace-label">
             {PRIMARY_NAV.map((entry) => (
               <li key={entry.to}>
                 <NavLink to={entry.to} end={entry.end} className="nav__item">
@@ -213,6 +213,12 @@ export function AppShell() {
             ))}
           </ul>
         </nav>
+
+        <a className="sidebar__resource" href="/resources" target="_blank" rel="noreferrer">
+          <span className="sidebar__resource-icon"><FileBarChart size={17} aria-hidden="true" /></span>
+          <span><strong>The Post-Award Brief</strong><small>Practical guides for grant teams</small></span>
+          <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
 
         <div className="sidebar__footer">
           {session.memberships.length > 1 ? (
@@ -251,6 +257,8 @@ export function AppShell() {
 
           <Breadcrumbs />
 
+          {session.workspace.isDemo && <span className="topbar__workspace-label"><span aria-hidden="true" />Demo workspace</span>}
+
           <div className="spacer" />
 
           <button
@@ -278,7 +286,7 @@ export function AppShell() {
               },
             ]}
             trigger={(props) => (
-              <button type="button" className="btn btn--ghost" {...props}>
+              <button type="button" className="btn btn--ghost topbar__account" {...props}>
                 <Avatar name={session.user.name} />
                 <span className="truncate" style={{ maxWidth: 140 }}>
                   {session.user.name}

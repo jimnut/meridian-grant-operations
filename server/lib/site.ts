@@ -427,17 +427,17 @@ function renderPublicPage(pagePath: PublicInfoPath, page: PublicPage): string {
   <meta property="og:title" content="${escapeHtml(page.title)}" />
   <meta property="og:description" content="${escapeHtml(page.description)}" />
   <meta property="og:url" content="${canonical}" />
-  <meta property="og:image" content="${config.siteUrl}/og-image-liquid-v3.png" />
-  <meta property="og:image:width" content="1730" />
-  <meta property="og:image:height" content="909" />
+  <meta property="og:image" content="${config.siteUrl}/og-image-daylight.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="GrantConsole post-award grant operations dashboard" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="${canonical}" />
   <meta name="twitter:title" content="${escapeHtml(page.title)}" />
   <meta name="twitter:description" content="${escapeHtml(page.description)}" />
-  <meta name="twitter:image" content="${config.siteUrl}/og-image-liquid-v3.png" />
+  <meta name="twitter:image" content="${config.siteUrl}/og-image-daylight.png" />
   <meta name="twitter:image:alt" content="GrantConsole post-award grant operations dashboard" />
-  <meta name="theme-color" content="#131110" />
+  <meta name="theme-color" content="#f7f8f5" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script type="application/ld+json">${structuredData}</script>
   <!--ANALYTICS-->

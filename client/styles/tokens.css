@@ -1,46 +1,47 @@
 /*
- * GrantConsole design tokens — "liquid control, solid evidence".
- *
- * Apple-style material belongs to the control layer; Astryx-style semantic
- * tokens keep the evidence and data layer predictable. Amber and red remain
- * reserved for states that require a human decision.
+ * GrantConsole — daylight surfaces, forest-green actions, lime highlights.
+ * Semantic risk colors remain distinct from the brand palette.
  */
 
 :root {
   /* Canvas and surfaces */
-  --canvas: #f7f5f1;
-  --canvas-deep: #ede9e2;
+  --canvas: #f7f8f5;
+  --canvas-deep: #edf0e9;
   --surface: #ffffff;
-  --surface-sunken: #f9f7f4;
+  --surface-sunken: #f5f7f2;
   --surface-raised: #ffffff;
 
   /* Ink */
-  --ink-900: #171412;
-  --ink-800: #241f1b;
-  --ink-700: #3d3630;
-  --ink-600: #57504a;
-  --ink-500: #6f6862;
+  --ink-900: #111512;
+  --ink-800: #202720;
+  --ink-700: #394239;
+  --ink-600: #505b50;
+  --ink-500: #626962;
   /* Lightest ink used for small text — 4.5:1+ on every surface it sits on. */
-  --ink-400: #7a736c;
-  --ink-300: #aca69f;
+  --ink-400: #697168;
+  --ink-300: #a1aaa0;
 
   /* Navigation shell */
-  --nav-bg: #16120e;
-  --nav-bg-hover: #211b15;
-  --nav-bg-active: #2a2118;
-  --nav-text: #d3ccc4;
-  --nav-text-strong: #f8f5f1;
-  --nav-text-dim: #948b81;
-  --nav-border: #332a21;
+  --nav-bg: #ffffff;
+  --nav-bg-hover: #f4f7f0;
+  --nav-bg-active: #eaf5e5;
+  --nav-text: #566052;
+  --nav-text-strong: #182515;
+  --nav-text-dim: #6a7466;
+  --nav-border: #e6eae2;
 
-  /* Accent — international orange */
-  --accent: #ff4f00;
-  --accent-hover: #e64700;
-  --accent-active: #cc3f00;
-  --accent-ink: #b83a00;
-  --accent-soft: #ffece1;
-  --accent-soft-strong: #ffdcc9;
-  --accent-border: #ffc4a3;
+  /* Brand green and restrained lime highlights */
+  --accent: #3d7b32;
+  --accent-hover: #2f6327;
+  --accent-active: #234d1e;
+  --accent-ink: #2f6f2b;
+  --accent-soft: #eaf5e5;
+  --accent-soft-strong: #dcefd1;
+  --accent-border: #c6ddba;
+  --highlight: #d8ff75;
+  --highlight-soft: #eff8d9;
+  --action: #172b15;
+  --action-hover: #284723;
 
   /* Attention — muted amber */
   --amber: #a76a13;
@@ -65,17 +66,17 @@
   --info-border: #c5dbe5;
 
   /* Lines */
-  --border: #e4ded5;
-  --border-strong: #d3ccc1;
-  --border-subtle: #ece7df;
+  --border: #e0e5dc;
+  --border-strong: #cdd5c8;
+  --border-subtle: #edf0e9;
 
   /* Control-state grammar — purpose-based rather than appearance-based. */
-  --control-hover: rgba(23, 20, 18, 0.055);
-  --control-pressed: rgba(23, 20, 18, 0.1);
-  --control-selected: rgba(255, 79, 0, 0.12);
+  --control-hover: rgba(35, 65, 25, 0.045);
+  --control-pressed: rgba(35, 65, 25, 0.09);
+  --control-selected: rgba(61, 123, 50, 0.1);
 
   /* Typography */
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
+  --font-sans: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
     Arial, sans-serif;
   --font-serif: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
@@ -112,25 +113,25 @@
   --radius-full: 999px;
 
   /* Elevation */
-  --shadow-xs: 0 1px 2px rgba(26, 20, 14, 0.045);
-  --shadow-sm: 0 1px 2px rgba(26, 20, 14, 0.05), 0 4px 14px rgba(26, 20, 14, 0.055);
-  --shadow-md: 0 2px 4px rgba(26, 20, 14, 0.06), 0 14px 34px rgba(26, 20, 14, 0.09);
-  --shadow-lg: 0 4px 8px rgba(26, 20, 14, 0.08), 0 28px 80px rgba(26, 20, 14, 0.2);
+  --shadow-xs: 0 1px 2px rgba(23, 43, 21, 0.025);
+  --shadow-sm: 0 2px 5px rgba(23, 43, 21, 0.025);
+  --shadow-md: 0 4px 12px rgba(23, 43, 21, 0.04), 0 16px 38px rgba(23, 43, 21, 0.07);
+  --shadow-lg: 0 8px 20px rgba(23, 43, 21, 0.07), 0 24px 64px rgba(23, 43, 21, 0.12);
 
   /* Material layer. Opaque defaults are upgraded when blur is supported. */
-  --glass-fill: #fdfbf8;
-  --glass-fill-strong: #f9f7f4;
-  --glass-dark-fill: #16120e;
+  --glass-fill: #ffffff;
+  --glass-fill-strong: #f7f8f5;
+  --glass-dark-fill: #172b15;
   --glass-border: rgba(255, 255, 255, 0.88);
   --glass-border-dark: rgba(255, 255, 255, 0.13);
   --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 1px 0 0 rgba(255, 255, 255, 0.36);
   --glass-highlight-dark: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 1px 0 0 rgba(255, 255, 255, 0.035);
-  --glass-shadow: 0 2px 4px rgba(26, 20, 14, 0.06), 0 18px 48px rgba(26, 20, 14, 0.11);
+  --glass-shadow: 0 4px 16px rgba(23, 43, 21, 0.05);
   --glass-blur: 22px;
 
   /* Layout */
-  --sidebar-width: 224px;
-  --topbar-height: 64px;
+  --sidebar-width: 232px;
+  --topbar-height: 72px;
   --content-max: 1480px;
 
   --focus-ring: 0 0 0 2px var(--canvas), 0 0 0 4px var(--accent);
@@ -142,17 +143,17 @@
 
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   :root {
-    --glass-fill: rgba(253, 251, 248, 0.72);
-    --glass-fill-strong: rgba(249, 247, 244, 0.84);
-    --glass-dark-fill: rgba(22, 18, 14, 0.88);
+    --glass-fill: rgba(255, 255, 255, 0.92);
+    --glass-fill-strong: rgba(247, 248, 245, 0.94);
+    --glass-dark-fill: rgba(23, 43, 21, 0.95);
   }
 }
 
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   :root {
     --glass-fill: #ffffff;
-    --glass-fill-strong: #f9f7f4;
-    --glass-dark-fill: #16120e;
+    --glass-fill-strong: #f7f8f5;
+    --glass-dark-fill: #172b15;
     --glass-blur: 0px;
   }
 }

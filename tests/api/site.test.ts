@@ -46,8 +46,8 @@ describe('public marketing surface', () => {
       '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"',
     );
     expect(response.text).toContain('<meta property="og:locale" content="en_US"');
-    expect(response.text).toContain('<meta property="og:image:width" content="1730"');
-    expect(response.text).toContain('<meta property="og:image:height" content="909"');
+    expect(response.text).toContain('<meta property="og:image:width" content="1200"');
+    expect(response.text).toContain('<meta property="og:image:height" content="630"');
     expect(response.text).toContain('<meta property="og:image:alt"');
     expect(response.text).toContain('<meta name="twitter:url" content="https://grantconsole.com/"');
     expect(response.text).toContain('<meta name="twitter:image:alt"');

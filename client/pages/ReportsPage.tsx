@@ -20,6 +20,7 @@ import { dueTone, formatCents, formatCentsCompact, formatIsoDate, healthTone, re
 import { BarList, CHART_COLORS } from '../components/charts';
 import { useLookups } from '../components/GrantFormDialog';
 import { Badge, Card, EmptyState, ErrorState, LoadingState, Progress, StatTile, StatusPill } from '../components/ui';
+import '../styles/reports.css';
 
 export function ReportsPage() {
   const session = useCurrentSession();
@@ -195,7 +196,7 @@ export function ReportsPage() {
               />
             </div>
 
-            <div className="grid grid--halves">
+            <div className="grid grid--halves reports-charts">
               <Card title="By funder" subtitle="Awarded value across the filtered set">
                 {data.byFunder.length === 0 ? (
                   <EmptyState title="No grants in view" description="Adjust the filters to see funder totals." compact />

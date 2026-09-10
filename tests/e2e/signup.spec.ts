@@ -50,7 +50,7 @@ test('the pricing page leads into a working sign-up that lands on an empty works
   await page.goto('/pricing');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Priced for teams');
   await expect(page.getByText('$179').first()).toBeVisible();
-  await expect(page.getByText('Most teams start here')).toBeVisible();
+  await expect(page.getByText('For growing portfolios')).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole('link', { name: 'Start free trial' }).nth(1).click();
@@ -77,7 +77,7 @@ test('the sample portfolio, trial status, plan cards and calendar feed all work'
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Settings' }).click();
   await page.getByRole('tab', { name: 'Plan & billing' }).click();
   await expect(page.getByText(/Free trial · \d+ days? left/)).toBeVisible();
-  await expect(page.getByText('Most popular')).toBeVisible();
+  await expect(page.getByText('For growing portfolios')).toBeVisible();
   await expect(page.getByRole('link', { name: /Email us to activate Growth/ })).toBeVisible();
 
   await page.getByRole('tab', { name: 'Calendar feed' }).click();

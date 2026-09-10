@@ -423,7 +423,7 @@ function BillingPanel() {
               <div key={id} className={`plan-card${plan.recommended ? ' plan-card--recommended' : ''}${current ? ' plan-card--current' : ''}`}>
                 <div className="row" style={{ justifyContent: 'space-between' }}>
                   <span className="plan-card__name">{plan.name}</span>
-                  {current ? <Badge tone="positive">Current</Badge> : plan.recommended ? <Badge tone="accent">Most popular</Badge> : null}
+                  {current ? <Badge tone="positive">Current</Badge> : plan.recommended ? <Badge tone="accent">For growing portfolios</Badge> : null}
                 </div>
                 <p className="muted small" style={{ margin: 0 }}>
                   {plan.tagline}

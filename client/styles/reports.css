@@ -1,0 +1,5 @@
+/* Retain the two-column chart layout when space allows, while allowing a
+   single card to fit containers narrower than the usual 340px minimum. */
+.reports-charts.grid--halves {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+}

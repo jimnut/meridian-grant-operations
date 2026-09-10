@@ -1,17 +1,18 @@
 ---
 name: GrantConsole — Product and Public Design
-description: A calm post-award command center: dark operational canvas, exact product evidence, warm readable content, and a restrained glass control layer.
+description: A calm post-award workspace with daylight surfaces, exact product evidence, forest-green actions, and restrained lime highlights.
 colors:
-  night: "#07141a"
-  nightSoft: "#0d2027"
-  paper: "#f3f6f2"
-  paperSoft: "#e7eee9"
+  night: "#172b15"
+  nightSoft: "#284723"
+  paper: "#f7f8f5"
+  paperSoft: "#edf0e9"
   card: "#ffffff"
-  ink: "#10201b"
-  inkSoft: "#5c6b65"
-  edge: "#d8e1db"
-  signal: "#49dda9"
-  signalDeep: "#08785b"
+  ink: "#111512"
+  inkSoft: "#626962"
+  edge: "#e0e5dc"
+  signal: "#3d7b32"
+  signalDeep: "#2f6f2b"
+  highlight: "#d8ff75"
   watch: "#efaa4f"
   risk: "#dc665c"
 rounded:
@@ -34,9 +35,9 @@ GrantConsole should feel like a beautifully built operating instrument, not a ge
 
 The visual system combines three ideas:
 
-1. **Cursor-like product evidence:** the real interface is the hero. Large product frames, concise claims, status language, and generous negative space replace decorative illustrations.
-2. **Liquid control layer:** translucency belongs only on navigation, menus, dialogs, command surfaces, and a small number of elevated control islands. Content tables and data cards remain stable, readable surfaces.
-3. **GrantConsole accountability:** mono labels identify rules, amounts, roles, and machine-readable facts. Emerald communicates the primary action or selected state. Risk never depends on color alone.
+1. **Real product evidence:** the actual interface is the hero. Product frames, concise claims, clear status language, and generous negative space make the product inspectable.
+2. **Quiet daylight surfaces:** white navigation and cards sit on a light gray-green canvas. Fine borders organize information; shadows and translucency are reserved for menus, dialogs, and transient controls.
+3. **GrantConsole accountability:** every amount, date, role, and risk signal comes from real records. Forest green identifies actions and selection; lime is a restrained brand highlight. Risk never depends on color alone.
 
 These are principles, not copies of another company's interface or assets.
 
@@ -54,9 +55,9 @@ The public landing is server/public/landing.html, a dependency-free, server-rend
 
 ### Page sequence
 
-1. Compact dark navigation with product, risk, team, security, FAQ, sign-in, and live-demo paths.
+1. Compact floating white navigation with features, pricing, resources, FAQ, sign-in, and trial paths.
 2. Category statement and brand promise.
-3. Real dashboard in a dark product frame.
+3. Real daylight dashboard in a dark device frame.
 4. Four concrete proof units from seeded data.
 5. Clear category boundary: discovery, fundraising CRM, and post-award operations.
 6. Three decision-oriented workflows: attention, restricted budget burn, and evidence.
@@ -69,9 +70,8 @@ The public landing is server/public/landing.html, a dependency-free, server-rend
 
 - Use the real product screenshot and seeded workspace facts.
 - Keep every important statement as crawlable HTML; screenshots support the copy rather than replace it.
-- Use a dark operational hero and warm neutral content sections.
-- Glass is limited to the product frame, one status note, and the integrity panel.
-- Use system fonts for speed and privacy: a system sans, platform serif, and system mono.
+- Use a light hero, green feature surfaces, and occasional dark or lime action sections.
+- Use locally hosted Archivo for brand and interface typography; system serif is retained for long-form articles and printable reports.
 - Use no JavaScript for layout or FAQ behavior. Native details provides the accordion.
 - Mobile layouts must prioritize copy and actions before the wide product image.
 
@@ -79,29 +79,32 @@ The public landing is server/public/landing.html, a dependency-free, server-rend
 
 The React application uses the semantic tokens in client/styles/tokens.css.
 
-- Sidebar and persistent navigation remain predominantly opaque for contrast.
-- Topbar, command palette, menus, dialogs, and transient control clusters may use the shared glass material tokens.
+- Sidebar and persistent navigation use opaque white surfaces, readable dark labels, and a soft green selected state.
+- The topbar, command palette, menus, and dialogs may use restrained translucent surfaces.
 - Tables, portfolio cards, grant records, inputs, banners, and status surfaces remain solid.
 - Concentric radii step down from shell to nested panel to control.
 - Hover changes luminance/border; pressed controls may scale to 0.98.
 - Focus retains the high-contrast visible ring.
 - Respect prefers-reduced-motion, prefers-reduced-transparency, and higher-contrast preferences.
+- Present dashboard priorities above four clear metric tiles. Keep the demo invitation compact and visibly separate from real portfolio signals.
+- Shared navigation tokens are dark text for light surfaces. Dark buttons must use explicitly light text rather than navigation text tokens.
+- Authentication uses the same four-square mark, a pale green story panel, white form area, and compact demo persona controls. Illustrations are explicitly labelled; never invent customer data or outcomes.
 
 ## Typography
 
-- **Hero display:** platform serif, weight 500, very tight tracking.
-- **Application headings:** system sans with strong hierarchy and restrained tracking.
-- **Body:** system sans, 15–20px depending on context.
+- **Hero display:** locally embedded Archivo, strong weight, tight tracking.
+- **Application headings:** locally hosted Archivo with strong hierarchy and restrained tracking.
+- **Body:** Archivo for the interface; a readable system serif for article bodies.
 - **Machine truth:** system mono for risk rules, roles, dates, labels, and source notes.
 - Keep line lengths near 60–72 characters for explanatory content.
 
 ## Color and state
 
-- **Night** is the product/hero canvas.
-- **Paper** is the reading canvas.
-- **Signal emerald** is reserved for the primary CTA, selection, progress, and positive machine state.
+- **Paper** is the product and reading canvas; white is the navigation and card surface.
+- **Night** is reserved for primary buttons and occasional public-page contrast sections.
+- **Signal green** identifies links, selection, progress, and positive machine state. Lime highlights the brand and selected summary surfaces.
 - **Watch amber** and **Risk red** require a written label or icon; never communicate state through color alone.
-- Text on dark surfaces uses near-white and desaturated gray-green, not pure white for every hierarchy.
+- Text on dark surfaces uses explicitly light colors, independently of light navigation tokens.
 - All text/control combinations must meet WCAG AA contrast.
 
 ## Motion
@@ -171,8 +174,8 @@ GrantConsole launched self-serve trials and published pricing on 6 September 202
 
 ## Marketing homepage refresh
 
-The homepage uses a light, product-first SaaS presentation while the authenticated application keeps its operational night-and-paper system. The public landing surface uses a floating white navigation bar, a dotted daylight canvas, an oversized centered product promise, a device-framed application view, modular feature panels, a dark live-demo block, and a lime closing action.
+The website and authenticated application share one light, product-first identity. The public landing surface uses a floating white navigation bar, a dotted daylight canvas, an oversized centered product promise, a device-framed application view, modular feature panels, a dark live-demo block, and a lime closing action. Pricing, resources, trust pages, and authentication carry the same typography, four-square mark, and green palette.
 
-Homepage-only tokens are `#f7f8f5` background, `#ffffff` surface, `#111512` ink, `#626962` supporting text, `#dde2dc` hairline, `#57a546` brand green, `#2f6f2b` deep green, `#eaf5e5` soft green, and `#d8ff75` highlight lime. Archivo remains embedded locally; no third-party font request is introduced.
+Shared brand colors are `#f7f8f5` background, `#ffffff` surface, `#111512` ink, `#626962` supporting text, `#dde2dc` hairline, `#57a546` brand green, `#2f6f2b` deep green, `#eaf5e5` soft green, and `#d8ff75` highlight lime. Archivo remains local; the app and shared public pages reuse `/fonts/archivo-latin.woff2`, extracted from the existing embedded homepage font. No third-party font request is introduced.
 
 Trial, pricing, sign-in, resources, trust, analytics, structured-data, and crawlability contracts remain part of the page. Product examples and numbers must come from implemented behavior or seeded records; the homepage must not invent customers, outcomes, integrations, certifications, or usage claims.
