@@ -55,6 +55,7 @@ sources:
     url: https://www.ecfr.gov/current/title-2/section-200.501
     checked: 2026-08-17
 related:
+  - post-award-grant-management
   - grant-reporting-calendar-template
   - grant-closeout-checklist
   - audit-ready-grant-file
@@ -62,6 +63,8 @@ related:
 ---
 
 ## Who this checklist is for
+
+For the definition, recipient responsibilities and software categories behind these steps, start with the [post-award grant management guide](/resources/post-award-grant-management).
 
 This checklist is for the people who inherit a grant after the celebration: grants and development managers who own the calendar, finance leads who own the restricted budget, program staff who produce the deliverables, and executive directors who have to answer "are we on top of our grants?" It assumes you are a nonprofit **recipient**, not a grantmaker, and that you manage several awards at once — the point where inboxes and one shared spreadsheet stop being enough.
 
