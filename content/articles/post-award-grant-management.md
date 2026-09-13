@@ -79,6 +79,7 @@ sources:
     url: https://grantconsole.com/
     checked: 2026-09-12
 related:
+  - choosing-grant-management-software-grantee
   - post-award-grant-management-checklist
   - grant-reporting-calendar-template
   - grant-closeout-checklist
@@ -176,6 +177,8 @@ Foundation and corporate awards do not automatically inherit those federal deadl
 ## Which software category supports post-award grant management?
 
 Choose software by the work you need to perform and whose awards it organizes. Product categories overlap, so a vendor's name alone does not tell you which features are available in the plan you are considering.
+
+The [grant management software buying guide](/resources/choosing-grant-management-software-grantee) turns these differences into ten practical demo tests, including permissions, evidence, exports and total cost.
 
 | Category | Primary job and verified examples | What a recipient should check |
 | --- | --- | --- |
