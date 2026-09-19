@@ -79,6 +79,7 @@ sources:
     url: https://grantconsole.com/
     checked: 2026-09-12
 related:
+  - track-multiple-grants-without-missing-deadlines
   - choosing-grant-management-software-grantee
   - post-award-grant-management-checklist
   - grant-reporting-calendar-template
@@ -138,6 +139,8 @@ A grants administrator may maintain the agreement, prepare reporting calendars, 
 Use a handoff record that answers four questions: what is required, who prepares it, who approves it and what proves completion. Record submission and retain its receipt. Track funder acceptance and requests for revision as separate states.
 
 Small nonprofits may combine roles in one person. Even then, distinguish preparation, review and authorization in the process. If staffing makes independent review difficult, leadership and a qualified adviser can help design proportionate controls. Buying software does not settle that organizational decision.
+
+For a repeatable weekly and monthly routine across several awards, use the [multiple-grant tracking guide](/resources/track-multiple-grants-without-missing-deadlines), including its eight-award example and practical warning checks.
 
 ## What reports and evidence does post-award management require?
 
