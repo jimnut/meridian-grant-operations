@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1440" width="1000" height="1440" role="img" aria-labelledby="grant-flow-title grant-flow-desc">
+  <title id="grant-flow-title">Grant management process: pre-award, award, post-award and closeout</title>
+  <desc id="grant-flow-desc">Pre-award includes opportunity, application and review. Award includes negotiation, acceptance and setup. Post-award includes implementation, monitoring, reporting and amendments. If spending or delivery diverges from the approved plan, investigate, check approval requirements, obtain required written approval and update the plan before returning to monitoring. Otherwise continue approved work and reporting. At the end of the approved program period, move to closeout: final performance and financial reports, settlement, funder review and record retention. No budget warning authorizes a change.</desc>
+  <rect width="1000" height="1440" rx="24" fill="#f6f8f3"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#18352c">
+    <text x="48" y="58" font-size="28" font-weight="700">The grant management process</text>
+    <text x="48" y="91" font-size="19">A recipient's operating view — with a decision path for change</text>
+    <g stroke="#547364" stroke-width="3" fill="none">
+      <path d="M330 242 V282 M330 408 V448 M330 598 V664 M330 826 V886 M330 1000 V1094"/>
+      <path d="M316 267 L330 282 L344 267 M316 433 L330 448 L344 433 M316 649 L330 664 L344 649 M316 871 L330 886 L344 871 M316 1079 L330 1094 L344 1079"/>
+      <path d="M508 746 H684 V803 M670 788 L684 803 L698 788"/>
+      <path d="M930 936 H960 V523 H612 M627 509 L612 523 L627 537"/>
+    </g>
+    <rect x="48" y="126" width="564" height="116" rx="16" fill="#e4ebe1" stroke="#b9cbbb"/>
+    <text x="76" y="164" font-size="19" font-weight="700">01  PRE-AWARD</text>
+    <text x="76" y="204" font-size="25">Opportunity → application → review</text>
+    <rect x="48" y="282" width="564" height="126" rx="16" fill="#e4ebe1" stroke="#b9cbbb"/>
+    <text x="76" y="320" font-size="19" font-weight="700">02  AWARD</text>
+    <text x="76" y="359" font-size="25">Negotiation → acceptance → setup</text>
+    <text x="76" y="389" font-size="18">Use the accepted scope, dates and budget</text>
+    <rect x="48" y="448" width="564" height="150" rx="16" fill="#183f32"/>
+    <text x="76" y="486" font-size="19" font-weight="700" fill="#d6f4a2">03  POST-AWARD</text>
+    <text x="76" y="529" font-size="25" fill="#ffffff">Implementation → monitoring</text>
+    <text x="76" y="568" font-size="25" fill="#ffffff">Reporting → approved amendments</text>
+    <text x="344" y="638" font-size="18">Review spending and delivery</text>
+    <path d="M330 664 L508 746 L330 826 L152 746 Z" fill="#fff1c9" stroke="#987526" stroke-width="2"/>
+    <text x="330" y="736" text-anchor="middle" font-size="22" font-weight="700">Diverges from</text>
+    <text x="330" y="766" text-anchor="middle" font-size="22" font-weight="700">approved plan?</text>
+    <text x="554" y="732" font-size="20" font-weight="700">YES</text>
+    <text x="347" y="861" font-size="20" font-weight="700">NO</text>
+    <rect x="636" y="803" width="294" height="242" rx="16" fill="#fff1c9" stroke="#d7ba70"/>
+    <text x="658" y="838" font-size="20" font-weight="700">Investigate the difference</text>
+    <text x="658" y="875" font-size="19">Is prior approval required?</text>
+    <text x="658" y="912" font-size="19">If yes: obtain written approval.</text>
+    <text x="658" y="949" font-size="19">Update only when authorized.</text>
+    <text x="658" y="986" font-size="19">Keep the decision and evidence.</text>
+    <text x="658" y="1023" font-size="19">Return to monitoring.</text>
+    <rect x="48" y="886" width="564" height="114" rx="16" fill="#ffffff" stroke="#b9cbbb"/>
+    <text x="76" y="931" font-size="24">Continue approved work and reporting</text>
+    <text x="76" y="971" font-size="18">Repeat monitoring throughout the program period</text>
+    <text x="58" y="1043" font-size="18">At the approved period end:</text>
+    <text x="58" y="1068" font-size="18">confirm final-report dates</text>
+    <rect x="48" y="1094" width="882" height="218" rx="16" fill="#e4ebe1" stroke="#b9cbbb"/>
+    <text x="76" y="1135" font-size="19" font-weight="700">04  CLOSEOUT</text>
+    <text x="76" y="1178" font-size="25">Final performance reports + final financial reports</text>
+    <text x="76" y="1221" font-size="25">Settlement and applicable property actions → funder review</text>
+    <text x="76" y="1264" font-size="25">Record retention and continuing responsibilities</text>
+    <text x="48" y="1362" font-size="18">GrantConsole · grantconsole.com/resources/grant-management-process-flow-chart</text>
+    <text x="48" y="1393" font-size="17">Operational illustration. Award terms and applicable rules control each decision.</text>
+  </g>
+</svg>

@@ -79,6 +79,7 @@ sources:
     url: https://grantconsole.com/
     checked: 2026-09-12
 related:
+  - grant-management-process-flow-chart
   - track-multiple-grants-without-missing-deadlines
   - choosing-grant-management-software-grantee
   - post-award-grant-management-checklist
@@ -107,6 +108,8 @@ Grant lifecycle management coordinates the work from opportunity assessment thro
 | Award | Terms are clarified, the award is accepted and records are set up | Authorized acceptance, understanding of conditions and a workable delivery plan | Authorized signatory and grants lead |
 | Post-award | Implementation, spending, monitoring, reporting and approved changes | Delivery, financial accountability, evidence, timely submissions and required notifications | Program lead, finance lead and grants lead together |
 | Closeout | Final reporting, settlement, funder review and retention setup | Required final documents, resolution of balances and continuing records responsibilities | Grants lead coordinating finance and program owners |
+
+The [grant management process flow chart](/resources/grant-management-process-flow-chart) illustrates these handoffs and the approval decision loop, with SVG and PNG downloads for team training.
 
 The crucial transition is from a proposed project to an approved one. Do not populate the operating plan from an early application if the funder approved a smaller amount, a different timetable or additional conditions. The accepted award and subsequent amendments must govern the working record.
 
