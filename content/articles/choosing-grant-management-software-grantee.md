@@ -71,6 +71,8 @@ Look for evidence that the software can run your actual award workflow, at the p
 
 This framework is for nonprofit grant recipients comparing tools for accepted awards. If your principal task is finding funders, managing donors or distributing grants, include the capabilities for that job in a separate evaluation. Many organizations need more than one category, and some vendors cover several.
 
+For named products and current public pricing, use the [2026 grant management software comparison](/resources/best-grant-management-software-nonprofits-2026). Its separate grantseeker, grantmaker and recipient tables help build a role-appropriate shortlist before applying the tests below.
+
 Before booking demonstrations, write down three current failures. Examples include expenses that cannot be reconciled to an award, evidence discovered missing on submission day, or a deadline that only one employee can see. Turn each into an acceptance test. A vendor passes when your team can demonstrate the workflow and inspect the result, not when a salesperson confirms that the product is “flexible.”
 
 For the category and recipient responsibilities, start with the [post-award grant management guide](/resources/post-award-grant-management). Use the [post-award checklist](/resources/post-award-grant-management-checklist) to identify required work. Then label requirements as mandatory, valuable or optional. Mandatory requirements might include access to historical attachments after staff departure, while an application-writing feature may be optional for an organization buying specifically for post-award work.
