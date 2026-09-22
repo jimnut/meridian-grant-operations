@@ -129,6 +129,8 @@ The initial handoff should produce five things:
 
 For federal awards, these records support explicit requirements. [2 CFR 200.302](https://www.ecfr.gov/current/title-2/section-200.302) requires identifiable award records, source documentation and financial reporting capability. Its budget requirement is concise: **“Comparison of expenditures with budget amounts for each Federal award.”** That is a comparison for each award, not merely the organization's total budget.
 
+For a section-by-section review, use the [federal grant compliance checklist](/resources/federal-grant-compliance-checklist-2-cfr-200). It connects the applicable rules to records, review responsibilities and common failures, with separate qualifications for reporting, audits, retention and closeout.
+
 The same system needs documented controls. [2 CFR 200.303](https://www.ecfr.gov/current/title-2/section-200.303) requires recipients and subrecipients to establish, document and maintain effective internal control over federal awards. A calendar is one useful control; it does not supply the entire system.
 
 Consider a fictional youth-services grant with a September 30 reporting period end and an October 30 submission deadline. The program lead must deliver reviewed service counts; finance must complete the relevant reconciliation; an authorized person must approve the submission. One calendar entry saying “report due” hides all three dependencies. Separate records make the handoff visible before October 30 arrives.
