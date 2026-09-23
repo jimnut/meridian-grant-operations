@@ -145,6 +145,8 @@ GrantForward's institutional model can matter more than its headline feature lis
 
 Do not copy a historical GrantHub price into a 2026 purchasing budget. The old Foundant product URL no longer describes a current subscription. The sunset date above comes from Instrumentl, which identifies itself as a transition partner; we could not retrieve a current Foundant announcement confirming remaining account-access arrangements. Existing users should resolve those directly with Foundant.
 
+For a focused comparison of these frequently confused options, read [Instrumentl vs GrantHub vs Submittable](/resources/instrumentl-vs-granthub-vs-submittable). It separates current plan capabilities, legacy migration questions and recipient-versus-grantmaker workflows, with a practical demonstration exercise.
+
 ## Which grant management software fits organizations that award funding?
 
 Foundant GLM, Fluxx Grantmaker, Blackbaud Grantmaking, Submittable, Euna Grants, and Good Grants are relevant choices for a nonprofit that runs a funding program. The central test is whether staff and applicants can complete the entire grantmaking process with appropriate permissions and records.
