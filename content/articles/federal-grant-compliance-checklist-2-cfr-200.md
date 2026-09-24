@@ -172,6 +172,8 @@ Use the following checklist in an award kickoff, periodic review, and staff hand
 
 **Common failure:** Staff enter the regulatory outside limit as their deadline without reading the award, or mistake a saved draft for a submitted report. Financial and performance reports must tell a coherent story, but they remain separate deliverables when the award requires both.
 
+For report types, forms and a worked deadline example, use the [grant reporting requirements guide](/resources/grant-reporting-requirements). It distinguishes federal recipients, subrecipients and foundation agreements, including the separate audit calendar.
+
 ### 200.334 Record retention requirements
 
 - [ ] Assign a retention trigger to each record category and check for holds before disposal.
