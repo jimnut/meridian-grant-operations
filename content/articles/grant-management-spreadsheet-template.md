@@ -156,6 +156,8 @@ This workbook's calculations do not send notifications. The cost of a missed rev
 
 GrantConsole connects awarded grants, deadlines, restricted budgets and evidence in a shared workspace. That does not mean software interprets an agreement or proves compliance. Try the [live example workspace](/signin) and test a real workflow before deciding whether to migrate.
 
+Before budgeting for a replacement, use the [Excel versus grant management software cost model](/resources/excel-vs-grant-management-software-cost). It includes setup, retained staff work and plan limits, and distinguishes released capacity from cash savings.
+
 ## How long should you retain grant tracking records?
 
 For federal awards, [2 CFR 200.334](https://www.ecfr.gov/current/title-2/section-200.334) generally requires recipients and subrecipients to retain award records for three years from submission of the final financial report. Renewed quarterly or annually funded awards have their stated reporting-based retention rules. The clock is not simply three years from the award's end date.
