@@ -145,6 +145,8 @@ Use a handoff record that answers four questions: what is required, who prepares
 
 Small nonprofits may combine roles in one person. Even then, distinguish preparation, review and authorization in the process. If staffing makes independent review difficult, leadership and a qualified adviser can help design proportionate controls. Buying software does not settle that organizational decision.
 
+For role boundaries, skills and an illustrative weekly workload, see [what a grants manager does](/resources/what-does-a-grants-manager-do). It separates coordination from financial review and authorized decisions.
+
 For a repeatable weekly and monthly routine across several awards, use the [multiple-grant tracking guide](/resources/track-multiple-grants-without-missing-deadlines), including its eight-award example and practical warning checks.
 
 ## What reports and evidence does post-award management require?
