@@ -45,7 +45,7 @@ export function entityGraphNodes(): Array<Record<string, unknown>> {
       '@id': `${config.siteUrl}/#organization`,
       name: 'GrantConsole',
       url: `${config.siteUrl}/`,
-      logo: { '@type': 'ImageObject', url: `${config.siteUrl}/favicon.svg` },
+      logo: { '@type': 'ImageObject', url: `${config.siteUrl}/grantconsole-mark.png` },
       email: 'support@grantconsole.com',
     },
     {
@@ -123,7 +123,7 @@ export function publicHead(meta: HeadMeta, extraStyles = ''): string {
 export function publicHeader(): string {
   return `<header class="site-header-wrap">
     <div class="site-header">
-      <a class="brand" href="/" aria-label="GrantConsole home"><img src="/favicon.svg" width="32" height="32" alt="" /><strong>GrantConsole</strong></a>
+      <a class="brand" href="/" aria-label="GrantConsole home"><img src="/grantconsole-logo.png" width="190" height="50" alt="" /></a>
       <nav aria-label="Primary"><a href="/pricing">Pricing</a><a href="/resources">Resources</a><a href="/about">About</a><a href="/security">Security</a><a href="/contact">Contact</a><a class="nav-signin" href="/signin">Sign in</a><a class="nav-demo" href="/signup">Start free trial</a></nav>
     </div>
   </header>`;
@@ -132,7 +132,7 @@ export function publicHeader(): string {
 export function publicFooter(): string {
   return `<footer class="site-footer-wrap">
     <div class="site-footer">
-      <div class="footer-intro"><a class="brand" href="/" aria-label="GrantConsole home"><img src="/favicon.svg" width="32" height="32" alt="" /><strong>GrantConsole</strong></a><p>Post-award grant management for nonprofits.</p><span>© GrantConsole</span></div>
+      <div class="footer-intro"><a class="brand" href="/" aria-label="GrantConsole home"><img src="/grantconsole-logo.png" width="190" height="50" alt="" /></a><p>Post-award grant management for nonprofits.</p><span>© GrantConsole</span></div>
       <nav aria-label="Footer"><a href="/pricing">Pricing</a><a href="/signup">Start free trial</a><a href="/signin">Live demo</a><a href="/resources">Resources</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/security">Security</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
     </div>
   </footer>`;
@@ -150,8 +150,7 @@ export function publicPageStyles(): string {
     .site-header,.site-footer,.page-shell { width:min(100% - 48px,1120px); margin-inline:auto; }
     .site-header { min-height:76px; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; gap:24px; background:var(--card); border:1px solid var(--edge); border-radius:18px; box-shadow:0 8px 24px rgba(17,21,18,.025); }
     .brand { display:flex; align-items:center; gap:10px; color:inherit; text-decoration:none; }
-    .brand img { width:32px; height:32px; flex:none; }
-    .brand strong { display:block; font-size:18px; font-weight:650; letter-spacing:-.045em; line-height:1.2; }
+    .brand img { width:190px; height:auto; flex:none; }
     .site-header nav,.site-footer nav { display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
     .site-header nav a { color:var(--muted); text-decoration:none; font-size:13px; font-weight:550; }
     .site-header nav a:hover { color:var(--signal); }
@@ -197,7 +196,7 @@ export function publicPageStyles(): string {
     .actions { margin-top:28px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
     .text-link { font-weight:750; }
     @media (max-width:1000px) { .site-header nav { gap:16px; } .site-header nav a[href='/about'],.site-header nav a[href='/security'],.site-header nav a[href='/contact'] { display:none; } }
-    @media (max-width:700px) { .site-header-wrap { padding-top:12px; } .site-header,.site-footer,.page-shell { width:calc(100% - 32px); } .site-header { padding:14px 16px; flex-wrap:wrap; gap:16px; } .site-header nav { width:100%; justify-content:space-between; gap:10px; } .site-header nav a { font-size:12px; } .site-header nav .nav-demo { padding:9px 12px; } .page-shell { padding-top:52px; } .page-hero { padding-bottom:32px; } .intro { font-size:16px; } .link-grid { grid-template-columns:1fr; } .site-footer { flex-direction:column; } .site-footer nav { justify-content:flex-start; } .contact-link { font-size:clamp(18px,5vw,25px); } }
+    @media (max-width:700px) { .site-header-wrap { padding-top:12px; } .site-header,.site-footer,.page-shell { width:calc(100% - 32px); } .site-header { padding:14px 16px; flex-wrap:wrap; gap:16px; } .brand img { width:170px; } .site-header nav { width:100%; justify-content:space-between; gap:10px; } .site-header nav a { font-size:12px; } .site-header nav .nav-demo { padding:9px 12px; } .page-shell { padding-top:52px; } .page-hero { padding-bottom:32px; } .intro { font-size:16px; } .link-grid { grid-template-columns:1fr; } .site-footer { flex-direction:column; } .site-footer nav { justify-content:flex-start; } .contact-link { font-size:clamp(18px,5vw,25px); } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; } }
   `;
 }

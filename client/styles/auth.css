@@ -39,10 +39,6 @@
   letter-spacing: -1.15px;
 }
 
-.signin--refreshed .signin__brand-dot {
-  color: #2f6f2b;
-}
-
 .signin--refreshed .signin__story {
   max-width: 520px;
 }

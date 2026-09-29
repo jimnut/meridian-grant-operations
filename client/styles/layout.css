@@ -38,18 +38,12 @@
 .sidebar__brand-link:hover { text-decoration: none; }
 
 .brandmark {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3px;
-  width: 29px;
-  height: 29px;
+  display: block;
+  width: 31px;
+  height: 33px;
+  object-fit: contain;
   flex: none;
 }
-
-.brandmark > span { background: #7aad55; border-radius: 5px; }
-.brandmark > span:nth-child(2) { background: #e3f4b2; }
-.brandmark > span:nth-child(3) { background: #d8ff75; }
-.brandmark > span:nth-child(4) { background: #355f2d; }
 
 .sidebar__wordmark {
   display: flex;

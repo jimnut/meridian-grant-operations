@@ -28,7 +28,7 @@ export function AuthLayout({
       <section className="signin__brandside">
         <a className="signin__brand" href="/" aria-label={`${BRAND.name} home`}>
           <BrandMark />
-          <span className="signin__wordmark">{BRAND.name}<span className="signin__brand-dot">.</span></span>
+          <span className="signin__wordmark">{BRAND.name}</span>
         </a>
 
         <div className="signin__story">
