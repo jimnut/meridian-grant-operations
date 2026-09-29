@@ -241,6 +241,8 @@ The 30-day product warning uses the grant's end date and open deliverables; it i
 
 This is an operational mapping, not a regulatory endorsement or a claim that the rules implement all of 2 CFR 200. GrantConsole tracks the obligations you enter; it does not interpret the award for you. Review its [product scope](/about) and [live demo](/signin) against an award register you have already checked.
 
+For AI-assisted summaries and drafting, see [what AI can and cannot do in grant management](/resources/can-ai-manage-your-grants). It separates preparation from authorized cost decisions, source evidence and submission, with a practical responsible-use policy.
+
 ## How should you organize federal grant management training?
 
 Train from the award outward. Give grants, finance, and program staff one fictional transaction and report to work through together. Have them identify the rule, choose the supporting records, assign the review, and explain what would cause escalation.
