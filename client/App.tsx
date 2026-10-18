@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import { AppShell } from './components/AppShell';
 import { LoadingState } from './components/ui';
-import { trackPageView } from './lib/analytics';
 import { useSession } from './lib/session';
 import { CalendarPage } from './pages/CalendarPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -34,10 +32,6 @@ const PUBLIC_ROUTES: Record<string, () => JSX.Element> = {
 export function App() {
   const { session, isLoading } = useSession();
   const location = useLocation();
-
-  useEffect(() => {
-    trackPageView(location.pathname);
-  }, [location.pathname]);
 
   if (isLoading) {
     return (

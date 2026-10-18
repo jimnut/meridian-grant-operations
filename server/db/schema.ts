@@ -6,7 +6,7 @@
  * never taken from client input.
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS organizations (
   is_demo                 INTEGER NOT NULL DEFAULT 0,
   calendar_token          TEXT,
   onboarding_dismissed_at TEXT,
+  conversion_quality      TEXT NOT NULL DEFAULT 'unreviewed',
+  acquisition_channel     TEXT NOT NULL DEFAULT 'unknown',
+  acquisition_landing     TEXT,
   created_at              TEXT NOT NULL,
   updated_at              TEXT NOT NULL
 );
@@ -255,6 +258,12 @@ CREATE TABLE IF NOT EXISTS leads (
   organization TEXT,
   message      TEXT,
   source       TEXT NOT NULL DEFAULT 'contact',
+  quality_status TEXT NOT NULL DEFAULT 'unreviewed',
+  quality_reason TEXT,
+  fingerprint TEXT,
+  receipt_hash TEXT,
+  receipt_expires_at TEXT,
+  receipt_consumed_at TEXT,
   created_at   TEXT NOT NULL
 );
 
@@ -268,6 +277,39 @@ CREATE TABLE IF NOT EXISTS billing_events (
   created_at   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_billing_events_org ON billing_events(org_id);
+
+-- Internal measurement only. No titles, names, emails, message bodies or GA IDs.
+CREATE TABLE IF NOT EXISTS conversion_events (
+  org_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('trial_started','trial_activated','paid_started')),
+  definition_version INTEGER NOT NULL DEFAULT 1,
+  occurred_at TEXT NOT NULL,
+  recorded_at TEXT NOT NULL,
+  PRIMARY KEY (org_id, event_type)
+);
+CREATE INDEX IF NOT EXISTS idx_conversions_date ON conversion_events(event_type, occurred_at);
+
+-- Minimal verified billing facts survive webhook ordering without retaining payloads.
+CREATE TABLE IF NOT EXISTS payment_facts (
+  event_id TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  billing_mode TEXT NOT NULL,
+  org_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  resource_id TEXT NOT NULL,
+  customer_ref TEXT,
+  subscription_ref TEXT,
+  charge_ref TEXT,
+  payment_intent_ref TEXT,
+  amount_minor INTEGER,
+  currency TEXT,
+  status TEXT NOT NULL,
+  occurred_at TEXT NOT NULL,
+  recorded_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_payment_facts_org ON payment_facts(org_id, kind);
+CREATE INDEX IF NOT EXISTS idx_payment_facts_customer ON payment_facts(customer_ref);
+CREATE INDEX IF NOT EXISTS idx_payment_facts_charge ON payment_facts(charge_ref);
 
 CREATE TABLE IF NOT EXISTS notification_log (
   id         TEXT PRIMARY KEY,
@@ -297,6 +339,15 @@ export const COLUMN_MIGRATIONS: ReadonlyArray<{ table: string; column: string; d
   { table: 'organizations', column: 'is_demo', ddl: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'organizations', column: 'calendar_token', ddl: 'TEXT' },
   { table: 'organizations', column: 'onboarding_dismissed_at', ddl: 'TEXT' },
+  { table: 'organizations', column: 'conversion_quality', ddl: "TEXT NOT NULL DEFAULT 'unreviewed'" },
+  { table: 'organizations', column: 'acquisition_channel', ddl: "TEXT NOT NULL DEFAULT 'unknown'" },
+  { table: 'organizations', column: 'acquisition_landing', ddl: 'TEXT' },
+  { table: 'leads', column: 'quality_status', ddl: "TEXT NOT NULL DEFAULT 'unreviewed'" },
+  { table: 'leads', column: 'quality_reason', ddl: 'TEXT' },
+  { table: 'leads', column: 'fingerprint', ddl: 'TEXT' },
+  { table: 'leads', column: 'receipt_hash', ddl: 'TEXT' },
+  { table: 'leads', column: 'receipt_expires_at', ddl: 'TEXT' },
+  { table: 'leads', column: 'receipt_consumed_at', ddl: 'TEXT' },
   { table: 'funders', column: 'is_sample', ddl: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'grants', column: 'is_sample', ddl: 'INTEGER NOT NULL DEFAULT 0' },
 ];

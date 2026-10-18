@@ -6,6 +6,7 @@
  */
 
 import type { Db } from '../db/connection';
+import { recordTrialActivation } from '../lib/conversion-events';
 import { logActivity } from '../lib/activity';
 import { ApiError } from '../lib/errors';
 import { newId } from '../lib/ids';
@@ -239,6 +240,7 @@ export function importGrants(db: Db, context: ImportContext, rows: ImportRow[], 
         if (reportDueDate) {
           insertMilestone.run(newId('mil'), context.orgId, grantId, text(row.reportTitle, 180) ?? 'Funder report', reportDueDate, now, now);
         }
+        recordTrialActivation(db, context.orgId);
         return { row: rowNumber, title, outcome: 'created', message: null, grantId };
       });
 

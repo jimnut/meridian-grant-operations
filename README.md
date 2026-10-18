@@ -254,7 +254,7 @@ Copy `.env.example` to `.env` to override. Every value has a safe development de
 | `ALLOWED_ORIGINS` | — | Extra origins permitted to send mutations |
 | `SITE_URL` | `https://grantconsole.com` | Canonical origin for robots.txt / sitemap.xml |
 | `APP_URL` | `SITE_URL` | Origin used in emails, invite links and Stripe redirects |
-| `GA_MEASUREMENT_ID` | *(off)* | GA4 id; public pages and the app shell load Google's tag only when set |
+| `GA_MEASUREMENT_ID` | *(off)* | GA4 id; public marketing pages only. App/auth routes never load Google's tag |
 | `SIGNUPS_ENABLED` | `true` | Pause self-serve sign-up without a deploy |
 | `TRIAL_DAYS` | `14` | Trial length for new workspaces |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | *(off)* | Transactional email; console fallback when unset |
@@ -303,3 +303,5 @@ This is a single-instance product with deliberate gaps.
 ### Before production
 
 Set `SESSION_SECRET` and `NODE_ENV=production` (this enables `Secure` cookies and strict origin checks); put the app behind TLS; move sessions and rate limiting to a shared store; move uploads to object storage with server-side scanning; replace the seeded team with an invitation flow plus password reset and 2FA; add backups and a migration runner beyond the single bootstrap schema; and add structured request logging with a real error tracker.
+
+Measurement deployment and operator reporting: [conversion measurement](docs/conversion-measurement.md).

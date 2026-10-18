@@ -21,7 +21,6 @@ import type { DashboardPayload } from '../../shared/types';
 import { api } from '../lib/api';
 import { attentionGrantHref, calendarGrantHref } from '../lib/grant-links';
 import { useCurrentSession, useSession } from '../lib/session';
-import { trackEvent } from '../lib/analytics';
 import { dueTone, formatCents, formatCentsCompact, formatPercent, pluralize } from '../lib/format';
 import { CHART_COLORS, DonutChart, StackedBar } from '../components/charts';
 import { OnboardingCard } from '../components/OnboardingCard';
@@ -102,7 +101,6 @@ function DemoGuide({ data }: { data?: DashboardPayload }) {
       // signOut clears the mutation cache too, so this must not depend on a
       // mutation's onSuccess. Reloading also discards all demo query observers.
       await signOut();
-      trackEvent('demo_trial_clicked', { location: 'dashboard' });
       window.location.replace('/signup');
     } catch {
       setLeaveError(true);

@@ -21,7 +21,6 @@ import {
 export { pricingHtml } from './pricing-page';
 
 const PUBLIC_DIR = path.resolve(process.cwd(), 'server/public');
-const STARTED_ON = new Date().toISOString().slice(0, 10);
 
 export const PUBLIC_INFO_PATHS = ['/about', '/contact', '/security', '/privacy', '/terms'] as const;
 export type PublicInfoPath = (typeof PUBLIC_INFO_PATHS)[number];
@@ -168,7 +167,7 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
     title: 'GrantConsole Privacy Notice',
     description:
       'What GrantConsole collects on the website, in customer workspaces and in the shared public demo, why, who processes it, how long it is kept and how to ask for changes.',
-    eyebrow: 'Privacy · Last updated 6 September 2026',
+    eyebrow: 'Privacy · Last updated 18 October 2026',
     heading: 'What we collect, and why.',
     intro:
       'This notice covers grantconsole.com, customer workspaces and the shared public demo. It is written to be read, not skimmed; if anything is unclear, ask and we will answer plainly.',
@@ -186,8 +185,9 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
       <section>
         <h2>The website and the public demo</h2>
         <ul>
-          <li><strong>Analytics.</strong> The public site and the application use Google Analytics 4 to understand visits, sign-ups and which features are used. Google may set analytics cookies and process browser, device, referral, page and approximate location information under its own terms. Content blockers stop it entirely and nothing breaks.</li>
-          <li><strong>Contact forms.</strong> What you type, your email and the page you sent it from, so we can reply.</li>
+          <li><strong>Analytics.</strong> Public marketing pages use Google Analytics 4, when configured, to understand visits and calls to action. The application, sign-in, sign-up, invitation and password-reset pages do not load Google Analytics. Google may set analytics cookies and process browser, device, public page and approximate location information under its own terms. We strip page query strings and fragments and restrict referral information. Browser Do Not Track, Global Privacy Control and content blockers disable our tag. Core features continue to work without it.</li>
+          <li><strong>Service measurement.</strong> We keep internal records of trial creation, first meaningful setup and confirmed payment, linked to the workspace. These counts do not contain grant content and are not sent to Google. A signed, first-party cookie can retain the first observed external channel and public landing page for up to 30 days to connect a visit with a later trial; it contains no visitor identifier or search terms. We honour Do Not Track and Global Privacy Control for this attribution. Spam and internal tests can be excluded from reports.</li>
+          <li><strong>Contact forms.</strong> What you type, your email and the form source, so we can reply. We classify suspicious submissions and suppress duplicates to reduce unwanted messages.</li>
           <li><strong>The public demo</strong> is a shared evaluation workspace that is reset daily. Use only the seeded example records; never enter real names, documents, financial records or other information belonging to a real person or organization.</li>
         </ul>
       </section>
@@ -291,8 +291,8 @@ export function publicInfoHtml(pagePath: PublicInfoPath): string {
   return rendered;
 }
 
-export function contactThanksHtml(): string {
-  return `<!doctype html>
+export function contactThanksHtml(accepted = false): string {
+  const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -312,9 +312,10 @@ export function contactThanksHtml(): string {
     <div class="actions"><a class="button" href="/signup">Start a free trial</a><a class="text-link" href="/signin">Open the live demo</a></div>
   </main>
   ${publicFooter()}
-  <script>if (typeof gtag === 'function') { gtag('event', 'generate_lead', { method: 'form' }); }</script>
+  ${accepted ? `<script>if (typeof gtag === 'function') { gtag('event', 'generate_lead', { method: 'form' }); }</script>` : ''}
 </body>
 </html>`;
+  return injectAnalytics(html);
 }
 
 export function publicNotFoundHtml(): string {
@@ -373,15 +374,14 @@ export function robotsTxt(): string {
 }
 
 export function sitemapXml(): string {
-  const entries: Array<{ loc: string; lastmod: string }> = PUBLIC_INDEXABLE_PATHS.map((pagePath) => ({
+  const entries: Array<{ loc: string; lastmod?: string }> = PUBLIC_INDEXABLE_PATHS.map((pagePath) => ({
     loc: `${config.siteUrl}${pagePath}`,
-    lastmod: STARTED_ON,
   }));
   entries.push(...articleSitemapEntries());
   const urls = entries.flatMap((entry) => [
     '  <url>',
     `    <loc>${entry.loc}</loc>`,
-    `    <lastmod>${entry.lastmod}</lastmod>`,
+    ...(entry.lastmod ? [`    <lastmod>${entry.lastmod}</lastmod>`] : []),
     '  </url>',
   ]);
   return [

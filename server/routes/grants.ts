@@ -3,6 +3,7 @@ import type { z } from 'zod';
 
 import { currentSession, requireCapability } from '../auth/middleware';
 import { describeChanges, logActivity } from '../lib/activity';
+import { recordTrialActivation } from '../lib/conversion-events';
 import { conflict, notFound, validationError } from '../lib/errors';
 import { handler, parseBody, parseQuery } from '../lib/http';
 import { newId } from '../lib/ids';
@@ -308,35 +309,39 @@ router.put(
     }
 
     const now = new Date().toISOString();
-    req.db
-      .prepare(
-        `UPDATE grants SET funder_id = @funderId, owner_user_id = @ownerUserId, title = @title, program = @program,
-            status = @status, requested_cents = @requestedCents, awarded_cents = @awardedCents, currency = @currency,
-            probability = @probability, purpose = @purpose, requirements = @requirements, next_action = @nextAction,
-            notes = @notes, application_date = @applicationDate, decision_date = @decisionDate,
-            start_date = @startDate, end_date = @endDate, renewal_date = @renewalDate,
-            closeout_date = @closeoutDate, updated_at = @now
-          WHERE id = @id AND org_id = @orgId`,
-      )
-      .run({ id: grantId, orgId: session.orgId, now, ...input, currency });
+    req.db.transaction(() => {
+      req.db
+        .prepare(
+          `UPDATE grants SET funder_id = @funderId, owner_user_id = @ownerUserId, title = @title, program = @program,
+              status = @status, requested_cents = @requestedCents, awarded_cents = @awardedCents, currency = @currency,
+              probability = @probability, purpose = @purpose, requirements = @requirements, next_action = @nextAction,
+              notes = @notes, application_date = @applicationDate, decision_date = @decisionDate,
+              start_date = @startDate, end_date = @endDate, renewal_date = @renewalDate,
+              closeout_date = @closeoutDate, updated_at = @now
+            WHERE id = @id AND org_id = @orgId`,
+        )
+        .run({ id: grantId, orgId: session.orgId, now, ...input, currency });
 
-    const changes = describeChanges([
-      { label: 'Status', from: GRANT_STATUS_LABELS[existing.status], to: GRANT_STATUS_LABELS[input.status] },
-      { label: 'Title', from: existing.title, to: input.title },
-      { label: 'Awarded', from: existing.awarded_cents, to: input.awardedCents },
-      { label: 'Period end', from: existing.end_date, to: input.endDate },
-      { label: 'Owner', from: existing.owner_user_id, to: input.ownerUserId },
-    ]);
+      const changes = describeChanges([
+        { label: 'Status', from: GRANT_STATUS_LABELS[existing.status], to: GRANT_STATUS_LABELS[input.status] },
+        { label: 'Title', from: existing.title, to: input.title },
+        { label: 'Awarded', from: existing.awarded_cents, to: input.awardedCents },
+        { label: 'Period end', from: existing.end_date, to: input.endDate },
+        { label: 'Owner', from: existing.owner_user_id, to: input.ownerUserId },
+      ]);
 
-    logActivity(req.db, {
-      orgId: session.orgId,
-      actorUserId: session.userId,
-      entityType: 'GRANT',
-      entityId: grantId,
-      grantId,
-      action: 'UPDATED',
-      summary: changes ? `Updated grant — ${changes}` : `Updated grant “${input.title}”`,
-    });
+      logActivity(req.db, {
+        orgId: session.orgId,
+        actorUserId: session.userId,
+        entityType: 'GRANT',
+        entityId: grantId,
+        grantId,
+        action: 'UPDATED',
+        summary: changes ? `Updated grant — ${changes}` : `Updated grant “${input.title}”`,
+      });
+
+      recordTrialActivation(req.db, session.orgId);
+    })();
 
     res.json(getGrantDetail(req.db, session.orgId, grantId, today(req)));
   }),
@@ -369,20 +374,24 @@ router.patch(
     }
 
     const now = new Date().toISOString();
-    req.db
-      .prepare('UPDATE grants SET status = ?, updated_at = ? WHERE id = ? AND org_id = ?')
-      .run(status, now, grantId, session.orgId);
+    req.db.transaction(() => {
+      req.db
+        .prepare('UPDATE grants SET status = ?, updated_at = ? WHERE id = ? AND org_id = ?')
+        .run(status, now, grantId, session.orgId);
 
-    logActivity(req.db, {
-      orgId: session.orgId,
-      actorUserId: session.userId,
-      entityType: 'GRANT',
-      entityId: grantId,
-      grantId,
-      action: 'STATUS_CHANGED',
-      summary: `Status changed from ${GRANT_STATUS_LABELS[existing.status]} to ${GRANT_STATUS_LABELS[status]}`,
-      metadata: { from: existing.status, to: status },
-    });
+      logActivity(req.db, {
+        orgId: session.orgId,
+        actorUserId: session.userId,
+        entityType: 'GRANT',
+        entityId: grantId,
+        grantId,
+        action: 'STATUS_CHANGED',
+        summary: `Status changed from ${GRANT_STATUS_LABELS[existing.status]} to ${GRANT_STATUS_LABELS[status]}`,
+        metadata: { from: existing.status, to: status },
+      });
+
+      recordTrialActivation(req.db, session.orgId);
+    })();
 
     res.json(getGrantDetail(req.db, session.orgId, grantId, today(req)));
   }),
@@ -411,19 +420,23 @@ router.patch(
       if (denial) throw conflict(denial);
     }
 
-    req.db
-      .prepare('UPDATE grants SET archived = ?, updated_at = ? WHERE id = ? AND org_id = ?')
-      .run(archived ? 1 : 0, new Date().toISOString(), grantId, session.orgId);
+    req.db.transaction(() => {
+      req.db
+        .prepare('UPDATE grants SET archived = ?, updated_at = ? WHERE id = ? AND org_id = ?')
+        .run(archived ? 1 : 0, new Date().toISOString(), grantId, session.orgId);
 
-    logActivity(req.db, {
-      orgId: session.orgId,
-      actorUserId: session.userId,
-      entityType: 'GRANT',
-      entityId: grantId,
-      grantId,
-      action: archived ? 'ARCHIVED' : 'RESTORED',
-      summary: `${archived ? 'Archived' : 'Restored'} grant “${existing.title}”`,
-    });
+      logActivity(req.db, {
+        orgId: session.orgId,
+        actorUserId: session.userId,
+        entityType: 'GRANT',
+        entityId: grantId,
+        grantId,
+        action: archived ? 'ARCHIVED' : 'RESTORED',
+        summary: `${archived ? 'Archived' : 'Restored'} grant “${existing.title}”`,
+      });
+
+      recordTrialActivation(req.db, session.orgId);
+    })();
 
     res.json(getGrantDetail(req.db, session.orgId, grantId, today(req)));
   }),

@@ -9,6 +9,7 @@ import { Router } from 'express';
 import { config } from '../config';
 import { handler, parseBody } from '../lib/http';
 import { newId } from '../lib/ids';
+import { clearLeadReceipt, issueLeadReceipt, leadFingerprint, leadFlag, LEAD_DUPLICATE_MS } from '../lib/lead-quality';
 import { renderHtml, sendMail } from '../lib/mailer';
 import { createThrottle } from '../lib/throttle';
 import { leadSchema } from '../lib/validation';
@@ -35,6 +36,7 @@ router.post(
   handler(async (req, res) => {
     const html = wantsHtml(req.get('accept'), req.get('content-type'));
     const input = parseBody(leadSchema, req.body);
+    clearLeadReceipt(res);
     if (input.website) {
       // Honeypot filled in: pretend it worked, store nothing.
       if (html) res.redirect(303, '/contact/thanks');
@@ -43,18 +45,30 @@ router.post(
     }
     leadThrottle.hit(req.ip ?? 'local');
 
-    const id = newId('lead');
-    const now = new Date().toISOString();
-    req.db
-      .prepare(
-        `INSERT INTO leads (id, email, name, organization, message, source, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(id, input.email, input.name, input.organization, input.message, input.source, now);
-
-    // Logged as well as stored so a lead survives even on ephemeral storage.
-    console.info(
-      `[lead] ${input.source} ${input.email}${input.name ? ` (${input.name})` : ''}${input.organization ? ` — ${input.organization}` : ''}${input.message ? `: ${input.message.replace(/\s+/g, ' ').slice(0, 300)}` : ''}`,
-    );
+    const now = new Date();
+    const fingerprint = leadFingerprint(input);
+    const reason = leadFlag(input);
+    const id = req.db.transaction(() => {
+      const duplicate = req.db.prepare('SELECT id FROM leads WHERE fingerprint = ? AND created_at > ? LIMIT 1')
+        .get(fingerprint, new Date(now.getTime() - LEAD_DUPLICATE_MS).toISOString());
+      if (duplicate) return null;
+      const leadId = newId('lead');
+      req.db.prepare(`INSERT INTO leads
+        (id, email, name, organization, message, source, created_at, fingerprint, quality_status, quality_reason)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(leadId, input.email, input.name, input.organization, input.message, input.source,
+          now.toISOString(), fingerprint, reason ? 'flagged' : 'unreviewed', reason);
+      return leadId;
+    })();
+    if (!id || reason) {
+      // Keep the same neutral response; flagged records remain reviewable by the
+      // owner, without sending an acknowledgement to a potentially spoofed address.
+      if (html) res.redirect(303, '/contact/thanks');
+      else res.status(202).json({ ok: true });
+      return;
+    }
+    // Operational logs deliberately exclude email, names and message content.
+    console.info('[lead] accepted', { id, source: input.source });
 
     void sendMail({
       to: config.leadNotificationEmail,
@@ -76,6 +90,7 @@ router.post(
     });
 
     if (html) {
+      issueLeadReceipt(req.db, id, res, now);
       res.redirect(303, '/contact/thanks');
       return;
     }

@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { currentSession, requireCapability } from '../auth/middleware';
 import { config } from '../config';
 import { logActivity } from '../lib/activity';
+import { recordTrialActivation } from '../lib/conversion-events';
 import {
   findInviteById,
   inviteUrl,
@@ -224,18 +225,22 @@ router.patch(
       return;
     }
 
-    req.db
-      .prepare('UPDATE memberships SET role = ? WHERE org_id = ? AND user_id = ?')
-      .run(role, session.orgId, targetUserId);
+    req.db.transaction(() => {
+      req.db
+        .prepare('UPDATE memberships SET role = ? WHERE org_id = ? AND user_id = ?')
+        .run(role, session.orgId, targetUserId);
 
-    logActivity(req.db, {
-      orgId: session.orgId,
-      actorUserId: session.userId,
-      entityType: 'MEMBERSHIP',
-      entityId: targetUserId,
-      action: 'ROLE_CHANGED',
-      summary: `${target.name}: ${ROLE_LABELS[target.role]} → ${ROLE_LABELS[role]}`,
-    });
+      logActivity(req.db, {
+        orgId: session.orgId,
+        actorUserId: session.userId,
+        entityType: 'MEMBERSHIP',
+        entityId: targetUserId,
+        action: 'ROLE_CHANGED',
+        summary: `${target.name}: ${ROLE_LABELS[target.role]} → ${ROLE_LABELS[role]}`,
+      });
+
+      recordTrialActivation(req.db, session.orgId);
+    })();
 
     res.json({ userId: targetUserId, role });
   }),

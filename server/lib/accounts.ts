@@ -13,6 +13,8 @@ import { createSession, purgeExpiredSessions, resolveSession, setSessionCookie }
 import { unauthenticated } from './errors';
 import { newId, newToken } from './ids';
 import { logActivity } from './activity';
+import { publicAcquisitionRoute } from './acquisition';
+import { recordTrialStarted } from './conversion-events';
 import type { Role } from '../../shared/constants';
 
 export const INVITE_TTL_DAYS = 14;
@@ -57,6 +59,7 @@ export interface CreateWorkspaceInput {
   currency?: string;
   fiscalYearStartMonth?: number;
   now?: Date;
+  acquisition?: { channel: 'google_organic' | 'other' | 'unknown'; landingRoute: string | null };
 }
 
 /** Creates a user, an organization on trial and the owner membership, atomically. */
@@ -93,6 +96,14 @@ export function createWorkspace(db: Db, input: CreateWorkspaceInput): { orgId: s
     db.prepare(
       `INSERT INTO memberships (id, user_id, org_id, role, created_at) VALUES (@id, @userId, @orgId, 'OWNER', @now)`,
     ).run({ id: newId('mem'), userId, orgId, now: nowIso });
+
+    if (input.acquisition) {
+      const channel = ['google_organic', 'other', 'unknown'].includes(input.acquisition.channel) ? input.acquisition.channel : 'unknown';
+      const route = input.acquisition.landingRoute;
+      const landing = publicAcquisitionRoute(route) ? route : null;
+      db.prepare('UPDATE organizations SET acquisition_channel = ?, acquisition_landing = ? WHERE id = ?').run(channel, landing, orgId);
+    }
+    recordTrialStarted(db, orgId, now);
 
     logActivity(
       db,

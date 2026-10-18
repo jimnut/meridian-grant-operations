@@ -8,7 +8,6 @@ import { CURRENCIES, MONTH_NAMES, ROLE_LABELS } from '../../shared/constants';
 import { COMMON_TIMEZONES, fiscalYearFor, formatIsoDate } from '../../shared/dates';
 import { annualSavingsPercent, formatUsd, FOUNDING_OFFER, PLAN_IDS, PLANS, type PlanDefinition, type PlanId } from '../../shared/plans';
 import type { BillingSummary, SessionOrganization, SessionPayload } from '../../shared/types';
-import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError } from '../lib/api';
 import { formatBytes } from '../lib/format';
 import { useCurrentSession, useSession } from '../lib/session';
@@ -264,8 +263,7 @@ function BillingPanel() {
     const outcome = params.get('checkout');
     if (!outcome) return;
     if (outcome === 'success') {
-      toast.success('Thank you — your subscription is active. It can take a few seconds to show here.');
-      trackEvent('subscription_activated');
+      toast.push('Checkout returned. We are checking your billing status; payment confirmation may take a moment.', 'info');
       void refresh();
       void queryClient.invalidateQueries({ queryKey: ['billing'] });
     } else if (outcome === 'canceled') {
@@ -277,8 +275,7 @@ function BillingPanel() {
 
   const checkout = useMutation({
     mutationFn: (payload: { plan: PlanId; interval: 'monthly' | 'annual' }) => api.post<{ url: string }>('/billing/checkout', payload),
-    onSuccess: (result, variables) => {
-      trackEvent('begin_checkout', { plan: variables.plan, interval: variables.interval });
+    onSuccess: (result) => {
       window.location.assign(result.url);
     },
     onError: (error: unknown) => toast.error(error instanceof ApiRequestError ? error.message : 'Checkout could not be started.'),
@@ -444,7 +441,7 @@ function BillingPanel() {
                       {checkout.isPending ? 'Opening checkout…' : `Choose ${plan.name}`}
                     </button>
                   ) : (
-                    <a className={`btn ${plan.recommended ? 'btn--primary' : ''}`} href={mailto(plan)} onClick={() => trackEvent('request_invoice', { plan: id, interval })}>
+                    <a className={`btn ${plan.recommended ? 'btn--primary' : ''}`} href={mailto(plan)}>
                       Email us to activate {plan.name}
                     </a>
                   )
@@ -484,7 +481,6 @@ function CalendarPanel() {
   const create = useMutation({
     mutationFn: () => api.post<{ url: string }>('/calendar/feed'),
     onSuccess: async () => {
-      trackEvent('calendar_feed_created');
       await queryClient.invalidateQueries({ queryKey: ['calendar-feed'] });
       await queryClient.invalidateQueries({ queryKey: ['onboarding'] });
       toast.success('Calendar link ready.');

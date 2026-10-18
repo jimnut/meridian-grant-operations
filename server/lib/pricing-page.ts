@@ -16,7 +16,7 @@ export const PRICING_FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'What counts as an active grant?',
-    a: 'Any grant that is not closed, declined or archived: prospects you are tracking, applications in flight, and every awarded grant with live obligations. Closed and declined grants stay in your history and never count.',
+    a: 'Any grant that is not closed, declined or archived: prospects you are tracking, applications in flight, and every awarded grant with live obligations. Closed and declined grants stay in your history and never count. This billing limit includes your pipeline; the dashboard’s active-award count covers awarded, reporting, renewal and closeout work only.',
   },
   {
     q: 'Is there a nonprofit discount?',
