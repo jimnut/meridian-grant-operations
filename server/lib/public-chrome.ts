@@ -24,16 +24,44 @@ export function siteUrl(): string {
 
 export const GA_ID_PATTERN = /^G-[A-Z0-9]{4,16}$/;
 
-/** Replaces the analytics slot with the GA4 tag when a valid measurement id is configured. */
+/** Public marketing pages only. No user input, query strings or private referrers. */
 export function injectAnalytics(html: string): string {
   const gaId = config.gaMeasurementId;
-  if (!gaId || !GA_ID_PATTERN.test(gaId)) return html;
+  if (!gaId || !GA_ID_PATTERN.test(gaId)) return html.replace('<!--ANALYTICS-->', '');
   return html.replace(
     '<!--ANALYTICS-->',
-    [
-      `<script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>`,
-      `<script>window.dataLayer=window.dataLayer||[];function gtag(){window.dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');</script>`,
-    ].join('\n  '),
+    `<script>(function(){
+      if(navigator.globalPrivacyControl===true||navigator.doNotTrack==='1'||window.doNotTrack==='1')return;
+      var path=location.pathname;
+      var anchor='';try{anchor=decodeURIComponent(location.hash.slice(1));}catch(e){}
+      // These pages use full-document navigation: remove arbitrary URL input
+      // before loading any third-party code, including enhanced measurement.
+      if(location.search||location.hash)history.replaceState(null,'',path);
+      // Keep deep links useful without putting their fragment back in the URL.
+      if(anchor){
+        var scrollToAnchor=function(){var target=document.getElementById(anchor);if(target)target.scrollIntoView();};
+        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scrollToAnchor,{once:true});
+        else scrollToAnchor();
+      }
+      var ref='';try{var u=new URL(document.referrer);if(u.protocol==='https:'||u.protocol==='http:')ref=u.origin+'/';}catch(e){}
+      window.dataLayer=window.dataLayer||[];
+      window.gtag=function(){window.dataLayer.push(arguments);};
+      var fields={page_location:location.origin+path,page_path:path,page_title:'GrantConsole',page_referrer:ref};
+      gtag('set',fields);
+      gtag('js',new Date());
+      gtag('config','${gaId}',Object.assign({send_page_view:false,allow_google_signals:false,allow_ad_personalization_signals:false},fields));
+      gtag('event','page_view',fields);
+      var script=document.createElement('script');script.async=true;script.src='https://www.googletagmanager.com/gtag/js?id=${gaId}';document.head.appendChild(script);
+      document.addEventListener('click',function(event){
+        var target=event.target;var link=target&&target.closest?target.closest('a[href]'):null;if(!link)return;
+        var url;try{url=new URL(link.href,location.origin);}catch(e){return;}
+        if(url.origin!==location.origin)return;
+        var targets={'/signup':'trial','/signin':'demo','/pricing':'pricing','/downloads/grant-management-spreadsheet-template.xlsx':'workbook','/templates/grant-reporting-calendar-template.csv':'calendar','/downloads/grant-management-process-flow-chart.svg':'flowchart_svg','/downloads/grant-management-process-flow-chart.png':'flowchart_png'};
+        var destination=targets[url.pathname];if(!destination)return;
+        var placement=link.closest('header')?'header':link.closest('footer')?'footer':'content';
+        gtag('event','cta_click',{destination:destination,placement:placement,page_path:path});
+      });
+    })();</script>`,
   );
 }
 

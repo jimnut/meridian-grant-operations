@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { config, isDemoMode } from '../config';
+import { clearAcquisition, readAcquisition } from '../lib/acquisition';
 import { dummyHash, hashPassword, passwordProblem, verifyPassword } from '../auth/password';
 import { clearSessionCookie, destroySession, destroyUserSessions } from '../auth/session';
 import { currentSession, requireAuth } from '../auth/middleware';
@@ -193,11 +194,13 @@ router.post(
       name: input.name,
       email: input.email,
       passwordHash,
+      acquisition: readAcquisition(req),
       organizationName: input.organizationName,
       timezone: input.timezone,
       fiscalYearStartMonth: input.fiscalYearStartMonth,
     });
 
+    clearAcquisition(res);
     startSession(req, res, userId, orgId);
 
     void sendMail({

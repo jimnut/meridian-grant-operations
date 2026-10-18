@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowUpRight, CalendarPlus, CheckCircle2, Circle, FileSpreadsheet, Sparkles, X } from 'lucide-react';
 
 import type { OnboardingStatus } from '../../shared/types';
-import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useToast } from '../lib/toast';
@@ -23,7 +22,6 @@ export function OnboardingCard() {
   const loadSample = useMutation({
     mutationFn: () => api.post('/onboarding/sample-data'),
     onSuccess: async () => {
-      trackEvent('sample_data_loaded');
       await refreshAll();
       toast.success('Sample portfolio loaded. Every dashboard signal now has something to say.');
     },

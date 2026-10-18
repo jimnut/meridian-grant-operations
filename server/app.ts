@@ -2,14 +2,15 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 import cookieParser from 'cookie-parser';
-import express, { type Express, type Response } from 'express';
+import express, { type Express, type Request, type Response } from 'express';
 import helmet from 'helmet';
 
 import { config } from './config';
 import { attachContext, csrfProtection, loadSession, requireAuth } from './auth/middleware';
 import type { Db } from './db/connection';
 import { errorMiddleware, notFoundMiddleware } from './lib/http';
-import { GA_ID_PATTERN } from './lib/public-chrome';
+import { captureAcquisition } from './lib/acquisition';
+import { clearLeadReceipt, consumeLeadReceipt, LEAD_RECEIPT_COOKIE } from './lib/lead-quality';
 import { loadCalendarEvents } from './services/calendar';
 import { buildIcs } from './services/ics';
 import { addDays, todayInTimezone } from '../shared/dates';
@@ -88,13 +89,8 @@ export function createApp(options: AppOptions = {}): Express {
   app.set('trust proxy', 'loopback');
   app.disable('x-powered-by');
 
-  // GA4 in the app shell (sign-up funnel, trial activation). Only admitted when
-  // a valid measurement id is configured; otherwise the CSP stays first-party.
-  const gaOn = Boolean(config.gaMeasurementId && GA_ID_PATTERN.test(config.gaMeasurementId));
-  const gaScriptHosts = gaOn ? ['https://www.googletagmanager.com'] : [];
-  const gaConnectHosts = gaOn
-    ? ['https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://www.googletagmanager.com']
-    : [];
+  // App/auth routes never load third-party analytics. Conversion milestones
+  // are recorded by successful server operations, without URLs or record titles.
 
   app.use(
     helmet({
@@ -106,18 +102,18 @@ export function createApp(options: AppOptions = {}): Express {
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
           formAction: ["'self'", 'https://checkout.stripe.com', 'https://billing.stripe.com'],
-          imgSrc: ["'self'", 'data:', 'blob:', ...gaConnectHosts],
+          imgSrc: ["'self'", 'data:', 'blob:'],
           // The client is a bundled SPA; styles are emitted by Vite as a stylesheet,
           // with a small inline style block for the initial paint.
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc:
             config.isProduction || servesBuiltClient
-              ? ["'self'", ...gaScriptHosts]
-              : ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...gaScriptHosts],
+              ? ["'self'"]
+              : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
           connectSrc:
             config.isProduction || servesBuiltClient
-              ? ["'self'", ...gaConnectHosts]
-              : ["'self'", 'ws:', 'http://localhost:5173', ...gaConnectHosts],
+              ? ["'self'"]
+              : ["'self'", 'ws:', 'http://localhost:5173'],
           fontSrc: ["'self'", 'data:'],
         },
       },
@@ -151,24 +147,32 @@ export function createApp(options: AppOptions = {}): Express {
     if (req.session) return next();
     res.setHeader('Content-Security-Policy', landingCsp());
     res.setHeader('Cache-Control', 'public, max-age=300');
+    res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
+    captureAcquisition(req, res);
     res.type('html').send(landingHtml());
   });
   for (const pagePath of PUBLIC_INFO_PATHS) {
-    app.get(pagePath, (_req, res) => {
+    app.get(pagePath, (req, res) => {
       res.setHeader('Content-Security-Policy', landingCsp());
       res.setHeader('Cache-Control', 'public, max-age=300');
+    res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
+    captureAcquisition(req, res);
       res.type('html').send(publicInfoHtml(pagePath));
     });
   }
-  app.get('/pricing', (_req, res) => {
+  app.get('/pricing', (req, res) => {
     res.setHeader('Content-Security-Policy', landingCsp());
     res.setHeader('Cache-Control', 'public, max-age=300');
+    res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
+    captureAcquisition(req, res);
     res.type('html').send(pricingHtml());
   });
-  app.get('/contact/thanks', (_req, res) => {
+  app.get('/contact/thanks', (req, res) => {
     res.setHeader('Content-Security-Policy', landingCsp());
     res.setHeader('Cache-Control', 'no-store');
-    res.type('html').send(contactThanksHtml());
+    const accepted = consumeLeadReceipt(req.db, req.cookies?.[LEAD_RECEIPT_COOKIE]);
+    clearLeadReceipt(res);
+    res.type('html').send(contactThanksHtml(accepted));
   });
   // Secret-address calendar feed. The token is the credential; no session.
   app.get('/feeds/:token.ics', (req, res) => {
@@ -194,13 +198,15 @@ export function createApp(options: AppOptions = {}): Express {
   });
   // Resource articles: Markdown in content/articles rendered with the same
   // chrome, CSP and cache policy as the trust pages. Unknown slugs 404 honestly.
-  const sendPublicHtml = (res: Response, html: string): void => {
+  const sendPublicHtml = (req: Request, res: Response, html: string): void => {
     res.setHeader('Content-Security-Policy', landingCsp());
     res.setHeader('Cache-Control', 'public, max-age=300');
+    res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
+    captureAcquisition(req, res);
     res.type('html').send(html);
   };
-  app.get(RESOURCES_ROUTE, (_req, res) => {
-    sendPublicHtml(res, resourcesIndexHtml());
+  app.get(RESOURCES_ROUTE, (req, res) => {
+    sendPublicHtml(req, res, resourcesIndexHtml());
   });
   app.get(`${RESOURCES_ROUTE}/feed.xml`, (_req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=900');
@@ -216,7 +222,7 @@ export function createApp(options: AppOptions = {}): Express {
       res.redirect(301, article.path);
       return;
     }
-    sendPublicHtml(res, articleHtml(article));
+    sendPublicHtml(req, res, articleHtml(article));
   });
   // Articles may also declare a top-level path (e.g. a product use-case page).
   app.use((req, res, next) => {
@@ -233,7 +239,7 @@ export function createApp(options: AppOptions = {}): Express {
       res.redirect(301, article.path);
       return;
     }
-    sendPublicHtml(res, articleHtml(article));
+    sendPublicHtml(req, res, articleHtml(article));
   });
   app.get('/robots.txt', (_req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -264,15 +270,12 @@ export function createApp(options: AppOptions = {}): Express {
 
   if (options.serveStatic) {
     const clientDir = options.clientDir ?? path.resolve(process.cwd(), 'dist/client');
-    // The shell is read once and, when analytics is configured, told which
-    // measurement id to load; the bundle itself decides what to send.
+    // The app shell remains first-party even when public-page GA is configured.
     let shellHtml: string | null = null;
     const appShell = (): string => {
       if (shellHtml === null) {
         const raw = fs.readFileSync(path.join(clientDir, 'index.html'), 'utf8');
-        shellHtml = gaOn
-          ? raw.replace('</head>', `  <meta name="grantconsole-ga" content="${config.gaMeasurementId}" />\n  </head>`)
-          : raw;
+        shellHtml = raw;
       }
       return shellHtml;
     };

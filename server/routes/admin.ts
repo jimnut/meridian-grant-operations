@@ -6,12 +6,15 @@
  */
 
 import { Router, type NextFunction, type Request, type Response } from 'express';
+import { z } from 'zod';
 
 import { config } from '../config';
 import { logActivity } from '../lib/activity';
+import { conversionSummary } from '../lib/conversion-events';
 import { ApiError, notFound } from '../lib/errors';
 import { handler, parseBody } from '../lib/http';
 import { timingSafeEqual } from '../lib/ids';
+import { LEAD_QUALITY_STATUSES } from '../lib/lead-quality';
 import { usageFor } from '../lib/plans';
 import { adminPlanSchema } from '../lib/validation';
 import { computeWorkspaceStatus, PLANS } from '../../shared/plans';
@@ -29,6 +32,22 @@ function requireAdminToken(req: Request, _res: Response, next: NextFunction): vo
 }
 
 router.use(requireAdminToken);
+
+router.get('/conversions', handler((req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(conversionSummary(req.db));
+}));
+
+router.patch('/conversions/quality', handler((req, res) => {
+  const input = parseBody(z.object({
+    organizationId: z.string().min(1).max(200),
+    quality: z.enum(['unreviewed', 'qualified', 'spam', 'internal_test']),
+  }), req.body);
+  const result = req.db.prepare('UPDATE organizations SET conversion_quality = ? WHERE id = ? AND is_demo = 0')
+    .run(input.quality, input.organizationId);
+  if (!result.changes) throw notFound('Organization');
+  res.json({ ok: true, quality: input.quality });
+}));
 
 router.get(
   '/organizations',
@@ -55,9 +74,24 @@ router.get(
 router.get(
   '/leads',
   handler((req, res) => {
-    res.json(req.db.prepare('SELECT * FROM leads ORDER BY created_at DESC LIMIT 500').all());
+    res.json(req.db.prepare(`SELECT id, email, name, organization, message, source, created_at,
+      quality_status, quality_reason FROM leads ORDER BY created_at DESC LIMIT 500`).all());
   }),
 );
+
+router.patch('/leads/quality', handler((req, res) => {
+  const input = parseBody(z.object({ id: z.string().min(1).max(100), quality: z.enum(LEAD_QUALITY_STATUSES) }), req.body);
+  const result = req.db.prepare('UPDATE leads SET quality_status = ?, quality_reason = ? WHERE id = ?')
+    .run(input.quality, 'owner_review', input.id);
+  if (!result.changes) throw notFound('Lead');
+  res.json({ ok: true });
+}));
+
+router.get('/leads/summary', handler((req, res) => {
+  res.json({ counts: req.db.prepare(`SELECT quality_status AS quality, COUNT(*) AS submissions
+    FROM leads GROUP BY quality_status`).all(),
+    definition: 'Stored contact submissions, not trial activations. Historical rows are unreviewed. Duplicate and honeypot submissions are not stored. Flagged submissions receive no automated emails.' });
+}));
 
 router.post(
   '/plan',

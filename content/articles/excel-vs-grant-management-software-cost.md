@@ -2,13 +2,13 @@
 title: "Excel vs Grant Management Software: Cost Comparison"
 description: "Compare Excel and grant management software costs using a transparent model for 5, 10 and 25 awards, verified prices, staff time and break-even assumptions."
 summary: >-
-  Grant management software is worth its cost when the staff time it releases and the workflow improvements you need exceed its subscription, setup and ongoing administration costs. An Excel tracker can remain the right choice for a small, simple portfolio. Compare both options with the same workload, retain staff review time in the software model and measure your own hours before treating an estimate as savings.
+  Compare grant management software cost with Excel by adding the subscription, setup and staff work that remains, then comparing the same workload in both systems. This model covers 5, 10 and 25 awarded grants with explicit assumptions explained below; the figures are illustrative, not measured savings. A maintained spreadsheet can remain the right choice, and released staff capacity is not automatically cash saved.
 category: comparison
 primaryKeyword: grant management software cost
 keywords: [Excel grant tracker, grant management spreadsheet, grant software pricing, nonprofit software costs, grant tracking template]
 intent: comparison
 publishedAt: 2026-09-26
-updatedAt: 2026-09-26
+updatedAt: 2026-10-18
 factCheckedAt: 2026-09-26
 author: GrantConsole editorial team
 brief: briefs/10-excel-vs-grant-software-cost.md
@@ -55,6 +55,13 @@ draft: false
 It can be worth it when the team spends enough time maintaining trackers, following up on evidence and rebuilding reports to justify the full cost of a system. The useful comparison is your current process against a working replacement with real staff participation.
 
 This model is for nonprofit grant recipients choosing how to manage active awards. It does not estimate fundraising revenue, a probability of winning grants or a monetary value for every operational risk. Those questions require different evidence.
+
+Use the section that answers your next question:
+
+- [Published software prices and plan scope](#how-much-does-grant-management-software-cost) — compare annual commitments for the features you need.
+- [Model inputs and assumptions](#what-assumptions-should-a-grant-management-cost-model-use) — replace the example hours and compensation rate with your own.
+- [First-year totals for 5, 10 and 25 grants](#what-changes-when-you-include-software-setup-and-retained-work) and [break-even sensitivity](#at-what-grant-count-does-software-break-even) — include setup and retained work.
+- [The free workbook](#what-are-the-best-excel-templates-for-grant-tracking) and [a workflow test](#how-do-you-test-the-business-case-before-committing) — compare an actual process before purchasing.
 
 Start by separating three things: cash spending, staff capacity and control quality. A subscription changes cash spending. Removing repetitive work releases capacity. Making approvals and evidence easier to inspect can improve control quality. They can support the same decision without being interchangeable measures.
 
@@ -177,7 +184,7 @@ The best template for your team separates award records, obligations, budgets an
 
 Use a stable grant identifier across tabs. Store reporting-period dates separately from deadlines. Give each obligation a named owner and link to the source requirement. For financial controls, use the approach in [restricted funds management](/resources/restricted-funds-management-for-nonprofits), with accounting records remaining the basis for reported expenditure.
 
-The [free grant management spreadsheet template](/resources/grant-management-spreadsheet-template) provides a five-tab starting point with fictional examples and documented row limits. A template is useful when its instructions let the next maintainer follow the structure. Avoid a complicated dashboard whose formulas nobody can inspect. Test it using one real award before loading the full portfolio.
+The [free grant management spreadsheet template](/resources/grant-management-spreadsheet-template) provides a five-tab starting point with fictional examples and documented row limits. If you only need report dates and owners, the [reporting calendar CSV](/resources/grant-reporting-calendar-template) is a narrower starting point. A template is useful when its instructions let the next maintainer follow the structure. Avoid a complicated dashboard whose formulas nobody can inspect. Test it using one real award before loading the full portfolio.
 
 ## How do you test the business case before committing?
 
@@ -186,3 +193,7 @@ Test one complete workflow: enter an award, assign a report, attach supporting e
 [GrantConsole's product workflow](/) connects deadlines, restricted budgets and evidence through explainable risk checks. Use the [seeded demo](/signin) to inspect the structure, then evaluate your own needs against the [reporting software guide](/grant-reporting-software-for-nonprofits). A demonstration establishes fit; your measured trial establishes the business case.
 
 Before purchasing, write down the annual cash commitment, expected setup effort, tasks that will stop and tasks that will remain. Assign one person to confirm after the first reporting cycle whether the promised workflow change actually happened. That short review turns an attractive spreadsheet calculation into a decision you can defend.
+
+## Update note
+
+October 18, 2026: added navigation to prices, assumptions, first-year totals and practical workbook/demo next steps. The illustrative model and its dated price and labor sources are unchanged.

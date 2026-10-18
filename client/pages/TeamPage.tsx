@@ -7,7 +7,6 @@ import { ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS, type Role } from '../../shared/c
 import { CAPABILITIES, ROLE_CAPABILITIES } from '../../shared/permissions';
 import { formatIsoDate } from '../../shared/dates';
 import type { Invite, TeamMember } from '../../shared/types';
-import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError } from '../lib/api';
 import { useCurrentSession, useSession } from '../lib/session';
 import { useToast } from '../lib/toast';
@@ -76,7 +75,6 @@ export function TeamPage() {
   const createInvite = useMutation({
     mutationFn: (payload: { email: string | null; role: Role }) => api.post<InviteResponse>('/team/invites', payload),
     onSuccess: async (result) => {
-      trackEvent('invite_sent', { role: result.role, emailed: result.emailed });
       setInviteError(null);
       setInviteForm({ email: '', role: 'MEMBER' });
       await queryClient.invalidateQueries({ queryKey: ['invites'] });

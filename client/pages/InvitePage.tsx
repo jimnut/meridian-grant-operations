@@ -5,7 +5,6 @@ import { CircleAlert, UserPlus } from 'lucide-react';
 
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '../../shared/constants';
 import type { InvitePreview, SessionPayload } from '../../shared/types';
-import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError, setCsrfToken } from '../lib/api';
 import { useSession } from '../lib/session';
 import { AuthLayout } from '../components/AuthLayout';
@@ -30,7 +29,6 @@ export function InvitePage() {
       api.post<SessionPayload>(`/auth/invites/${encodeURIComponent(token)}/accept`, payload),
     onSuccess: async (payload) => {
       setCsrfToken(payload.csrfToken);
-      trackEvent('join_organization', { role: payload.role });
       queryClient.clear();
       await refresh();
       window.location.assign('/');

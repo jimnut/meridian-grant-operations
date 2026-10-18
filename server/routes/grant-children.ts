@@ -6,6 +6,7 @@ import multer from 'multer';
 import { config } from '../config';
 import { currentSession, requireCapability } from '../auth/middleware';
 import { logActivity } from '../lib/activity';
+import { recordTrialActivation } from '../lib/conversion-events';
 import { badRequest, notFound } from '../lib/errors';
 import {
   ALLOWED_TYPE_SUMMARY,
@@ -283,34 +284,38 @@ router.post(
     const input = parseBody(milestoneSchema, req.body);
 
     const id = newId('mil');
-    const now = new Date().toISOString();
-    req.db
-      .prepare(
-        `INSERT INTO milestones (id, org_id, grant_id, type, title, due_date, status, submitted_at, completed_at,
-            required_evidence_count, notes, created_at, updated_at)
-         VALUES (@id, @orgId, @grantId, @type, @title, @dueDate, @status, @submittedAt, @completedAt,
-            @requiredEvidenceCount, @notes, @now, @now)`,
-      )
-      .run({
-        id,
+    req.db.transaction(() => {
+      const now = new Date().toISOString();
+      req.db
+        .prepare(
+          `INSERT INTO milestones (id, org_id, grant_id, type, title, due_date, status, submitted_at, completed_at,
+              required_evidence_count, notes, created_at, updated_at)
+           VALUES (@id, @orgId, @grantId, @type, @title, @dueDate, @status, @submittedAt, @completedAt,
+              @requiredEvidenceCount, @notes, @now, @now)`,
+        )
+        .run({
+          id,
+          orgId: grant.orgId,
+          grantId: grant.id,
+          now,
+          submittedAt: input.status === 'SUBMITTED' || input.status === 'COMPLETE' ? now : null,
+          completedAt: input.status === 'COMPLETE' || input.status === 'WAIVED' ? now : null,
+          ...input,
+        });
+
+      touchGrant(req.db, grant.orgId, grant.id);
+      logActivity(req.db, {
         orgId: grant.orgId,
+        actorUserId: session.userId,
+        entityType: 'MILESTONE',
+        entityId: id,
         grantId: grant.id,
-        now,
-        submittedAt: input.status === 'SUBMITTED' || input.status === 'COMPLETE' ? now : null,
-        completedAt: input.status === 'COMPLETE' || input.status === 'WAIVED' ? now : null,
-        ...input,
+        action: 'CREATED',
+        summary: `Added ${MILESTONE_TYPE_LABELS[input.type].toLowerCase()} “${input.title}”`,
       });
 
-    touchGrant(req.db, grant.orgId, grant.id);
-    logActivity(req.db, {
-      orgId: grant.orgId,
-      actorUserId: session.userId,
-      entityType: 'MILESTONE',
-      entityId: id,
-      grantId: grant.id,
-      action: 'CREATED',
-      summary: `Added ${MILESTONE_TYPE_LABELS[input.type].toLowerCase()} “${input.title}”`,
-    });
+      recordTrialActivation(req.db, grant.orgId);
+    })();
 
     res.status(201).json(loadMilestone(req.db, grant.orgId, id));
   }),
@@ -330,62 +335,66 @@ router.patch(
       | undefined;
     if (!existing) throw notFound('Deliverable');
 
-    const patch = parseBody(milestonePatchSchema, req.body);
-    const now = new Date().toISOString();
-    const nextStatus = patch.status ?? existing.status;
+    req.db.transaction(() => {
+      const patch = parseBody(milestonePatchSchema, req.body);
+      const now = new Date().toISOString();
+      const nextStatus = patch.status ?? existing.status;
 
-    const submittedAt =
-      nextStatus === 'SUBMITTED' || nextStatus === 'COMPLETE'
-        ? (existing.submitted_at ?? now)
-        : nextStatus === 'NOT_STARTED' || nextStatus === 'IN_PROGRESS'
-          ? null
-          : existing.submitted_at;
-    const completedAt =
-      nextStatus === 'COMPLETE' || nextStatus === 'WAIVED' ? (existing.completed_at ?? now) : null;
+      const submittedAt =
+        nextStatus === 'SUBMITTED' || nextStatus === 'COMPLETE'
+          ? (existing.submitted_at ?? now)
+          : nextStatus === 'NOT_STARTED' || nextStatus === 'IN_PROGRESS'
+            ? null
+            : existing.submitted_at;
+      const completedAt =
+        nextStatus === 'COMPLETE' || nextStatus === 'WAIVED' ? (existing.completed_at ?? now) : null;
 
-    req.db
-      .prepare(
-        `UPDATE milestones SET
-            type = COALESCE(@type, type),
-            title = COALESCE(@title, title),
-            due_date = CASE WHEN @dueDateSet = 1 THEN @dueDate ELSE due_date END,
-            status = @status,
-            required_evidence_count = COALESCE(@requiredEvidenceCount, required_evidence_count),
-            notes = CASE WHEN @notesSet = 1 THEN @notes ELSE notes END,
-            submitted_at = @submittedAt,
-            completed_at = @completedAt,
-            updated_at = @now
-          WHERE id = @id AND org_id = @orgId`,
-      )
-      .run({
-        id: milestoneId,
+      req.db
+        .prepare(
+          `UPDATE milestones SET
+              type = COALESCE(@type, type),
+              title = COALESCE(@title, title),
+              due_date = CASE WHEN @dueDateSet = 1 THEN @dueDate ELSE due_date END,
+              status = @status,
+              required_evidence_count = COALESCE(@requiredEvidenceCount, required_evidence_count),
+              notes = CASE WHEN @notesSet = 1 THEN @notes ELSE notes END,
+              submitted_at = @submittedAt,
+              completed_at = @completedAt,
+              updated_at = @now
+            WHERE id = @id AND org_id = @orgId`,
+        )
+        .run({
+          id: milestoneId,
+          orgId: grant.orgId,
+          now,
+          type: patch.type ?? null,
+          title: patch.title ?? null,
+          dueDate: patch.dueDate ?? null,
+          dueDateSet: patch.dueDate !== undefined ? 1 : 0,
+          status: nextStatus,
+          requiredEvidenceCount: patch.requiredEvidenceCount ?? null,
+          notes: patch.notes ?? null,
+          notesSet: patch.notes !== undefined ? 1 : 0,
+          submittedAt,
+          completedAt,
+        });
+
+      touchGrant(req.db, grant.orgId, grant.id);
+      logActivity(req.db, {
         orgId: grant.orgId,
-        now,
-        type: patch.type ?? null,
-        title: patch.title ?? null,
-        dueDate: patch.dueDate ?? null,
-        dueDateSet: patch.dueDate !== undefined ? 1 : 0,
-        status: nextStatus,
-        requiredEvidenceCount: patch.requiredEvidenceCount ?? null,
-        notes: patch.notes ?? null,
-        notesSet: patch.notes !== undefined ? 1 : 0,
-        submittedAt,
-        completedAt,
+        actorUserId: session.userId,
+        entityType: 'MILESTONE',
+        entityId: milestoneId,
+        grantId: grant.id,
+        action: patch.status && patch.status !== existing.status ? 'STATUS_CHANGED' : 'UPDATED',
+        summary:
+          patch.status && patch.status !== existing.status
+            ? `“${existing.title}” marked ${MILESTONE_STATUS_LABELS[patch.status].toLowerCase()}`
+            : `Updated deliverable “${patch.title ?? existing.title}”`,
       });
 
-    touchGrant(req.db, grant.orgId, grant.id);
-    logActivity(req.db, {
-      orgId: grant.orgId,
-      actorUserId: session.userId,
-      entityType: 'MILESTONE',
-      entityId: milestoneId,
-      grantId: grant.id,
-      action: patch.status && patch.status !== existing.status ? 'STATUS_CHANGED' : 'UPDATED',
-      summary:
-        patch.status && patch.status !== existing.status
-          ? `“${existing.title}” marked ${MILESTONE_STATUS_LABELS[patch.status].toLowerCase()}`
-          : `Updated deliverable “${patch.title ?? existing.title}”`,
-    });
+      recordTrialActivation(req.db, grant.orgId);
+    })();
 
     res.json(loadMilestone(req.db, grant.orgId, milestoneId));
   }),

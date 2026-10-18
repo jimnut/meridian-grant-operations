@@ -5,7 +5,6 @@ import { CircleAlert, Sparkles } from 'lucide-react';
 
 import { PLANS, TRIAL_DAYS, type PlanId } from '../../shared/plans';
 import type { SessionPayload } from '../../shared/types';
-import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError, setCsrfToken } from '../lib/api';
 import { useSession } from '../lib/session';
 import { AuthLayout } from '../components/AuthLayout';
@@ -34,7 +33,6 @@ export function SignUpPage() {
     mutationFn: (payload: Record<string, unknown>) => api.post<SessionPayload>('/auth/sign-up', payload),
     onSuccess: async (payload) => {
       if (payload && 'csrfToken' in payload) setCsrfToken(payload.csrfToken);
-      trackEvent('sign_up', { method: 'email', plan: plan ?? 'trial' });
       setErrors({});
       setFormError(null);
       await refresh();

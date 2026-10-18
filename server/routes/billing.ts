@@ -11,6 +11,7 @@ import { currentSession, requireCapability } from '../auth/middleware';
 import { config } from '../config';
 import type { Db } from '../db/connection';
 import { logActivity } from '../lib/activity';
+import { recordVerifiedPaymentFact, reconcilePaymentConversions } from '../lib/conversion-events';
 import { conflict, notFound } from '../lib/errors';
 import { handler, parseBody } from '../lib/http';
 import { newId } from '../lib/ids';
@@ -144,6 +145,8 @@ router.post(
 interface StripeEvent {
   id: string;
   type: string;
+  created?: number;
+  livemode?: boolean;
   data: { object: Record<string, unknown> };
 }
 
@@ -209,19 +212,22 @@ function planFromSubscription(object: Record<string, unknown>): PlanId | null {
 }
 
 function recordEvent(db: Db, event: StripeEvent, orgId: string | null, summary: string): boolean {
-  try {
-    db.prepare(
-      `INSERT INTO billing_events (id, org_id, stripe_event_id, type, summary, payload, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    ).run(newId('bev'), orgId, event.id, event.type, summary.slice(0, 500), JSON.stringify(event.data.object).slice(0, 8000), new Date().toISOString());
-    return true;
-  } catch {
-    // UNIQUE(stripe_event_id): Stripe retried an event we already applied.
-    return false;
-  }
+  return db.prepare(
+    `INSERT INTO billing_events (id, org_id, stripe_event_id, type, summary, payload, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(stripe_event_id) DO NOTHING`,
+  ).run(newId('bev'), orgId, event.id, event.type, summary.slice(0, 500), JSON.stringify(event.data.object).slice(0, 8000), new Date().toISOString()).changes > 0;
 }
 
 /** Applies one verified Stripe event. Idempotent per event id. Returns what changed. */
 export function applyStripeEvent(db: Db, event: StripeEvent): { applied: boolean; summary: string } {
+  return db.transaction(() => {
+    recordVerifiedPaymentFact(db, event);
+    const result = applySubscriptionEvent(db, event);
+    reconcilePaymentConversions(db);
+    return result;
+  })();
+}
+
+function applySubscriptionEvent(db: Db, event: StripeEvent): { applied: boolean; summary: string } {
   const object = event.data.object;
   const now = new Date().toISOString();
 
@@ -287,7 +293,12 @@ export function applyStripeEvent(db: Db, event: StripeEvent): { applied: boolean
       return { applied: true, summary };
     }
     case 'invoice.payment_failed':
+    case 'invoice.payment_succeeded':
     case 'invoice.paid': {
+      if (event.type === 'invoice.payment_succeeded' && object.status !== 'paid') {
+        recordEvent(db, event, null, 'Payment attempt succeeded; invoice not fully paid');
+        return { applied: false, summary: 'invoice not fully paid' };
+      }
       const org = findOrg(db, { subscriptionId: invoiceSubscriptionId(object), customerId: object.customer });
       if (!org) return { applied: false, summary: 'invoice event for unknown organization' };
       const failed = event.type === 'invoice.payment_failed';

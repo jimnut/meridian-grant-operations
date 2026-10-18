@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import { SessionProvider } from './lib/session';
 import { ToastProvider } from './lib/toast';
-import { initAnalytics } from './lib/analytics';
 import { ApiRequestError } from './lib/api';
 
 import './styles/tokens.css';
@@ -29,7 +28,6 @@ const queryClient = new QueryClient({
   },
 });
 
-initAnalytics();
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element missing');

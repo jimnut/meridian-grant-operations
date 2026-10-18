@@ -6,7 +6,6 @@ import { CircleAlert, CircleCheck, FileSpreadsheet, Upload } from 'lucide-react'
 import { BRAND } from '../../shared/brand';
 import { detectDelimiter, parseCsv } from '../../shared/csv';
 import type { ImportResult } from '../../shared/types';
-import { trackEvent } from '../lib/analytics';
 import { api, ApiRequestError } from '../lib/api';
 import { useCurrentSession } from '../lib/session';
 import { useToast } from '../lib/toast';
@@ -115,7 +114,6 @@ export function ImportPage() {
     mutationFn: (rows: Record<string, string>[]) => api.post<ImportResult>('/grants/import', { rows, createFunders: true }),
     onSuccess: async (data) => {
       setResult(data);
-      trackEvent('import_grants', { created: data.created, errors: data.errors });
       await queryClient.invalidateQueries();
       if (data.created > 0) toast.success(`${data.created} grant${data.created === 1 ? '' : 's'} imported.`);
     },
