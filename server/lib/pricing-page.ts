@@ -28,7 +28,7 @@ export const PRICING_FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'What happens to our data if we cancel?',
-    a: 'You can export every grant, deliverable, budget line and the evidence list to CSV at any time, and download every uploaded file. After cancellation the workspace stays read-only through the end of the paid period, and you can delete the organization yourself from Settings.',
+    a: 'You can export every grant, deliverable, budget line and the evidence list to CSV at any time, and download every uploaded file. After cancellation, editing continues until the end of the paid period; the workspace then becomes read-only. You can delete the organization yourself from Settings.',
   },
   {
     q: 'Do you charge per user?',
