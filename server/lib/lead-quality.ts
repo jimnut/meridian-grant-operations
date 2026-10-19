@@ -3,6 +3,7 @@ import type { Response } from 'express';
 
 import { config } from '../config';
 import type { Db } from '../db/connection';
+import { secureMeasurementCookie } from './measurement-cookie';
 
 export const LEAD_RECEIPT_COOKIE = 'grantconsole_lead_receipt';
 const RECEIPT_TTL_MS = 15 * 60 * 1000;
@@ -34,12 +35,12 @@ export function issueLeadReceipt(db: Db, id: string, res: Response, now = new Da
   db.prepare('UPDATE leads SET receipt_hash = ?, receipt_expires_at = ? WHERE id = ?')
     .run(receiptHash(token), new Date(now.getTime() + RECEIPT_TTL_MS).toISOString(), id);
   res.cookie(LEAD_RECEIPT_COOKIE, token, {
-    httpOnly: true, secure: config.isProduction, sameSite: 'lax', path: '/contact/thanks', maxAge: RECEIPT_TTL_MS,
+    httpOnly: true, secure: secureMeasurementCookie(res.req), sameSite: 'lax', path: '/contact/thanks', maxAge: RECEIPT_TTL_MS,
   });
 }
 
 export function clearLeadReceipt(res: Response): void {
-  res.clearCookie(LEAD_RECEIPT_COOKIE, { httpOnly: true, secure: config.isProduction, sameSite: 'lax', path: '/contact/thanks' });
+  res.clearCookie(LEAD_RECEIPT_COOKIE, { httpOnly: true, secure: secureMeasurementCookie(res.req), sameSite: 'lax', path: '/contact/thanks' });
 }
 
 /** Atomic consumption makes direct visits, refreshes and replayed cookies inert. */

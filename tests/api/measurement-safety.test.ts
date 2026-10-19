@@ -40,9 +40,11 @@ describe('contact conversion integrity', () => {
     expect(outbox).toHaveLength(2);
     const receipt = cookieValue(posted, LEAD_RECEIPT_COOKIE)!;
     expect(receipt).toBeTruthy();
+    expect((posted.headers['set-cookie'] as unknown as string[]).find((cookie) => cookie.startsWith(`${receipt};`))).toContain('; Secure');
     const first = await request(ctx.app).get('/contact/thanks').set('Cookie', receipt);
     expect(first.text).toContain("gtag('event', 'generate_lead'");
     expect(first.headers['cache-control']).toBe('no-store');
+    expect((first.headers['set-cookie'] as unknown as string[]).find((cookie) => cookie.startsWith(`${LEAD_RECEIPT_COOKIE}=;`))).toContain('; Secure');
     const replay = await request(ctx.app).get('/contact/thanks').set('Cookie', receipt);
     expect(replay.text).not.toContain("gtag('event', 'generate_lead'");
   });
@@ -111,11 +113,14 @@ describe('privacy and acquisition boundaries', () => {
     const landing = await agent.get('/resources/grant-management-spreadsheet-template?private=do-not-store').set('Referer', 'https://www.google.com/search?q=private-search-term');
     expect(landing.status).toBe(200); expect(landing.headers['cache-control']).toBe('private, no-store');
     const cookie = cookieValue(landing, 'grantconsole_acquisition')!;
+    expect((landing.headers['set-cookie'] as unknown as string[]).find((header) => header.startsWith(`${cookie};`))).toContain('; Secure');
     const encoded = cookie.split('=')[1]!.split('.')[0]!;
     const decoded = Buffer.from(encoded, 'base64url').toString('utf8');
     expect(decoded).not.toContain('private'); expect(decoded).toContain('google_organic');
-    const signup = await agent.post('/api/auth/sign-up').send({ name: 'Synthetic User', email: 'attribution@example.org', password: 'Synthetic-password-123!', organizationName: 'Synthetic Measurement Org' });
+    // The test server is HTTP; explicitly replay the cookie as an HTTPS browser would.
+    const signup = await agent.post('/api/auth/sign-up').set('Cookie', cookie).send({ name: 'Synthetic User', email: 'attribution@example.org', password: 'Synthetic-password-123!', organizationName: 'Synthetic Measurement Org' });
     expect(signup.status).toBe(201);
+    expect((signup.headers['set-cookie'] as unknown as string[]).find((header) => header.startsWith('grantconsole_acquisition=;'))).toContain('; Secure');
     expect(ctx.db.prepare('SELECT acquisition_channel, acquisition_landing FROM organizations WHERE id = ?').get(signup.body.organization.id)).toEqual({ acquisition_channel: 'google_organic', acquisition_landing: '/resources/grant-management-spreadsheet-template' });
   });
   it('respects privacy signals, excludes paid Google clicks and leaves unknown routes/cookies unattributed', async () => {
@@ -137,8 +142,9 @@ describe('privacy and acquisition boundaries', () => {
       const agent = request.agent(ctx.app);
       const landing = await agent.get(route).set('Referer', 'https://www.google.com/');
       expect(landing.status).toBe(200);
-      expect(cookieValue(landing, 'grantconsole_acquisition')).toBeTruthy();
-      const signup = await agent.post('/api/auth/sign-up').send({ name: 'Synthetic Landing', email: `landing${index}@example.org`, password: 'Synthetic-password-123!', organizationName: `Synthetic Landing ${index}` });
+      const cookie = cookieValue(landing, 'grantconsole_acquisition')!;
+      expect(cookie).toBeTruthy();
+      const signup = await agent.post('/api/auth/sign-up').set('Cookie', cookie).send({ name: 'Synthetic Landing', email: `landing${index}@example.org`, password: 'Synthetic-password-123!', organizationName: `Synthetic Landing ${index}` });
       expect(signup.status).toBe(201);
       expect(ctx.db.prepare('SELECT acquisition_channel, acquisition_landing FROM organizations WHERE id = ?').get(signup.body.organization.id))
         .toEqual({ acquisition_channel: 'google_organic', acquisition_landing: route });
