@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { config } from '../config';
 import { findArticle } from './articles';
 import { timingSafeEqual } from './ids';
+import { secureMeasurementCookie } from './measurement-cookie';
 
 const COOKIE = 'grantconsole_acquisition';
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -49,12 +50,12 @@ export function captureAcquisition(req: Request, res: Response): void {
   const channel = GOOGLE_HOSTS.has(ref.hostname) && !paid ? 'google_organic' : 'other';
   const encoded = Buffer.from(JSON.stringify({ channel, landingRoute: req.path, at: Date.now() })).toString('base64url');
   res.cookie(COOKIE, `${encoded}.${signature(encoded)}`, {
-    httpOnly: true, secure: config.isProduction, sameSite: 'lax', path: '/', maxAge: WINDOW_MS,
+    httpOnly: true, secure: secureMeasurementCookie(req), sameSite: 'lax', path: '/', maxAge: WINDOW_MS,
   });
   // A first-touch Set-Cookie must never be shared by a CDN/public page cache.
   res.setHeader('Cache-Control', 'private, no-store');
 }
 
 export function clearAcquisition(res: Response): void {
-  res.clearCookie(COOKIE, { httpOnly: true, secure: config.isProduction, sameSite: 'lax', path: '/' });
+  res.clearCookie(COOKIE, { httpOnly: true, secure: secureMeasurementCookie(res.req), sameSite: 'lax', path: '/' });
 }
