@@ -123,9 +123,9 @@ export function createWorkspace(db: Db, input: CreateWorkspaceInput): { orgId: s
 }
 
 /** Issues a session cookie and populates `req.session` for the rest of the request. */
-export function startSession(req: Request, res: Response, userId: string, orgId: string): void {
+export function startSession(req: Request, res: Response, userId: string, orgId: string, mfaVerified = false): void {
   purgeExpiredSessions(req.db);
-  const session = createSession(req.db, userId, orgId);
+  const session = createSession(req.db, userId, orgId, mfaVerified);
   setSessionCookie(res, session.id);
   const resolved = resolveSession(req.db, session.id);
   if (!resolved) throw unauthenticated('Could not start a session. Try again.');

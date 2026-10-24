@@ -89,6 +89,14 @@ function resolveSessionSecret(): string {
   return generated;
 }
 
+function resolveMfaKey(): string {
+  const value = envString('MFA_ENCRYPTION_KEY').trim();
+  if (value && (!/^[a-fA-F0-9]{64}$/.test(value) || new Set(value.toLowerCase()).size < 8)) {
+    throw new Error('MFA_ENCRYPTION_KEY must be a separately generated random 32-byte key encoded as 64 hex characters.');
+  }
+  return value;
+}
+
 const dataDir = path.resolve(process.cwd(), envString('DATA_DIR', './data'));
 
 /**
@@ -140,6 +148,8 @@ export const config = {
   databaseFile: path.join(dataDir, 'meridian.db'),
   uploadsDir: path.join(dataDir, 'uploads'),
   sessionSecret: resolveSessionSecret(),
+  /** Separate persistent AES-256 key; never derive or silently replace enrolled MFA seeds. */
+  mfaEncryptionKey: resolveMfaKey(),
   sessionTtlHours: envInt('SESSION_TTL_HOURS', 72),
   maxUploadBytes: envInt('MAX_UPLOAD_MB', 10) * 1024 * 1024,
   maxUploadMb: envInt('MAX_UPLOAD_MB', 10),

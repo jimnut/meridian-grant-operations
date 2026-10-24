@@ -4,6 +4,8 @@ import type { Response } from 'express';
 import { config } from '../config';
 import type { Db } from '../db/connection';
 import { newToken } from '../lib/ids';
+import { mfaEnabled } from './mfa';
+import { unauthenticated } from '../lib/errors';
 import type { Role } from '../../shared/constants';
 import { computeWorkspaceStatus, type WorkspaceStatus } from '../../shared/plans';
 
@@ -54,14 +56,15 @@ export function decodeCookie(raw: string | undefined): string | null {
   return id;
 }
 
-export function createSession(db: Db, userId: string, orgId: string): SessionRecord {
+export function createSession(db: Db, userId: string, orgId: string, mfaVerified = false): SessionRecord {
+  if (mfaEnabled(db, userId) && !mfaVerified) throw unauthenticated('Complete two-factor verification to sign in.');
   const id = newToken(24);
   const csrfToken = newToken(24);
   const now = new Date();
   const expires = new Date(now.getTime() + config.sessionTtlHours * 3600_000);
   db.prepare(
-    `INSERT INTO sessions (id, user_id, org_id, csrf_token, created_at, expires_at)
-     VALUES (@id, @userId, @orgId, @csrfToken, @createdAt, @expiresAt)`,
+    `INSERT INTO sessions (id, user_id, org_id, csrf_token, created_at, expires_at, mfa_verified)
+     VALUES (@id, @userId, @orgId, @csrfToken, @createdAt, @expiresAt, @mfaVerified)`,
   ).run({
     id,
     userId,
@@ -69,6 +72,7 @@ export function createSession(db: Db, userId: string, orgId: string): SessionRec
     csrfToken,
     createdAt: now.toISOString(),
     expiresAt: expires.toISOString(),
+    mfaVerified: mfaVerified ? 1 : 0,
   });
   return { id, userId, orgId, csrfToken, expiresAt: expires.toISOString() };
 }
@@ -109,6 +113,10 @@ export function resolveSession(db: Db, sessionId: string): ResolvedSession | nul
 
   if (!row) return null;
   if (!row.isActive) return null;
+  if (mfaEnabled(db, row.userId)) {
+    const proof = db.prepare('SELECT mfa_verified AS verified FROM sessions WHERE id = ?').get(sessionId) as { verified: number };
+    if (!proof.verified) return null;
+  }
   if (new Date(row.expiresAt).getTime() <= Date.now()) {
     db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
     return null;

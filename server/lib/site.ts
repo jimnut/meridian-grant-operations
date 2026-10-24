@@ -121,7 +121,7 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
           <li>Repeated sign-in, sign-up and reset attempts are throttled per address.</li>
           <li>Session cookies are signed, HTTP-only and SameSite=Lax; production cookies are marked Secure.</li>
           <li>Password-reset and invitation links are single-use, expire (one hour and fourteen days), and are stored only as hashes.</li>
-          <li>Changing a password signs out every other device.</li>
+          <li>Changing a password signs out every other device. An enrolled second factor is still required after a password reset.</li>
         </ul>
       </section>
       <section>
@@ -151,12 +151,12 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
         <ul>
           <li>Every grant, deliverable, task, budget line and report schedule exports to CSV at any time; every uploaded file can be downloaded.</li>
           <li>An owner can delete the organization from Settings, which removes its records, uploads and invitations.</li>
-          <li>Support staff do not open customer workspaces without written permission.</li>
+          <li>Support staff do not open customer workspaces without written permission. Hosting in Frankfurt does not establish UK-only or EU-only support access; ask us for the current access and transfer assessment before providing personal data.</li>
         </ul>
       </section>
       <aside class="notice">
         <strong>What we do not have yet.</strong>
-        <span>GrantConsole does not currently publish a SOC 2, ISO 27001 or similar independent certification, and does not yet offer single sign-on or two-factor authentication. Contact us before relying on the product for a requirement that needs formal attestation; we will tell you exactly where we stand.</span>
+        <span>GrantConsole does not currently publish a SOC 2, ISO 27001 or similar independent certification and does not yet offer single sign-on. ${config.mfaEncryptionKey ? 'Authenticator-app two-factor authentication is available in Settings → Your account, with single-use recovery codes. Each person must enable it for their own account; it is not mandatory for every workspace.' : 'Authenticator-app two-factor authentication has not been activated on this deployment.'} Contact us before relying on the product for a requirement that needs formal attestation; we will tell you exactly where we stand.</span>
       </aside>
       <section>
         <h2>Report a concern</h2>
@@ -193,11 +193,11 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
       </section>
       <section>
         <h2>Who processes data on our behalf</h2>
-        <p>Render (application hosting and storage), Stripe (payments), Google (analytics) and a transactional email provider (Resend). Each is bound by its own data-processing terms. We do not use advertising networks.</p>
+        <p>Render (application hosting and storage), Stripe (payments), Google (analytics) and a transactional email provider (Resend). These providers publish their own processing terms. Account-specific acceptance, service scope and any international-transfer arrangements must be assessed before customer processing; this notice is not proof that a customer DPA has been agreed. We do not use advertising networks.</p>
       </section>
       <section>
         <h2>Retention and deletion</h2>
-        <p>Workspace data is kept while your organization has an account, including a read-only period after a trial or subscription ends so nothing is lost by accident. An owner can delete the organization at any time from Settings, which removes its records, uploads and invitations. Backups age out on a rolling basis. Contact-form messages are kept for up to two years.</p>
+        <p>Workspace data is kept while your organization has an account, including a read-only period after a trial or subscription ends so nothing is lost by accident. An owner can request live workspace deletion from Settings. This removes the workspace records, uploads, invitations and orphan account credentials; shared accounts and anonymous attribution needed by another workspace can remain. File-removal failures are reported for retry. Provider-held billing records and retained backup copies are handled separately. Render disk snapshots are retained for seven days. Application backup availability, retention and recovery depend on the deployed backup configuration; off-site protection and tested recovery are not implied. Contact-form messages are retained for review and reply; contact support for deletion.</p>
       </section>
       <section>
         <h2>Your rights and choices</h2>

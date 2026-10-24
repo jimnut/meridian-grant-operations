@@ -32,7 +32,7 @@ export default defineConfig({
   webServer: {
     // DEMO_MODE is explicit here because the owner journey exercises the
     // one-click demo sign-in shortcut.
-    command: `DATA_DIR=./.e2e-data PORT=${PORT} HOST=127.0.0.1 DEMO_MODE=true node dist/server/index.js`,
+    command: `DATA_DIR=./.e2e-data PORT=${PORT} HOST=127.0.0.1 DEMO_MODE=true MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef node dist/server/index.js`,
     url: `${BASE_URL}/api/health`,
     reuseExistingServer: false,
     timeout: 60_000,

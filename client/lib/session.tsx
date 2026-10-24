@@ -42,9 +42,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await api.post('/auth/sign-out');
+    await queryClient.cancelQueries();
     setCsrfToken('');
-    queryClient.clear();
+    // Keep the mounted session query so its observers see the signed-out state.
+    // Clearing it first detaches those observers and leaves private UI visible.
     queryClient.setQueryData(['session'], null);
+    queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' });
+    queryClient.getMutationCache().clear();
   }, [queryClient]);
 
   const value = useMemo<SessionContextValue>(

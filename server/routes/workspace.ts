@@ -381,8 +381,9 @@ router.delete(
 
 /**
  * Irreversible. The owner re-enters their password and the organization name;
- * records, uploads, invitations and billing links are removed, and any person
- * left without a membership is deactivated.
+ * Live records and uploads are removed. People without other memberships are
+ * erased, except an anonymous identity stub needed by another workspace's
+ * retained evidence. Provider billing records and backup retention are separate.
  */
 router.delete(
   '/organization',
@@ -401,34 +402,71 @@ router.delete(
       throw validationError('Your password is not correct.', { password: 'Not correct.' });
     }
 
-    const memberIds = (req.db.prepare('SELECT user_id AS userId FROM memberships WHERE org_id = ?').all(session.orgId) as Array<{ userId: string }>).map((m) => m.userId);
+    // Include former members still referenced by this workspace, otherwise their
+    // account credentials survive simply because membership was removed first.
+    const relatedUserIds = (req.db.prepare(`
+      SELECT user_id AS userId FROM memberships WHERE org_id = @orgId
+      UNION SELECT uploaded_by FROM documents WHERE org_id = @orgId
+      UNION SELECT author_user_id FROM comments WHERE org_id = @orgId
+      UNION SELECT actor_user_id FROM activities WHERE org_id = @orgId AND actor_user_id IS NOT NULL
+      UNION SELECT owner_user_id FROM grants WHERE org_id = @orgId AND owner_user_id IS NOT NULL
+      UNION SELECT assignee_user_id FROM tasks WHERE org_id = @orgId AND assignee_user_id IS NOT NULL
+      UNION SELECT created_by FROM invites WHERE org_id = @orgId AND created_by IS NOT NULL
+      UNION SELECT accepted_by FROM invites WHERE org_id = @orgId AND accepted_by IS NOT NULL
+    `).all({ orgId: session.orgId }) as Array<{ userId: string }>).map((m) => m.userId);
     const storageKeys = (req.db.prepare('SELECT storage_key AS storageKey FROM documents WHERE org_id = ?').all(session.orgId) as Array<{ storageKey: string }>).map((d) => d.storageKey);
 
+    // Never remove a path belonging to another tenant, including a corrupt
+    // storage key. Removing only this generated directory also avoids following
+    // file symlinks to files outside it. Node's recursive rm unlinks symlinks.
+    const directoryName = session.orgId.replace(/[^A-Za-z0-9_-]/g, '');
+    const uploadsRoot = path.resolve(req.uploadsDir);
+    const organizationDirectory = path.resolve(uploadsRoot, directoryName);
+    if (!directoryName || path.dirname(organizationDirectory) !== uploadsRoot || storageKeys.some((key) => {
+      const relative = path.relative(organizationDirectory, path.resolve(uploadsRoot, key));
+      return !relative || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative);
+    })) {
+      throw conflict('Deletion could not safely locate the workspace uploads. Contact support to complete deletion.');
+    }
+    // Filesystem removal cannot be rolled back by SQLite. Keep the organization,
+    // document metadata and authenticated session when it fails so the same
+    // authorized request can retry; some files may already have been removed.
+    try {
+      fs.rmSync(organizationDirectory, { recursive: true, force: true });
+    } catch {
+      console.error('[org] upload erasure failed; organization deletion requires retry');
+      throw conflict('Workspace deletion is incomplete because some uploads could not be removed. Retry deletion; contact support if this continues.');
+    }
+
     req.db.transaction(() => {
+      // Local webhook copies can contain billing contact details. This does not
+      // cancel a Stripe subscription or remove Stripe's statutory records.
+      req.db.prepare('DELETE FROM billing_events WHERE org_id = ?').run(session.orgId);
       req.db.prepare('DELETE FROM organizations WHERE id = ?').run(session.orgId);
-      for (const userId of memberIds) {
+      for (const userId of relatedUserIds) {
         const remaining = (req.db.prepare('SELECT COUNT(*) AS count FROM memberships WHERE user_id = ?').get(userId) as { count: number }).count;
         if (remaining === 0) {
-          req.db.prepare('UPDATE users SET is_active = 0 WHERE id = ?').run(userId);
-          req.db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+          const retainedEvidence = req.db.prepare(`
+            SELECT 1 FROM documents WHERE uploaded_by = ?
+            UNION ALL SELECT 1 FROM comments WHERE author_user_id = ? LIMIT 1
+          `).get(userId, userId);
+          if (retainedEvidence) {
+            // Another controller's records must remain intact. Keep only an
+            // inactive anonymous attribution stub with no usable credentials.
+            req.db.prepare(`UPDATE users SET name = 'Deleted user', email = ?, password_hash = '',
+              title = NULL, last_sign_in_at = NULL, is_active = 0 WHERE id = ?`)
+              .run(`deleted-${newToken(24)}@deleted.invalid`, userId);
+            for (const table of ['sessions', 'password_resets', 'user_mfa', 'mfa_recovery_codes', 'mfa_rate_limits']) {
+              req.db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(userId);
+            }
+          } else {
+            req.db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+          }
         }
       }
     })();
 
-    for (const key of storageKeys) {
-      try {
-        fs.rmSync(path.join(req.uploadsDir, key), { force: true });
-      } catch {
-        // Best effort; a missing file is already gone.
-      }
-    }
-    try {
-      fs.rmSync(path.join(req.uploadsDir, session.orgId.replace(/[^A-Za-z0-9_-]/g, '')), { recursive: true, force: true });
-    } catch {
-      // ignore
-    }
-
-    console.info(`[org] ${session.userEmail} deleted organization ${session.orgName} (${session.orgId})`);
+    console.info('[org] organization live-data erasure completed');
     clearSessionCookie(res);
     res.status(204).end();
   }),

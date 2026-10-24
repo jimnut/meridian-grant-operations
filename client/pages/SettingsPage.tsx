@@ -13,6 +13,7 @@ import { formatBytes } from '../lib/format';
 import { useCurrentSession, useSession } from '../lib/session';
 import { useToast } from '../lib/toast';
 import { Dialog } from '../components/Dialog';
+import { MfaPanel } from '../components/MfaPanel';
 import { Badge, Card, DefinitionList, Field, Input, LoadingState, Select, TabPanel, Tabs, useFocusFirstInvalid } from '../components/ui';
 
 type SettingsTab = 'organization' | 'billing' | 'calendar' | 'account' | 'danger';
@@ -661,6 +662,7 @@ function AccountPanel() {
           </form>
         )}
       </Card>
+      <MfaPanel />
     </div>
   );
 }

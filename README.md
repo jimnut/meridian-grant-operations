@@ -258,6 +258,8 @@ Copy `.env.example` to `.env` to override. Every value has a safe development de
 | `SIGNUPS_ENABLED` | `true` | Pause self-serve sign-up without a deploy |
 | `TRIAL_DAYS` | `14` | Trial length for new workspaces |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | *(off)* | Transactional email; console fallback when unset |
+| `MFA_ENCRYPTION_KEY` | *(off)* | Separate random 32-byte key in 64 hex characters. Activates authenticator enrollment; retain securely outside the app for recovery. |
+| `BACKUP_ENABLED`, `BACKUP_DIR`, `BACKUP_ENCRYPTION_KEY`, `BACKUP_RETAIN_DAYS` | *(off)* | Explicit daily local encrypted backup configuration, separate key and finite 1–90-day retention (14 by default). Each success is fully restored and verified before old bundles are pruned. Off-site storage is not automatically provisioned. |
 | `LEAD_NOTIFICATION_EMAIL` | `support@grantconsole.com` | Internal lead-alert recipient; one valid email address, at most 200 characters. Does not change public support links, sender or Reply-To. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*` | *(off)* | Online checkout, portal and webhook |
 | `STRIPE_CHECKOUT_NOTE` | *(none)* | Optional line under the Checkout pay button, e.g. who issues receipts when the Stripe account is shared |
@@ -290,8 +292,8 @@ Launched 2026-09-06. Real organizations live in the same database as the seeded 
 This is a single-instance product with deliberate gaps.
 
 - **Storage is only durable on a persistent disk.** Point `DATA_DIR` at a mounted disk in production; the free Render tier loses local files on restart.
-- **No 2FA or SSO yet.** Password reset needs an email provider or an owner-issued link.
-- **Single-process SQLite.** Fine for a team-sized workload on one machine; it is not clustered and there is no connection pool, read replica, or backup job.
+- **Authenticator 2FA is opt-in per account when a separate `MFA_ENCRYPTION_KEY` is configured.** Single-use hashed recovery codes, replay protection, persistent account failure limits and session revocation cover sign-in, reset and invitation flows. Shared demo accounts cannot enroll. SSO and mandatory workspace-wide 2FA are not implemented. Keep the MFA key separately backed up; changing or losing it without migration prevents enrolled users authenticating.
+- **Single-process SQLite.** Fine for a team-sized workload on one machine; it is not clustered and there is no connection pool or read replica. An optional daily encrypted application backup/restore job is available with explicit configuration; same-disk bundles are not independent disaster recovery. See [backup and recovery](docs/backup-recovery.md).
 - **Sessions are database rows**, not a distributed store. Restarting with a generated dev secret invalidates cookies.
 - **Uploads are local files.** No virus scanning, no object storage, no content sniffing beyond the extension/MIME agreement — a valid-looking PDF is trusted to be one.
 - **Reporting packets print from the browser.** The packet page is designed for print/save-as-PDF and exports to CSV; there is no server-side PDF renderer.

@@ -1,9 +1,11 @@
 import { Router } from 'express';
+import { z } from 'zod';
+import { beginMfaSetup, checkMfaRate, failMfaAttempt, mfaAvailable, mfaEnabled, replaceRecoveryCodes, verifyMfa } from '../auth/mfa';
 
 import { config, isDemoMode } from '../config';
 import { clearAcquisition, readAcquisition } from '../lib/acquisition';
 import { dummyHash, hashPassword, passwordProblem, verifyPassword } from '../auth/password';
-import { clearSessionCookie, destroySession, destroyUserSessions } from '../auth/session';
+import { clearSessionCookie, destroySession, destroyUserSessions, resolveSession } from '../auth/session';
 import { currentSession, requireAuth } from '../auth/middleware';
 import { ApiError, conflict, forbidden, notFound, unauthenticated, validationError } from '../lib/errors';
 import { handler, parseBody } from '../lib/http';
@@ -130,18 +132,21 @@ function primaryOrgFor(req: Parameters<typeof currentSession>[0], userId: string
 router.post(
   '/sign-in',
   handler(async (req, res) => {
-    const { email, password } = parseBody(signInSchema, req.body);
+    const { email, password, mfaCode } = parseBody(signInSchema, req.body);
     const key = `${req.ip ?? 'local'}:${email}`;
     signInThrottle.hit(key);
 
-    const user = findUserByEmail(req, email);
+    const candidate = findUserByEmail(req, email);
 
     // Same message and comparable work whether the account exists or not: the
     // fallback is a real hash at the same cost, so an unknown email cannot be
     // distinguished by how quickly it fails.
-    const hash = user?.passwordHash ?? dummyHash();
+    const hash = candidate?.passwordHash ?? dummyHash();
     const ok = await verifyPassword(password, hash);
-    if (!user || !ok || !user.isActive) {
+    // Password verification yields. A reset, account removal or deactivation
+    // during bcrypt must also invalidate this in-flight sign-in attempt.
+    const user = candidate ? findUserByEmail(req, email) : undefined;
+    if (!candidate || !user || !ok || !user.isActive || user.id !== candidate.id || user.passwordHash !== hash) {
       throw unauthenticated('That email and password combination is not recognised.');
     }
 
@@ -150,8 +155,13 @@ router.post(
       throw unauthenticated('This account is not a member of any organization.');
     }
 
+    if (mfaEnabled(req.db, user.id)) {
+      checkMfaRate(req.db, user.id);
+      if (!mfaCode) { res.status(202).json({ mfaRequired: true }); return; }
+      if (!verifyMfa(req.db, user.id, mfaCode)) throw unauthenticated('That authenticator or recovery code is not valid.');
+    }
     signInThrottle.clear(key);
-    startSession(req, res, user.id, orgId);
+    startSession(req, res, user.id, orgId, true);
 
     logActivity(req.db, {
       orgId,
@@ -273,7 +283,7 @@ router.post(
     }
 
     destroySession(req.db, session.id);
-    startSession(req, res, session.userId, organizationId);
+    startSession(req, res, session.userId, organizationId, true);
     res.json(buildSessionPayload(req));
   }),
 );
@@ -301,8 +311,8 @@ router.post(
         ),
       });
       if (!result.sent && !config.isTest) {
-        // No provider: the link is logged so an operator can hand it over.
-        console.info(`[auth] password reset requested for ${user.email}; email not configured. Link: ${url}`);
+        // Never leak a usable recovery credential into operational logs.
+        console.warn('[auth] password reset email was not delivered; no reset token is written to logs.');
       }
     }
 
@@ -329,11 +339,12 @@ router.post(
 
     const passwordHash = await hashPassword(password);
     req.db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, userId);
-    // Every existing session is signed out; the person who reset is signed in fresh.
+    // Password reset must not bypass an enrolled second factor.
     destroyUserSessions(req.db, userId);
 
     const orgId = primaryOrgFor(req, userId);
-    if (!orgId) {
+    if (!orgId || mfaEnabled(req.db, userId)) {
+      clearSessionCookie(res);
       res.status(200).json({ ok: true, signedIn: false });
       return;
     }
@@ -417,10 +428,11 @@ router.post(
       throw new ApiError('NOT_FOUND', 'That invitation is no longer valid. Ask your organization to send a new one.');
     }
     const input = parseBody(acceptInviteSchema, req.body);
-    const now = new Date();
-
     let userId: string;
     let userName: string;
+    let userEmail: string;
+    let verifiedPasswordHash: string | undefined;
+    let pendingUser: { id: string; name: string; email: string; passwordHash: string } | undefined;
     let created = false;
 
     if (req.session) {
@@ -429,6 +441,7 @@ router.post(
       }
       userId = req.session.userId;
       userName = req.session.userName;
+      userEmail = req.session.userEmail;
     } else {
       const email = invite.email ?? input.email;
       if (!email) throw validationError('Enter your email address.', { email: 'Enter your email address.' });
@@ -439,8 +452,15 @@ router.post(
         if (!ok) {
           throw unauthenticated('An account with that email already exists. Enter its password to join, or reset it first.');
         }
+        if (mfaEnabled(req.db, existing.id)) {
+          checkMfaRate(req.db, existing.id);
+          if (!input.mfaCode) { res.status(202).json({ mfaRequired: true }); return; }
+          if (!verifyMfa(req.db, existing.id, input.mfaCode)) throw unauthenticated('That authenticator or recovery code is not valid.');
+        }
         userId = existing.id;
         userName = existing.name;
+        userEmail = existing.email;
+        verifiedPasswordHash = existing.passwordHash;
       } else {
         if (!input.name) throw validationError('Enter your name.', { name: 'Enter your name.' });
         const problem = passwordProblem(input.password);
@@ -448,44 +468,161 @@ router.post(
         const passwordHash = await hashPassword(input.password);
         userId = newId('usr');
         userName = input.name;
-        req.db
-          .prepare(
-            `INSERT INTO users (id, name, email, password_hash, title, is_active, created_at)
-             VALUES (?, ?, ?, ?, NULL, 1, ?)`,
-          )
-          .run(userId, input.name, email, passwordHash, now.toISOString());
+        userEmail = email;
+        pendingUser = { id: userId, name: input.name, email, passwordHash };
         created = true;
       }
     }
 
-    const already = req.db
-      .prepare('SELECT role FROM memberships WHERE org_id = ? AND user_id = ?')
-      .get(invite.org_id, userId) as { role: Role } | undefined;
-    if (!already) {
-      const status = workspaceStatusFor(req.db, invite.org_id);
-      if (status) assertSeatCapacity(req.db, invite.org_id, status, false, invite.role);
-      req.db
-        .prepare('INSERT INTO memberships (id, user_id, org_id, role, created_at) VALUES (?, ?, ?, ?, ?)')
-        .run(newId('mem'), userId, invite.org_id, invite.role, now.toISOString());
-    }
-    req.db
-      .prepare('UPDATE invites SET accepted_at = ?, accepted_by = ? WHERE id = ?')
-      .run(now.toISOString(), userId, invite.id);
-
-    logActivity(req.db, {
-      orgId: invite.org_id,
-      actorUserId: userId,
-      entityType: 'MEMBERSHIP',
-      entityId: userId,
-      action: 'JOINED',
-      summary: `${userName} joined as ${ROLE_LABELS[invite.role]}${created ? ' (new account)' : ''}`,
-    });
+    // Password hashing/comparison yields to other requests. Re-read the invite
+    // after every await, then claim it and create the account/membership under
+    // the same write lock. A concurrent accept, revoke or expiry must win over
+    // an earlier read of a live invite, without leaving an orphan new account.
+    const joinedOrgId = req.db.transaction(() => {
+      const now = new Date();
+      const liveInvite = findInviteByToken(req.db, req.params.token ?? '');
+      if (!liveInvite || !inviteIsLive(liveInvite, now)) {
+        throw new ApiError('NOT_FOUND', 'That invitation is no longer valid. Ask your organization to send a new one.');
+      }
+      if (liveInvite.email && liveInvite.email !== userEmail) throw forbidden('This invitation belongs to a different account.');
+      if (verifiedPasswordHash) {
+        const current = findUserByEmail(req, userEmail);
+        if (!current?.isActive || current.id !== userId || current.passwordHash !== verifiedPasswordHash) {
+          throw unauthenticated('Your account credentials changed. Sign in again before accepting the invitation.');
+        }
+      }
+      if (pendingUser) {
+        if (findUserByEmail(req, pendingUser.email)) throw conflict('An account with that email already exists. Sign in to accept the invitation.');
+        req.db.prepare(`INSERT INTO users (id, name, email, password_hash, title, is_active, created_at)
+          VALUES (?, ?, ?, ?, NULL, 1, ?)`)
+          .run(pendingUser.id, pendingUser.name, pendingUser.email, pendingUser.passwordHash, now.toISOString());
+      }
+      const claimed = req.db.prepare(`UPDATE invites SET accepted_at = ?, accepted_by = ?
+        WHERE id = ? AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ?`)
+        .run(now.toISOString(), userId, liveInvite.id, now.toISOString());
+      if (claimed.changes !== 1) throw new ApiError('NOT_FOUND', 'That invitation is no longer valid. Ask your organization to send a new one.');
+      const already = req.db
+        .prepare('SELECT role FROM memberships WHERE org_id = ? AND user_id = ?')
+        .get(liveInvite.org_id, userId) as { role: Role } | undefined;
+      if (!already) {
+        const status = workspaceStatusFor(req.db, liveInvite.org_id);
+        if (status) assertSeatCapacity(req.db, liveInvite.org_id, status, false, liveInvite.role);
+        req.db.prepare('INSERT INTO memberships (id, user_id, org_id, role, created_at) VALUES (?, ?, ?, ?, ?)')
+          .run(newId('mem'), userId, liveInvite.org_id, liveInvite.role, now.toISOString());
+      }
+      logActivity(req.db, {
+        orgId: liveInvite.org_id,
+        actorUserId: userId,
+        entityType: 'MEMBERSHIP',
+        entityId: userId,
+        action: 'JOINED',
+        summary: `${userName} joined as ${ROLE_LABELS[liveInvite.role]}${created ? ' (new account)' : ''}`,
+      });
+      return liveInvite.org_id;
+    }).immediate();
 
     if (req.session) destroySession(req.db, req.session.id);
-    startSession(req, res, userId, invite.org_id);
+    startSession(req, res, userId, joinedOrgId, true);
     res.status(created ? 201 : 200).json(buildSessionPayload(req));
   }),
 );
+
+/* ------------------------------------------------------ authenticator MFA */
+
+const mfaCredentials = z.object({ password: z.string().min(1).max(200), code: z.string().trim().max(80).default('') });
+
+async function reauthenticateMfa(req: Parameters<typeof currentSession>[0], password: string): Promise<void> {
+  const session = currentSession(req);
+  if (session.workspace.isDemo) throw forbidden('Security settings cannot be changed on shared demo accounts.');
+  checkMfaRate(req.db, session.userId);
+  const row = req.db.prepare('SELECT password_hash AS hash FROM users WHERE id = ?').get(session.userId) as { hash: string } | undefined;
+  const ok = await verifyPassword(password, row?.hash ?? dummyHash());
+  // Never resurrect a session revoked by a concurrent password reset, sign-out,
+  // membership removal or MFA change while bcrypt was running.
+  const freshSession = resolveSession(req.db, session.id);
+  const freshPassword = req.db.prepare('SELECT password_hash AS hash FROM users WHERE id = ?').get(session.userId) as { hash: string } | undefined;
+  if (!row || !freshSession || freshSession.userId !== session.userId || freshSession.orgId !== session.orgId || freshPassword?.hash !== row.hash) {
+    throw unauthenticated('Your account or session changed. Sign in again before changing security settings.');
+  }
+  if (freshSession.workspace.isDemo) throw forbidden('Security settings cannot be changed on shared demo accounts.');
+  req.session = freshSession;
+  checkMfaRate(req.db, session.userId);
+  if (!ok) {
+    failMfaAttempt(req.db, session.userId);
+    throw unauthenticated('Your current password is not correct.');
+  }
+}
+
+function rotateMfaSession(req: Parameters<typeof currentSession>[0], res: Parameters<typeof startSession>[1]): void {
+  const session = currentSession(req);
+  destroyUserSessions(req.db, session.userId);
+  startSession(req, res, session.userId, session.orgId, true);
+}
+
+router.get('/mfa', requireAuth, handler((req, res) => {
+  const userId = currentSession(req).userId;
+  res.setHeader('Cache-Control', 'no-store');
+  const count = req.db.prepare('SELECT COUNT(*) AS n FROM mfa_recovery_codes WHERE user_id = ?').get(userId) as { n: number };
+  res.json({ available: mfaAvailable(), enabled: mfaEnabled(req.db, userId), recoveryCodesRemaining: count.n });
+}));
+
+router.post('/mfa/setup', requireAuth, handler(async (req, res) => {
+  const { password } = parseBody(mfaCredentials, req.body);
+  await reauthenticateMfa(req, password);
+  const session = currentSession(req);
+  const secret = beginMfaSetup(req.db, session.userId, session.id);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ secret, issuer: 'GrantConsole', account: session.userEmail, expiresInSeconds: 600 });
+}));
+
+router.post('/mfa/enable', requireAuth, handler((req, res) => {
+  const { code } = parseBody(z.object({ code: z.string().trim().min(1).max(80) }), req.body);
+  const session = currentSession(req);
+  if (session.workspace.isDemo) throw forbidden('Security settings cannot be changed on shared demo accounts.');
+  const codes = req.db.transaction(() => {
+    if (!verifyMfa(req.db, session.userId, code, { setupSession: session.id, allowRecovery: false })) return null;
+    req.db.prepare('UPDATE user_mfa SET enabled_at = ?, pending_expires_at = NULL, pending_session_id = NULL WHERE user_id = ?')
+      .run(new Date().toISOString(), session.userId);
+    const recoveryCodes = replaceRecoveryCodes(req.db, session.userId);
+    rotateMfaSession(req, res);
+    return recoveryCodes;
+  }).immediate();
+  if (!codes) throw unauthenticated('The code is invalid or setup expired. Start again if necessary.');
+  logActivity(req.db, { orgId: session.orgId, actorUserId: session.userId, entityType: 'MEMBERSHIP', entityId: session.userId, action: 'MFA_ENABLED', summary: 'Two-factor authentication enabled' });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ recoveryCodes: codes, ...buildSessionPayload(req) });
+}));
+
+router.post('/mfa/disable', requireAuth, handler(async (req, res) => {
+  const { password, code } = parseBody(mfaCredentials, req.body);
+  await reauthenticateMfa(req, password);
+  const session = currentSession(req);
+  const changed = req.db.transaction(() => {
+    if (!verifyMfa(req.db, session.userId, code)) return false;
+    req.db.prepare('DELETE FROM user_mfa WHERE user_id = ?').run(session.userId);
+    req.db.prepare('DELETE FROM mfa_recovery_codes WHERE user_id = ?').run(session.userId);
+    req.db.prepare('DELETE FROM mfa_rate_limits WHERE user_id = ?').run(session.userId);
+    rotateMfaSession(req, res); return true;
+  }).immediate();
+  if (!changed) throw unauthenticated('That authenticator or recovery code is not valid.');
+  logActivity(req.db, { orgId: session.orgId, actorUserId: session.userId, entityType: 'MEMBERSHIP', entityId: session.userId, action: 'MFA_DISABLED', summary: 'Two-factor authentication disabled' });
+  res.json(buildSessionPayload(req));
+}));
+
+router.post('/mfa/recovery-codes', requireAuth, handler(async (req, res) => {
+  const { password, code } = parseBody(mfaCredentials, req.body);
+  await reauthenticateMfa(req, password);
+  const session = currentSession(req);
+  const codes = req.db.transaction(() => {
+    if (!verifyMfa(req.db, session.userId, code)) return null;
+    const recoveryCodes = replaceRecoveryCodes(req.db, session.userId);
+    rotateMfaSession(req, res); return recoveryCodes;
+  }).immediate();
+  if (!codes) throw unauthenticated('That authenticator or recovery code is not valid.');
+  logActivity(req.db, { orgId: session.orgId, actorUserId: session.userId, entityType: 'MEMBERSHIP', entityId: session.userId, action: 'MFA_RECOVERY_REPLACED', summary: 'Two-factor recovery codes replaced' });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ recoveryCodes: codes, ...buildSessionPayload(req) });
+}));
 
 /* ------------------------------------------------------------------- demo */
 

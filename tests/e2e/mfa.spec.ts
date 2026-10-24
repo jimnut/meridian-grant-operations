@@ -1,0 +1,33 @@
+import { expect, test } from '@playwright/test';
+import { totp } from '../../server/auth/mfa';
+
+test('a real workspace owner can enroll, require a second factor, and use a recovery code', async ({ page, context }) => {
+  const email = `mfa-${Date.now()}@example.invalid`;
+  const password = 'Synthetic-browser-password!2026';
+  const signup = await page.request.post('/api/auth/sign-up', { data: { name: 'MFA Browser Owner', email, password, organizationName: 'MFA browser synthetic org', timezone: 'Europe/London', fiscalYearStartMonth: 1 } });
+  expect(signup.status()).toBe(201);
+  await page.goto('/settings/account');
+  const panel = page.locator('.card').filter({ has: page.getByRole('heading', { name: 'Two-factor authentication', exact: true }) });
+  await expect(panel.getByText('Not enabled', { exact: true })).toBeVisible();
+  await panel.getByLabel('Current password', { exact: true }).fill(password);
+  await panel.getByRole('button', { name: 'Set up authenticator app' }).click();
+  const secret = await panel.getByLabel('Authenticator setup key').inputValue();
+  await panel.getByLabel('Six-digit authenticator code').fill(totp(secret));
+  await panel.getByRole('button', { name: 'Verify and enable two-factor authentication' }).click();
+  await expect(panel.getByText('These codes are shown once.', { exact: false })).toBeVisible();
+  const recovery = await panel.locator('li code').first().innerText();
+  await panel.getByRole('button', { name: 'I have saved my recovery codes' }).click();
+  await expect(panel.getByText('Enabled', { exact: true })).toBeVisible();
+  await context.clearCookies();
+  await page.goto('/signin');
+  await page.getByLabel('Work email').fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByLabel('Authenticator or recovery code')).toBeVisible();
+  expect((await page.request.get('/api/auth/session')).status()).toBe(401);
+  await page.getByLabel('Authenticator or recovery code').fill(recovery);
+  await page.getByRole('button', { name: 'Verify and sign in' }).click();
+  await expect(page.getByRole('heading', { name: /Good day, MFA/ })).toBeVisible();
+  await page.goto('/settings/account');
+  await expect(panel.getByText('9 recovery codes remaining', { exact: false })).toBeVisible();
+});
