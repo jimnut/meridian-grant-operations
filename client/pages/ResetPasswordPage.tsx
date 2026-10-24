@@ -15,6 +15,7 @@ export function ResetPasswordPage() {
   const token = params.get('token') ?? '';
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [signInRequired, setSignInRequired] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const reset = useMutation({
@@ -22,6 +23,7 @@ export function ResetPasswordPage() {
       api.post<SessionPayload | { ok: boolean; signedIn: false }>('/auth/reset-password', payload),
     onSuccess: async (payload) => {
       if ('csrfToken' in payload) setCsrfToken(payload.csrfToken);
+      else { setSignInRequired(true); setPassword(''); setConfirm(''); }
       await refresh();
     },
     onError: (error: unknown) => {
@@ -47,10 +49,10 @@ export function ResetPasswordPage() {
     <AuthLayout
       title="Choose a new password"
       headline="Choose a new password."
-      lede="Every other device is signed out once you save, and you are signed in here straight away."
+      lede="Every other device is signed out once you save. If two-factor authentication is enabled, sign in again with your authenticator or recovery code."
     >
       <h2 style={{ fontSize: 'var(--text-2xl)', letterSpacing: '-0.02em' }}>New password</h2>
-      {!token ? (
+      {signInRequired ? <p className="banner banner--info">Your password was changed. <Link to="/signin">Sign in with your new password and second factor.</Link></p> : !token ? (
         <div className="stack stack-4" style={{ marginTop: 'var(--space-4)' }}>
           <div className="banner banner--amber" role="alert">
             <CircleAlert size={17} className="banner__icon" aria-hidden="true" />

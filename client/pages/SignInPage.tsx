@@ -8,7 +8,7 @@ import { api, ApiRequestError, setCsrfToken } from '../lib/api';
 import { useSession } from '../lib/session';
 import { Avatar, Field, Input } from '../components/ui';
 import { AuthLayout } from '../components/AuthLayout';
-import type { SessionPayload } from '../../shared/types';
+import type { SignInResult } from '../../shared/types';
 
 interface DemoAccount {
   name: string;
@@ -23,6 +23,8 @@ export function SignInPage() {
   const { refresh } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
@@ -41,9 +43,11 @@ export function SignInPage() {
   });
 
   const signIn = useMutation({
-    mutationFn: (credentials: { email: string; password: string }) =>
-      api.post<SessionPayload>('/auth/sign-in', credentials),
+    mutationFn: (credentials: { email: string; password: string; mfaCode?: string }) =>
+      api.post<SignInResult>('/auth/sign-in', credentials),
     onSuccess: async (payload) => {
+      if ('mfaRequired' in payload) { setMfaRequired(true); setPendingEmail(null); setFormError(null); return; }
+      setPassword(''); setMfaCode('');
       setCsrfToken(payload.csrfToken);
       setFormError(null);
       await refresh();
@@ -63,11 +67,12 @@ export function SignInPage() {
       setFormError('Enter your email address and password.');
       return;
     }
-    signIn.mutate({ email: email.trim(), password });
+    signIn.mutate({ email: email.trim(), password, mfaCode: mfaRequired ? mfaCode : undefined });
   };
 
   const signInAsDemoAccount = (account: DemoAccount) => {
     if (!demo) return;
+    setMfaRequired(false); setMfaCode('');
     setEmail(account.email);
     setPassword(demo.password);
     setPendingEmail(account.email);
@@ -127,9 +132,13 @@ export function SignInPage() {
           />
         </Field>
 
+        {mfaRequired && <Field label="Authenticator or recovery code" htmlFor="signin-mfa" hint="Enter the six-digit code from your authenticator, or one unused recovery code.">
+          <Input id="signin-mfa" name="mfaCode" autoComplete="one-time-code" value={mfaCode} maxLength={80} required autoFocus onChange={(event) => setMfaCode(event.target.value)} />
+        </Field>}
+
         <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy}>
           <LockKeyhole size={16} aria-hidden="true" />
-          {busy && !pendingEmail ? 'Signing in…' : 'Sign in'}
+          {busy && !pendingEmail ? 'Signing in…' : mfaRequired ? 'Verify and sign in' : 'Sign in'}
           <ArrowRight size={17} aria-hidden="true" />
         </button>
         <p className="signin__forgot">

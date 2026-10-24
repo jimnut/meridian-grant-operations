@@ -103,6 +103,7 @@ const probability = z
 export const signInSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address.').max(200),
   password: z.string().min(1, 'Enter your password.').max(200),
+  mfaCode: z.string().trim().max(80).optional(),
 });
 
 export const switchOrgSchema = z.object({
@@ -384,6 +385,7 @@ export const inviteSchema = z.object({
 });
 
 export const acceptInviteSchema = z.object({
+  mfaCode: z.string().trim().max(80).optional(),
   name: optionalText(120),
   email: optionalEmail,
   password: z.union([z.string().max(200), z.undefined(), z.null()]).transform((v) => v ?? ''),

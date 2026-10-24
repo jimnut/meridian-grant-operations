@@ -45,6 +45,8 @@ export interface SessionPayload {
   workspace: WorkspaceStatus;
 }
 
+export type SignInResult = SessionPayload | { mfaRequired: true };
+
 export interface Invite {
   id: string;
   email: string | null;

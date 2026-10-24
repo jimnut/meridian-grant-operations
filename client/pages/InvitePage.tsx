@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircleAlert, UserPlus } from 'lucide-react';
 
 import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '../../shared/constants';
-import type { InvitePreview, SessionPayload } from '../../shared/types';
+import type { InvitePreview, SignInResult } from '../../shared/types';
 import { api, ApiRequestError, setCsrfToken } from '../lib/api';
 import { useSession } from '../lib/session';
 import { AuthLayout } from '../components/AuthLayout';
@@ -14,7 +14,8 @@ export function InvitePage() {
   const { token = '' } = useParams();
   const { session, refresh } = useSession();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', mfaCode: '' });
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -26,8 +27,9 @@ export function InvitePage() {
 
   const accept = useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
-      api.post<SessionPayload>(`/auth/invites/${encodeURIComponent(token)}/accept`, payload),
+      api.post<SignInResult>(`/auth/invites/${encodeURIComponent(token)}/accept`, payload),
     onSuccess: async (payload) => {
+      if ('mfaRequired' in payload) { setMfaRequired(true); return; }
       setCsrfToken(payload.csrfToken);
       queryClient.clear();
       await refresh();
@@ -58,7 +60,7 @@ export function InvitePage() {
     if (!form.password) next.password = 'Enter a password.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
-    accept.mutate({ name: form.name.trim() || undefined, email: invitedEmail ?? form.email.trim(), password: form.password });
+    accept.mutate({ name: form.name.trim() || undefined, email: invitedEmail ?? form.email.trim(), password: form.password, mfaCode: form.mfaCode });
   };
 
   return (
@@ -136,6 +138,9 @@ export function InvitePage() {
             </>
           )}
 
+          {mfaRequired && !session && <Field label="Authenticator or recovery code" htmlFor="invite-mfa" hint="Your existing account has two-factor authentication enabled.">
+            <Input id="invite-mfa" autoComplete="one-time-code" value={form.mfaCode} required maxLength={80} onChange={(e) => setForm({ ...form, mfaCode: e.target.value })} />
+          </Field>}
           <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={accept.isPending}>
             <UserPlus size={16} aria-hidden="true" />
             {accept.isPending ? 'Joining…' : `Join ${data.organizationName}`}

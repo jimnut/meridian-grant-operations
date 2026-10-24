@@ -3,6 +3,7 @@ import { createApp } from './app';
 import { config } from './config';
 import { ensureDataDirs, getDb } from './db/connection';
 import { startScheduler } from './lib/scheduler';
+import { startBackupScheduler } from './lib/backup-scheduler';
 import { mailerConfigured } from './lib/mailer';
 import { stripeConfigured, webhookConfigured } from './lib/stripe';
 import { buildCommercialSummary } from './services/commercial-summary';
@@ -18,6 +19,7 @@ function main(): void {
 
   const app = createApp({ db, serveStatic: true });
   const stopScheduler = startScheduler(db);
+  const stopBackups = startBackupScheduler(db, config.uploadsDir);
 
   // Bind to loopback unless HOST is set explicitly; see server/config.ts.
   const server = app.listen(config.port, config.host, () => {
@@ -47,6 +49,7 @@ function main(): void {
   const shutdown = (signal: string) => {
     console.info(`\n[${signal}] shutting down…`);
     stopScheduler();
+    stopBackups();
     server.close(() => {
       db.close();
       process.exit(0);

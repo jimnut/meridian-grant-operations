@@ -6,7 +6,7 @@
  * never taken from client input.
  */
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -70,6 +70,25 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
+CREATE TABLE IF NOT EXISTS user_mfa (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  encrypted_secret TEXT NOT NULL,
+  enabled_at TEXT,
+  last_step INTEGER NOT NULL DEFAULT -1,
+  pending_expires_at INTEGER,
+  pending_session_id TEXT
+);
+CREATE TABLE IF NOT EXISTS mfa_recovery_codes (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash TEXT NOT NULL,
+  PRIMARY KEY(user_id, code_hash)
+);
+CREATE TABLE IF NOT EXISTS mfa_rate_limits (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  window_started INTEGER NOT NULL,
+  failures INTEGER NOT NULL DEFAULT 0
+);
 
 CREATE TABLE IF NOT EXISTS funders (
   id          TEXT PRIMARY KEY,
@@ -342,6 +361,7 @@ CREATE TABLE IF NOT EXISTS notification_log (
  * applied idempotently by inspecting `PRAGMA table_info` at startup.
  */
 export const COLUMN_MIGRATIONS: ReadonlyArray<{ table: string; column: string; ddl: string }> = [
+  { table: 'sessions', column: 'mfa_verified', ddl: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'users', column: 'last_sign_in_at', ddl: 'TEXT' },
   { table: 'organizations', column: 'plan', ddl: "TEXT NOT NULL DEFAULT 'trial'" },
   { table: 'organizations', column: 'subscription_status', ddl: "TEXT NOT NULL DEFAULT 'trialing'" },

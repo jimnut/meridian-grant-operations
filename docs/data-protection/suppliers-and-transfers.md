@@ -1,0 +1,49 @@
+# GrantConsole suppliers, locations and transfer assessment
+
+**Working register, 25 October 2026.** Public terms reviewed; actual account agreements, settings and acceptance evidence remain to be confirmed. The rows are not a representation that every supplier is already contractually approved by a customer. Attach a completed, dated version to each accepted customer DPA.
+
+## Data flows and supplier register
+
+| Supplier / role | Data actually relevant to this service | Location / international access | Current evidence and next step |
+| --- | --- | --- | --- |
+| Render Services, Inc.; infrastructure subprocessor for workspace processing; separate account-data role as applicable | Application requests, SQLite customer workspace database, uploads, operational logs; persistent-disk snapshots | Application/disk reported in Frankfurt, Germany; this does not establish all support, logs, backup or onward-access locations | [Public DPA](https://render.com/dpa) includes processor terms and UK-transfer provisions. Record contracting account/entity, applicable version/acceptance, service/disk region, snapshot locations, support access, onward subprocessors and applicable transfer basis. Render's DPA describes US processing: Frankfurt storage alone cannot support an EU-only processing claim. |
+| Plus Five Five, Inc. (Resend); transactional-email subprocessor to the extent sending customer-directed notices | Recipient names/emails, organisation names, invitations/reset links, trial notices, weekly grant/deadline/task titles and relevant dates; delivery metadata | US entity; public terms describe primary US processing. Actual account locations, retention and provider-access countries need review | [Public DPA](https://resend.com/legal/dpa) incorporates UK-transfer clauses and says it becomes binding with the relevant agreement or execution. This is not proof of this account's acceptance/version. It describes deletion within 90 days of account termination, which is not a per-message erasure guarantee. Confirm applicable particulars, subprocessors, message/log retention, deletion route and tracking settings. Avoid sensitive titles and do not email evidence attachments. |
+| Stripe; billing provider with processor and independent-controller functions, according to its terms | Billing contact, customer/subscription identifiers, plan and transaction metadata. Card details go directly to hosted Stripe Checkout | Stripe terms describe US/global transfers; exact contracting entity and account region pending | [Public DPA](https://stripe.com/legal/dpa) and [transfer addendum](https://stripe.com/legal/dta). Confirm actual contracting entity, incorporated terms and transfer basis. Do not describe Stripe as only a workspace subprocessor or imply it receives grant files. Separate mandatory payment/compliance retention from customer-directed workspace processing. |
+| Google; optional public marketing analytics, outside the workspace-processing scope | Public page/device/browser events and approximate location when enabled; verify actual event payloads and cookie settings | Relevant Google entity, account settings, storage/access and onward transfers need review | [Published data-processing terms](https://business.safety.google/adsprocessorterms/). Current app source excludes GA from authenticated workspaces and authentication pages. Confirm production configuration, applicable account terms, lawful basis and current UK analytics/cookie requirements; DNT/GPC handling alone does not decide those requirements. Do not list analytics as receiving grant records. |
+| Privileged operator(s), staff or contractors; authorised personnel or separate processor according to relationship | Potential access to database, uploads, secrets, hosting logs and backups within permissions | **Not confirmed.** A UK business address does not establish where an administrator works | Record each person's identity, country, legal relationship, confidentiality obligation, access approval, MFA and support-access limits. If a separate overseas contractor/entity receives access, assess it as a supplier/transfer route rather than treating it as an employee by assumption. |
+| Additional independent backup destination, if enabled | Encrypted database/upload backup packages and metadata | Not selected/verified in this register | Do not silently introduce a new cloud-storage processor. Record entity, region, DPA, access, key custody, retention, transfer basis and customer authorisation before customer data is copied. A configured destination is not evidence that copies exist or are restorable. |
+
+No other service is approved to receive Customer Personal Data by this register. Review monitoring, CI/deployment integrations, support mailbox and local diagnostic workflows to identify any omitted personal-data processors. Developer tools should use synthetic fixtures; private source-code handling alone does not establish workspace-data processing.
+
+## Evidence required for each supplier
+
+Maintain an account-level record rather than merely bookmarking a DPA:
+
+1. Correct legal supplier and operator account entity; current applicable agreement/DPA version and how/when incorporated or accepted. Do not execute new obligations under an unconfirmed operator legal name.
+2. Exact categories and purposes, including logs, email content, authentication links and backup metadata; minimise them at source.
+3. Production region and every relevant support/admin, recovery and onward-access country. Distinguish regional storage promises from global service/support access.
+4. Relevant subprocessors, change-notification subscription and an internal response owner. Render's published DPA offers ten-day notice for notified subscribers; a blanket 30-day customer promise requires an additional workable process or specific customer authorisation.
+5. Adequacy or other applicable international-transfer mechanism for each relevant route; scope, completed parties/annexes, effective terms and documented review. A US supplier's assertion of a Data Privacy Framework route must be checked against current UK Extension eligibility for the actual entity and data before reliance.
+6. Actual retention, erasure requests, support access, security measures, breach notice terms and recovery assurances; resolve any incompatibility with the customer agreement.
+
+## International access and transfer worksheet
+
+Use the current [ICO transfer guide](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/a-brief-guide-to-international-transfers/) and [detailed compliance guidance](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/a-guide-to-international-transfers/how-do-we-comply-with-the-transfer-rules-if-were-initiating-the-restricted-transfer/). The Data (Use and Access) Act terminology includes a **data protection test**; ICO also uses **transfer risk assessment (TRA)**. This worksheet is not itself a completed test or transfer contract.
+
+| Assessment field | Record before approval |
+| --- | --- |
+| Flow and owner | Source, receiving legal entity, onward recipients, origin/destination/access countries, controller/processor roles, who initiates the transfer |
+| Data and purpose | Minimum categories, people, volume/frequency, sensitivity, duration and why the route is needed |
+| Restricted-transfer analysis | Applicable UK GDPR scope, separate recipient/entity status and overseas availability; conclusion with reasons |
+| Route | Current UK adequacy scope or a valid appropriate safeguard; for an IDTA/UK Addendum, completed parties/annexes, signature/incorporation and evidence it applies to this account/data |
+| Protection assessment when needed | Applicable destination law/practice and access risks; enforceability, rights/remedies, likelihood and severity; evidence and proportionate reasoning that protection is not materially lower |
+| Supplementary measures | Minimisation/redaction, TLS, at-rest encryption, separate backup-key custody, access countries/approval, least privilege, MFA, access records and incident/deletion controls, with limits |
+| Decision | Approver, date, permitted scope, residual risks, conditions, customer instructions, review date and change triggers |
+
+Assess each leg separately, including onward support and backup access. Germany hosting may fall within applicable UK adequacy, but it does not establish that transfers to a US contracting provider, its onward recipients or overseas support are covered. Record the actual legal structure rather than assuming the disk region determines the answer.
+
+Remote access by an overseas employee of the same legal entity is not automatically a restricted transfer to a separate organisation. It still needs security, instructions and transparent access-location assessment. Access by a separate overseas contractor, company or other supplier must be assessed on its own facts. See [ICO's transfer identification guidance](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/international-transfers/a-guide-to-international-transfers/are-we-making-a-restricted-transfer/).
+
+Encryption at rest on infrastructure controlled by the receiver does not make that receiver unable to access plaintext. Customer permission for support does not substitute for any required transfer mechanism. Do not use routine consent or an emergency exception as a standing solution for systematic service transfers. If a route cannot be supported, stop the affected new processing and obtain an acceptable alternative before approving it.
+
+Review on new supplier/subprocessor, changed access country, substantial data scope change, legal/adequacy change, provider incident or at least annually. Record unresolved facts openly; do not turn this worksheet into a positive conclusion by filling only the headings.

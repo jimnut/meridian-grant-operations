@@ -9,6 +9,7 @@ export default defineConfig({
     // Keep test runs entirely off the demo database and uploads directory.
     env: {
       DATA_DIR: './.test-data',
+      MFA_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
       SESSION_SECRET: 'test-session-secret-not-used-in-production',
       // Billing under test: the webhook can be exercised with signed payloads,
       // but no price ids means checkout never reaches the network.
