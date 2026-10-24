@@ -1,3 +1,4 @@
+import { loadLeadForm } from '../helpers/lead-form';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -12,6 +13,14 @@ import { resetPublicThrottles } from '../../server/routes/public';
 import { PLANS } from '../../shared/plans';
 import type { SessionPayload } from '../../shared/types';
 import { createTestContext, del, post, seedContext, signIn, DEMO_USERS, type Client, type TestContext } from '../helpers/context';
+
+
+let currentFormToken = '';
+async function prepareForm(app: import('node:http').Server) {
+  const loaded = await loadLeadForm(app);
+  currentFormToken = loaded.token;
+  return loaded;
+}
 
 let context: TestContext;
 
@@ -94,30 +103,28 @@ describe('pricing page', () => {
 
 describe('lead capture', () => {
   it('stores JSON leads and redirects plain form posts to the thank-you page', async () => {
-    const json = await request(context.app)
-      .post('/api/public/leads')
-      .send({ email: 'ed@nonprofit.org', name: 'Ed Director', organization: 'Helping Hands', message: 'We manage 14 grants.', source: 'pricing' });
+    const json = await request(context.app).post('/api/public/leads').set('Cookie', (await prepareForm(context.app)).cookie)
+      .send({ ...{ email: 'ed@nonprofit.org', name: 'Ed Director', organization: 'Helping Hands', message: 'We manage 14 grants.', source: 'pricing' }, formToken: currentFormToken });
     expect(json.status).toBe(201);
     const stored = context.db.prepare('SELECT * FROM leads WHERE email = ?').get('ed@nonprofit.org') as { source: string; organization: string };
     expect(stored.source).toBe('pricing');
     expect(stored.organization).toBe('Helping Hands');
 
-    const form = await request(context.app)
-      .post('/api/public/leads')
+    const form = await request(context.app).post('/api/public/leads').set('Cookie', (await prepareForm(context.app)).cookie)
       .set('Accept', 'text/html')
       .type('form')
-      .send({ email: 'form@nonprofit.org', message: 'Hello', source: 'contact' });
+      .send({ ...{ email: 'form@nonprofit.org', message: 'Hello', source: 'contact' }, formToken: currentFormToken });
     expect(form.status).toBe(303);
     expect(form.headers.location).toBe('/contact/thanks');
     const thanks = await request(context.app).get('/contact/thanks');
     expect(thanks.status).toBe(200);
     expect(thanks.text).toContain('Message received');
 
-    const bot = await request(context.app).post('/api/public/leads').send({ email: 'bot@spam.org', website: 'x' });
+    const bot = await request(context.app).post('/api/public/leads').set('Cookie', (await prepareForm(context.app)).cookie).send({ ...{ email: 'bot@spam.org', website: 'x' }, formToken: currentFormToken });
     expect(bot.status).toBe(202);
     expect(context.db.prepare('SELECT 1 AS ok FROM leads WHERE email = ?').get('bot@spam.org')).toBeUndefined();
 
-    const invalid = await request(context.app).post('/api/public/leads').send({ email: 'not-an-email' });
+    const invalid = await request(context.app).post('/api/public/leads').set('Cookie', (await prepareForm(context.app)).cookie).send({ ...{ email: 'not-an-email' }, formToken: currentFormToken });
     expect(invalid.status).toBe(422);
   });
 

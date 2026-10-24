@@ -1,3 +1,4 @@
+import { loadLeadForm } from '../helpers/lead-form';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -9,6 +10,14 @@ vi.hoisted(() => {
 import { config, resolveLeadNotificationEmail } from '../../server/config';
 import { setMailTransport, type MailMessage } from '../../server/lib/mailer';
 import { createTestContext, type TestContext } from '../helpers/context';
+
+
+let currentFormToken = '';
+async function prepareForm(app: import('node:http').Server) {
+  const loaded = await loadLeadForm(app);
+  currentFormToken = loaded.token;
+  return loaded;
+}
 
 let context: TestContext;
 const outbox: MailMessage[] = [];
@@ -32,9 +41,8 @@ afterAll(async () => {
 
 describe('internal lead notifications', () => {
   it('routes the captured alert to the configured inbox and the acknowledgment to the visitor', async () => {
-    const response = await request(context.app)
-      .post('/api/public/leads')
-      .send({ email: 'visitor@example.org', organization: 'Example Nonprofit', message: 'Please explain grant tracking.', source: 'contact' });
+    const response = await request(context.app).post('/api/public/leads').set('Cookie', (await prepareForm(context.app)).cookie)
+      .send({ ...{ email: 'visitor@example.org', organization: 'Example Nonprofit', message: 'Please explain grant tracking.', source: 'contact' }, formToken: currentFormToken });
 
     expect(response.status).toBe(201);
     expect(config.leadNotificationEmail).toBe('team-inbox@example.org');

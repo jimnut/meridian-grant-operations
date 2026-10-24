@@ -16,9 +16,18 @@ export function leadFingerprint(input: { email: string; message: string | null; 
     .digest('hex');
 }
 
-/** A narrow triage signal, never a name/domain-based rejection of a real person. */
+/** Content triage only; never reject a language, nationality or email provider. */
 export function leadFlag(input: { name: string | null; organization: string | null; message: string | null }): string | null {
-  const repeated = input.name?.trim();
+  const normalized = (value: string | null) => (value ?? '').normalize('NFKC').replace(/[\u200B-\u200D\u2060\uFEFF]/g, '').trim();
+  const name = normalized(input.name);
+  const organization = normalized(input.organization);
+  const message = normalized(input.message);
+  // Identity fields must not turn our notifications or acknowledgements into link spam.
+  if (/(?:https?:\/\/|www\.)/i.test(`${name} ${organization}`)) return 'identity_contains_link';
+  if (/[\r\n]/.test(`${name}${organization}`)) return 'identity_contains_newline';
+  if (name.length >= 24 && name === organization && name === message) return 'repeated_message_fields';
+  if ((message.match(/https?:\/\//gi)?.length ?? 0) > 3) return 'excessive_message_links';
+  const repeated = name;
   const opaque = (value: string) => /^[A-Z0-9]{16,80}$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 5;
   if (repeated && repeated === input.organization?.trim() && opaque(repeated) && input.message && opaque(input.message.trim())) {
     return 'repeated_opaque_fields';

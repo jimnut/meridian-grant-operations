@@ -392,6 +392,7 @@ export const acceptInviteSchema = z.object({
 export const LEAD_SOURCES = ['contact', 'pricing', 'pilot', 'demo', 'security', 'import-help'] as const;
 
 export const leadSchema = z.object({
+  formToken: z.string().max(200).optional(),
   email: emailField,
   name: optionalText(120),
   organization: optionalText(160),
