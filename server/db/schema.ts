@@ -6,7 +6,7 @@
  * never taken from client input.
  */
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 export const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -318,6 +318,9 @@ CREATE TABLE IF NOT EXISTS lead_mail_outbox (
   last_error TEXT,
   created_at INTEGER NOT NULL,
   sent_at INTEGER,
+  retry_generation INTEGER NOT NULL DEFAULT 0,
+  delivery_status TEXT NOT NULL DEFAULT 'pending',
+  delivery_event_at INTEGER NOT NULL DEFAULT 0,
   UNIQUE (lead_id, kind)
 );
 CREATE INDEX IF NOT EXISTS idx_lead_mail_due ON lead_mail_outbox(status, next_attempt_at);
@@ -331,6 +334,26 @@ CREATE TABLE IF NOT EXISTS lead_mail_provider_state (
   blocked_until INTEGER NOT NULL,
   reason TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS lead_mail_receipts (
+  provider_id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL REFERENCES lead_mail_outbox(id) ON DELETE CASCADE,
+  generation INTEGER NOT NULL,
+  accepted_at INTEGER NOT NULL,
+  delivery_status TEXT NOT NULL DEFAULT 'accepted',
+  event_at INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS lead_mail_delivery_events (
+  id TEXT PRIMARY KEY,
+  provider_id TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  type TEXT NOT NULL,
+  reason TEXT,
+  occurred_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL,
+  source TEXT NOT NULL,
+  applied_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_lead_mail_events_provider ON lead_mail_delivery_events(provider_id, applied_at);
 
 CREATE TABLE IF NOT EXISTS billing_events (
   id           TEXT PRIMARY KEY,
@@ -414,6 +437,9 @@ export const COLUMN_MIGRATIONS: ReadonlyArray<{ table: string; column: string; d
   { table: 'leads', column: 'receipt_hash', ddl: 'TEXT' },
   { table: 'leads', column: 'receipt_expires_at', ddl: 'TEXT' },
   { table: 'leads', column: 'receipt_consumed_at', ddl: 'TEXT' },
+  { table: 'lead_mail_outbox', column: 'retry_generation', ddl: 'INTEGER NOT NULL DEFAULT 0' },
+  { table: 'lead_mail_outbox', column: 'delivery_status', ddl: "TEXT NOT NULL DEFAULT 'pending'" },
+  { table: 'lead_mail_outbox', column: 'delivery_event_at', ddl: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'funders', column: 'is_sample', ddl: 'INTEGER NOT NULL DEFAULT 0' },
   { table: 'grants', column: 'is_sample', ddl: 'INTEGER NOT NULL DEFAULT 0' },
 ];

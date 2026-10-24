@@ -98,9 +98,11 @@ router.get('/lead-mail', handler((req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json({
     counts: req.db.prepare('SELECT status, COUNT(*) AS count FROM lead_mail_outbox GROUP BY status').all(),
+    deliveryCounts: req.db.prepare('SELECT delivery_status, COUNT(*) AS count FROM lead_mail_outbox GROUP BY delivery_status').all(),
     provider: req.db.prepare('SELECT blocked_until, reason FROM lead_mail_provider_state WHERE id = 1').get() ?? null,
     jobs: req.db.prepare(`SELECT id, lead_id, kind, recipient, status, attempts, next_attempt_at,
-      provider_id, last_error, created_at, sent_at FROM lead_mail_outbox ORDER BY created_at DESC LIMIT 100`).all(),
+      provider_id, last_error, created_at, sent_at, retry_generation, delivery_status, delivery_event_at
+      FROM lead_mail_outbox ORDER BY created_at DESC LIMIT 100`).all(),
     definition: 'sent means provider accepted the request, not inbox delivery or a substantive human response. Historical leads are not automatically queued.',
   });
 }));

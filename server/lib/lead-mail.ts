@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { config } from '../config';
 import type { Db } from '../db/connection';
 import { mailerConfigured, renderHtml, sendMail, type MailMessage, type MailResult } from './mailer';
+import { applyLeadMailDeliveryEvents } from './lead-mail-events';
 
 const MINUTE = 60_000;
 export const LEAD_MAIL_LEASE_MS = MINUTE;
@@ -17,6 +18,7 @@ interface Job {
   id: string; lead_id: string; kind: string; recipient: string; envelope: string; status: string;
   attempts: number; attempt_started_at: number | null; ambiguous_since: number | null;
   lease_token: string | null; lease_until: number | null;
+  retry_generation: number;
 }
 
 /** Configured holds are persisted before any job can be claimed; removing env never releases a hold. */
@@ -112,7 +114,11 @@ export function dispatchLeadMail(db: Db, at?: number): Promise<number> {
     for (let i = 0; i < 10; i += 1) {
       const job = claim(db, clock());
       if (!job) break;
-      const result = await sendMail(JSON.parse(job.envelope) as MailMessage);
+      const envelope = JSON.parse(job.envelope) as MailMessage;
+      // Only a definitive, authenticated quota failure advances the key. Ambiguous
+      // HTTP retries retain their generation and the immutable request payload.
+      const result = await sendMail({ ...envelope, idempotencyKey: job.retry_generation
+        ? `${envelope.idempotencyKey}/retry/${job.retry_generation}` : envelope.idempotencyKey });
       const now = clock();
       db.transaction(() => {
         // A stale worker must not overwrite a newer lease or a newly applied hold.
@@ -121,8 +127,14 @@ export function dispatchLeadMail(db: Db, at?: number): Promise<number> {
         if (!owned) return;
         if (result.sent) {
           db.prepare(`UPDATE lead_mail_outbox SET status = 'sent', provider_id = ?, sent_at = ?, last_error = NULL,
+            delivery_status = 'accepted', delivery_event_at = 0,
             lease_token = NULL, lease_until = NULL WHERE id = ? AND lease_token = ?`)
             .run(result.id ?? null, now, job.id, job.lease_token);
+          if (result.id) {
+            db.prepare(`INSERT OR IGNORE INTO lead_mail_receipts (provider_id, job_id, generation, accepted_at)
+              VALUES (?, ?, ?, ?)`).run(result.id, job.id, job.retry_generation, now);
+            applyLeadMailDeliveryEvents(db, result.id, now);
+          }
           accepted += 1;
           return;
         }
