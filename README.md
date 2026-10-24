@@ -283,6 +283,7 @@ Launched 2026-09-06. Real organizations live in the same database as the seeded 
 - **Import**: `/grants/import` parses CSV in the browser, auto-maps columns, and `POST /api/grants/import` creates funders and grants (with a first report deliverable), skipping duplicates and reporting each row.
 - **Onboarding**: checklist on the Today page, a one-click sample portfolio (`is_sample` rows, removable), and organization deletion from Settings → Danger zone.
 - **Public site**: `/pricing` (Offer + FAQPage structured data), contact and pricing lead forms (`POST /api/public/leads`, stored, logged and emailed), customer-grade Terms, Privacy and Security pages.
+- **Contact-form abuse controls**: `/contact` and `/pricing` issue browser-bound, signed two-hour tokens; forms require cookies and each token can be used once. Responses containing tokens are private and uncached. SQLite persists consumed tokens and notification reservations across restarts. Identity-field links/newlines and suspicious repeated content are flagged without alert or acknowledgment emails. Unflagged submissions can reserve at most 5 notification pairs per rolling hour / 15 per day globally, 2 per hour / 4 per day per email, and 3 per hour per connection. Excess submissions remain stored as flagged leads for owner review; failed mail attempts still consume the reservation. These controls limit abuse but do not prove a sender is human.
 
 ## Honest limitations
 

@@ -7,6 +7,7 @@
 import { Router } from 'express';
 
 import { config } from '../config';
+import { consumeLeadToken, reserveLeadNotification, verifiedLeadToken } from '../lib/lead-abuse';
 import { handler, parseBody } from '../lib/http';
 import { newId } from '../lib/ids';
 import { clearLeadReceipt, issueLeadReceipt, leadFingerprint, leadFlag, LEAD_DUPLICATE_MS } from '../lib/lead-quality';
@@ -46,20 +47,29 @@ router.post(
     leadThrottle.hit(req.ip ?? 'local');
 
     const now = new Date();
+    const tokenHash = verifiedLeadToken(req, input.formToken, now.getTime());
+    if (!tokenHash) {
+      res.setHeader('Cache-Control', 'no-store');
+      if (html) res.status(403).type('html').send('<!doctype html><html lang="en"><meta charset="utf-8"><title>Please reload the form</title><h1>Please reload the form</h1><p>This form expired or could not be verified. Copy your message, then open a fresh <a href="/contact">contact form</a> or <a href="/pricing">pricing form</a> and try again. Cookies must be enabled.</p></html>');
+      else res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Reload the contact or pricing form and try again.' } });
+      return;
+    }
     const fingerprint = leadFingerprint(input);
-    const reason = leadFlag(input);
+    let reason = leadFlag(input);
     const id = req.db.transaction(() => {
+      if (!consumeLeadToken(req.db, tokenHash, now.getTime())) return null;
       const duplicate = req.db.prepare('SELECT id FROM leads WHERE fingerprint = ? AND created_at > ? LIMIT 1')
         .get(fingerprint, new Date(now.getTime() - LEAD_DUPLICATE_MS).toISOString());
       if (duplicate) return null;
       const leadId = newId('lead');
+      if (!reason) reason = reserveLeadNotification(req.db, { id: leadId, email: input.email, ip: req.ip ?? 'local' }, now.getTime());
       req.db.prepare(`INSERT INTO leads
         (id, email, name, organization, message, source, created_at, fingerprint, quality_status, quality_reason)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(leadId, input.email, input.name, input.organization, input.message, input.source,
           now.toISOString(), fingerprint, reason ? 'flagged' : 'unreviewed', reason);
       return leadId;
-    })();
+    }).immediate();
     if (!id || reason) {
       // Keep the same neutral response; flagged records remain reviewable by the
       // owner, without sending an acknowledgement to a potentially spoofed address.

@@ -6,7 +6,7 @@
  * never taken from client input.
  */
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -266,6 +266,20 @@ CREATE TABLE IF NOT EXISTS leads (
   receipt_consumed_at TEXT,
   created_at   TEXT NOT NULL
 );
+
+-- Only consumed form tokens are stored. These and mail reservations survive restarts.
+CREATE TABLE IF NOT EXISTS lead_form_uses (
+  token_hash TEXT PRIMARY KEY,
+  used_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_lead_form_uses_time ON lead_form_uses(used_at);
+CREATE TABLE IF NOT EXISTS lead_mail_attempts (
+  lead_id TEXT PRIMARY KEY,
+  email_hash TEXT NOT NULL,
+  ip_hash TEXT NOT NULL,
+  attempted_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_lead_mail_attempts_time ON lead_mail_attempts(attempted_at);
 
 CREATE TABLE IF NOT EXISTS billing_events (
   id           TEXT PRIMARY KEY,

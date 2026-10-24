@@ -9,6 +9,7 @@ import { config } from './config';
 import { attachContext, csrfProtection, loadSession, requireAuth } from './auth/middleware';
 import type { Db } from './db/connection';
 import { errorMiddleware, notFoundMiddleware } from './lib/http';
+import { protectLeadForm } from './lib/lead-abuse';
 import { captureAcquisition } from './lib/acquisition';
 import { clearLeadReceipt, consumeLeadReceipt, LEAD_RECEIPT_COOKIE } from './lib/lead-quality';
 import { loadCalendarEvents } from './services/calendar';
@@ -155,9 +156,10 @@ export function createApp(options: AppOptions = {}): Express {
     app.get(pagePath, (req, res) => {
       res.setHeader('Content-Security-Policy', landingCsp());
       res.setHeader('Cache-Control', 'public, max-age=300');
-    res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
-    captureAcquisition(req, res);
-      res.type('html').send(publicInfoHtml(pagePath));
+      res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
+      captureAcquisition(req, res);
+      const html = publicInfoHtml(pagePath);
+      res.type('html').send(pagePath === '/contact' ? protectLeadForm(html, req, res) : html);
     });
   }
   app.get('/pricing', (req, res) => {
@@ -165,7 +167,7 @@ export function createApp(options: AppOptions = {}): Express {
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.vary('Cookie'); res.vary('Referer'); res.vary('DNT'); res.vary('Sec-GPC');
     captureAcquisition(req, res);
-    res.type('html').send(pricingHtml());
+    res.type('html').send(protectLeadForm(pricingHtml(), req, res));
   });
   app.get('/contact/thanks', (req, res) => {
     res.setHeader('Content-Security-Policy', landingCsp());

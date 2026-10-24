@@ -1,3 +1,4 @@
+import { loadLeadForm } from '../helpers/lead-form';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,6 +14,14 @@ import { resetAuthThrottles } from '../../server/routes/auth';
 import { setMailTransport, type MailMessage } from '../../server/lib/mailer';
 import { createTestContext, type TestContext } from '../helpers/context';
 
+
+let currentFormToken = '';
+async function prepareForm(app: import('node:http').Server) {
+  const loaded = await loadLeadForm(app);
+  currentFormToken = loaded.token;
+  return loaded;
+}
+
 let ctx: TestContext;
 let shellDir: string;
 const outbox: MailMessage[] = [];
@@ -22,7 +31,7 @@ beforeAll(async () => {
   fs.writeFileSync(path.join(shellDir, 'index.html'), '<!doctype html><html><head><title>App</title></head><body>app shell</body></html>');
   setMailTransport(async (message) => { outbox.push(message); return { sent: true, transport: 'custom' }; });
 });
-beforeEach(() => { resetPublicThrottles(); resetAuthThrottles(); outbox.length = 0; });
+beforeEach(() => { resetPublicThrottles(); resetAuthThrottles(); outbox.length = 0; ctx.db.exec('DELETE FROM lead_mail_attempts'); });
 afterAll(async () => {
   await ctx?.cleanup(); if (shellDir) fs.rmSync(shellDir, { recursive: true, force: true });
   setMailTransport(null); vi.unstubAllEnvs();
@@ -35,7 +44,7 @@ describe('contact conversion integrity', () => {
     const direct = await request(ctx.app).get('/contact/thanks');
     expect(direct.text).not.toContain("gtag('event', 'generate_lead'");
     expect(direct.text).not.toContain('<!--ANALYTICS-->');
-    const posted = await request(ctx.app).post('/api/public/leads').type('form').send(inquiry('receipt@example.org'));
+    const posted = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).type('form').send({ ...inquiry('receipt@example.org'), formToken: currentFormToken });
     expect(posted.status).toBe(303);
     expect(outbox).toHaveLength(2);
     const receipt = cookieValue(posted, LEAD_RECEIPT_COOKIE)!;
@@ -49,28 +58,28 @@ describe('contact conversion integrity', () => {
     expect(replay.text).not.toContain("gtag('event', 'generate_lead'");
   });
   it('deduplicates submissions across limiter resets and suppresses repeat mail and receipts', async () => {
-    const first = await request(ctx.app).post('/api/public/leads').send(inquiry('duplicate@example.org'));
+    const first = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).send({ ...inquiry('duplicate@example.org'), formToken: currentFormToken });
     expect(first.status).toBe(201);
     resetPublicThrottles();
-    const second = await request(ctx.app).post('/api/public/leads').type('form').send(inquiry('duplicate@example.org'));
+    const second = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).type('form').send({ ...inquiry('duplicate@example.org'), formToken: currentFormToken });
     expect(second.status).toBe(303);
     expect(cookieValue(second, LEAD_RECEIPT_COOKIE)).toBeUndefined();
     expect(outbox).toHaveLength(2);
     expect(ctx.db.prepare('SELECT COUNT(*) AS n FROM leads WHERE email = ?').get('duplicate@example.org')).toEqual({ n: 1 });
   });
   it('retains opaque repeated submissions as flagged without sending mail or a receipt', async () => {
-    const response = await request(ctx.app).post('/api/public/leads').send({ email: 'synthetic@example.org', name: 'EXAMPLE1858872SYNTHETIC', organization: 'EXAMPLE1858872SYNTHETIC', message: 'EXAMPLE1858872BOTSTRING', source: 'contact' });
+    const response = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).send({ ...{ email: 'synthetic@example.org', name: 'EXAMPLE1858872SYNTHETIC', organization: 'EXAMPLE1858872SYNTHETIC', message: 'EXAMPLE1858872BOTSTRING', source: 'contact' }, formToken: currentFormToken });
     expect(response.status).toBe(202); expect(outbox).toHaveLength(0);
     expect(ctx.db.prepare('SELECT quality_status FROM leads WHERE email = ?').get('synthetic@example.org')).toEqual({ quality_status: 'flagged' });
   });
   it('silently discards honeypots; invalid forms and forged or expired receipts never convert', async () => {
-    const honey = await request(ctx.app).post('/api/public/leads').type('form').send({ ...inquiry('honeypot@example.org'), website: 'spam.example' });
+    const honey = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).type('form').send({ ...{ ...inquiry('honeypot@example.org'), website: 'spam.example' }, formToken: currentFormToken });
     expect(honey.status).toBe(303); expect(outbox).toHaveLength(0);
     expect(ctx.db.prepare('SELECT id FROM leads WHERE email = ?').get('honeypot@example.org')).toBeUndefined();
-    expect((await request(ctx.app).post('/api/public/leads').send({ email: 'invalid' })).status).toBe(422);
+    expect((await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).send({ ...{ email: 'invalid' }, formToken: currentFormToken })).status).toBe(422);
     const forged = await request(ctx.app).get('/contact/thanks').set('Cookie', `${LEAD_RECEIPT_COOKIE}=${'a'.repeat(64)}`);
     expect(forged.text).not.toContain("gtag('event', 'generate_lead'");
-    const posted = await request(ctx.app).post('/api/public/leads').type('form').send(inquiry('expired@example.org'));
+    const posted = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).type('form').send({ ...inquiry('expired@example.org'), formToken: currentFormToken });
     ctx.db.prepare("UPDATE leads SET receipt_expires_at = '2000-01-01T00:00:00.000Z' WHERE email = ?").run('expired@example.org');
     const expired = await request(ctx.app).get('/contact/thanks').set('Cookie', cookieValue(posted, LEAD_RECEIPT_COOKIE)!);
     expect(expired.text).not.toContain("gtag('event', 'generate_lead'");
@@ -80,13 +89,14 @@ describe('contact conversion integrity', () => {
     directApp.set('trust proxy', false); // Model an untrusted peer; loopback is explicitly trusted in normal local tests.
     const direct = await ctx.serve(directApp);
     for (let i = 0; i < 12; i++) {
-      expect((await request(direct).post('/api/public/leads').set('X-Forwarded-For', `198.51.100.${i}`).send(inquiry(`limit${i}@example.org`))).status).toBe(201);
+      expect((await request(direct).post('/api/public/leads').set('Cookie', (await prepareForm(direct)).cookie).set('X-Forwarded-For', `198.51.100.${i}`).send({ ...inquiry(`limit${i}@example.org`), formToken: currentFormToken })).status).toBe(i < 3 ? 201 : 202);
     }
-    const limited = await request(direct).post('/api/public/leads').set('X-Forwarded-For', '203.0.113.99').send(inquiry('limited@example.org'));
+    const limited = await request(direct).post('/api/public/leads').set('Cookie', (await prepareForm(direct)).cookie).set('X-Forwarded-For', '203.0.113.99').send({ ...inquiry('limited@example.org'), formToken: currentFormToken });
     expect(limited.status).toBe(429);
+    expect(outbox).toHaveLength(6);
   });
   it('restricts quality changes and lead summaries to the existing owner token', async () => {
-    const lead = await request(ctx.app).post('/api/public/leads').send(inquiry('review@example.org'));
+    const lead = await request(ctx.app).post('/api/public/leads').set('Cookie', (await prepareForm(ctx.app)).cookie).send({ ...inquiry('review@example.org'), formToken: currentFormToken });
     expect((await request(ctx.app).patch('/api/admin/leads/quality').send({ id: lead.body.id, quality: 'qualified' })).status).toBe(401);
     expect((await request(ctx.app).patch('/api/admin/leads/quality').set('Authorization', `Bearer ${config.adminToken}`).send({ id: lead.body.id, quality: 'qualified' })).status).toBe(200);
     const summary = await request(ctx.app).get('/api/admin/leads/summary').set('Authorization', `Bearer ${config.adminToken}`);
