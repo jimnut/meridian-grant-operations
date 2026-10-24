@@ -5,6 +5,7 @@ import { ensureDataDirs, getDb } from './db/connection';
 import { startScheduler } from './lib/scheduler';
 import { startBackupScheduler } from './lib/backup-scheduler';
 import { mailerConfigured } from './lib/mailer';
+import { startLeadMailWorker } from './lib/lead-mail';
 import { stripeConfigured, webhookConfigured } from './lib/stripe';
 import { buildCommercialSummary } from './services/commercial-summary';
 
@@ -20,6 +21,7 @@ function main(): void {
   const app = createApp({ db, serveStatic: true });
   const stopScheduler = startScheduler(db);
   const stopBackups = startBackupScheduler(db, config.uploadsDir);
+  const stopLeadMail = startLeadMailWorker(db);
 
   // Bind to loopback unless HOST is set explicitly; see server/config.ts.
   const server = app.listen(config.port, config.host, () => {
@@ -50,6 +52,7 @@ function main(): void {
     console.info(`\n[${signal}] shutting down…`);
     stopScheduler();
     stopBackups();
+    stopLeadMail();
     server.close(() => {
       db.close();
       process.exit(0);

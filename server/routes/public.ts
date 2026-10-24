@@ -6,12 +6,11 @@
 
 import { Router } from 'express';
 
-import { config } from '../config';
 import { consumeLeadToken, reserveLeadNotification, verifiedLeadToken } from '../lib/lead-abuse';
 import { handler, parseBody } from '../lib/http';
 import { newId } from '../lib/ids';
 import { clearLeadReceipt, issueLeadReceipt, leadFingerprint, leadFlag, LEAD_DUPLICATE_MS } from '../lib/lead-quality';
-import { renderHtml, sendMail } from '../lib/mailer';
+import { dispatchLeadMail, enqueueLeadMail } from '../lib/lead-mail';
 import { createThrottle } from '../lib/throttle';
 import { leadSchema } from '../lib/validation';
 
@@ -68,6 +67,7 @@ router.post(
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(leadId, input.email, input.name, input.organization, input.message, input.source,
           now.toISOString(), fingerprint, reason ? 'flagged' : 'unreviewed', reason);
+      if (!reason) enqueueLeadMail(req.db, { ...input, id: leadId }, now.getTime());
       return leadId;
     }).immediate();
     if (!id || reason) {
@@ -80,24 +80,9 @@ router.post(
     // Operational logs deliberately exclude email, names and message content.
     console.info('[lead] accepted', { id, source: input.source });
 
-    void sendMail({
-      to: config.leadNotificationEmail,
-      subject: `New ${input.source} lead: ${input.organization ?? input.email}`,
-      text: [`Email: ${input.email}`, `Name: ${input.name ?? '—'}`, `Organization: ${input.organization ?? '—'}`, `Source: ${input.source}`, '', input.message ?? '(no message)'].join('\n'),
-    });
-    void sendMail({
-      to: input.email,
-      subject: 'We received your message — GrantConsole',
-      text: `Thanks for reaching out${input.name ? `, ${input.name}` : ''}. A real person will reply within one business day.\n\nIn the meantime you can open the live demo at ${config.siteUrl}/signin or start a free trial at ${config.siteUrl}/signup.`,
-      html: renderHtml(
-        'We received your message',
-        [
-          `Thanks for reaching out${input.name ? `, ${input.name}` : ''}. A real person will reply within one business day.`,
-          'In the meantime you can open the live demo or start a free trial — no card needed.',
-        ],
-        { label: 'Start a free trial', url: `${config.siteUrl}/signup` },
-      ),
-    });
+    // The durable jobs already committed with the enquiry. This is only a fast first attempt;
+    // the hosted worker retries quota errors and recovers after restarts.
+    void dispatchLeadMail(req.db);
 
     if (html) {
       issueLeadReceipt(req.db, id, res, now);

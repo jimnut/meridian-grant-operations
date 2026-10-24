@@ -76,7 +76,7 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
     eyebrow: 'Contact',
     heading: 'Talk to the people who build GrantConsole.',
     intro:
-      'Questions about a trial, a plan, importing your spreadsheet, or whether GrantConsole fits your portfolio? Send a note and a real person replies within one business day.',
+      'Questions about a trial, a plan, importing your spreadsheet, or whether GrantConsole fits your portfolio? Send a note to the GrantConsole team. We send an automatic acknowledgement and review your questions separately.',
     body: `
       <section>
         <h2>Send a message</h2>
@@ -307,7 +307,7 @@ export function contactThanksHtml(accepted = false): string {
   ${publicHeader()}
   <main class="page-shell error-page">
     <p class="eyebrow">Message received</p>
-    <h1>Thanks — a real person will reply within one business day.</h1>
+    <h1>Thanks — we received your enquiry.</h1>
     <p class="intro">In the meantime you can open the live demo with seeded nonprofit data, or start your own free trial. No card, no sales call.</p>
     <div class="actions"><a class="button" href="/signup">Start a free trial</a><a class="text-link" href="/signin">Open the live demo</a></div>
   </main>

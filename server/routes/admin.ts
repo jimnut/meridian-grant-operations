@@ -93,6 +93,47 @@ router.get('/leads/summary', handler((req, res) => {
     definition: 'Stored contact submissions, not trial activations. Historical rows are unreviewed. Duplicate and honeypot submissions are not stored. Flagged submissions receive no automated emails.' });
 }));
 
+/** Operational receipts: provider acceptance is deliberately separate from inbox delivery. */
+router.get('/lead-mail', handler((req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    counts: req.db.prepare('SELECT status, COUNT(*) AS count FROM lead_mail_outbox GROUP BY status').all(),
+    provider: req.db.prepare('SELECT blocked_until, reason FROM lead_mail_provider_state WHERE id = 1').get() ?? null,
+    jobs: req.db.prepare(`SELECT id, lead_id, kind, recipient, status, attempts, next_attempt_at,
+      provider_id, last_error, created_at, sent_at FROM lead_mail_outbox ORDER BY created_at DESC LIMIT 100`).all(),
+    definition: 'sent means provider accepted the request, not inbox delivery or a substantive human response. Historical leads are not automatically queued.',
+  });
+}));
+
+router.get('/leads/reply-holds', handler((req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(req.db.prepare('SELECT email, reason, created_at FROM lead_reply_holds ORDER BY created_at').all());
+}));
+
+router.post('/leads/reply-holds', handler((req, res) => {
+  const input = parseBody(z.object({ email: z.string().trim().toLowerCase().email().max(200), reason: z.string().trim().min(1).max(200) }), req.body);
+  req.db.transaction(() => {
+    req.db.prepare(`INSERT INTO lead_reply_holds (email, reason, created_at) VALUES (?, ?, ?)
+      ON CONFLICT(email) DO UPDATE SET reason = excluded.reason`).run(input.email, input.reason, Date.now());
+    req.db.prepare(`UPDATE lead_mail_outbox SET status = 'held', last_error = 'recipient_hold'
+      WHERE recipient = ? AND status = 'pending'`).run(input.email);
+  }).immediate();
+  res.json({ ok: true });
+}));
+
+router.delete('/leads/reply-holds', handler((req, res) => {
+  const input = parseBody(z.object({ email: z.string().trim().toLowerCase().email().max(200) }), req.body);
+  if (config.leadReplyHoldEmails.includes(input.email)) {
+    throw new ApiError('BAD_REQUEST', 'Remove this address from LEAD_REPLY_HOLD_EMAILS before explicitly releasing its persisted hold.');
+  }
+  req.db.transaction(() => {
+    req.db.prepare('DELETE FROM lead_reply_holds WHERE email = ?').run(input.email);
+    req.db.prepare(`UPDATE lead_mail_outbox SET status = 'pending', next_attempt_at = ?, last_error = NULL
+      WHERE recipient = ? AND status = 'held'`).run(Date.now(), input.email);
+  }).immediate();
+  res.json({ ok: true });
+}));
+
 router.post(
   '/plan',
   handler((req, res) => {
