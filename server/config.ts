@@ -134,6 +134,13 @@ export function resolveLeadNotificationEmail(env: NodeJS.ProcessEnv = process.en
   return parsed.data;
 }
 
+function resolveLeadReplyHolds(): string[] {
+  return envString('LEAD_REPLY_HOLD_EMAILS').split(',').map((email) => email.trim().toLowerCase()).filter(Boolean).map((email) => {
+    if (!z.string().email().max(200).safeParse(email).success) throw new Error('LEAD_REPLY_HOLD_EMAILS must contain valid comma-separated email addresses.');
+    return email;
+  });
+}
+
 export const config = {
   nodeEnv,
   isProduction,
@@ -164,6 +171,7 @@ export const config = {
   appUrl: envString('APP_URL', envString('SITE_URL', 'https://grantconsole.com')).replace(/\/+$/, ''),
   supportEmail,
   leadNotificationEmail: resolveLeadNotificationEmail(),
+  leadReplyHoldEmails: resolveLeadReplyHolds(),
   /** Self-serve workspace creation. On by default; flip off to pause launches. */
   signupsEnabled: envBool('SIGNUPS_ENABLED', true),
   trialDays: envInt('TRIAL_DAYS', TRIAL_DAYS),

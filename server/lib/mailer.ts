@@ -15,6 +15,10 @@ export interface MailMessage {
   subject: string;
   text: string;
   html?: string;
+  /** Durable jobs freeze the complete provider request, including sender settings. */
+  from?: string;
+  replyTo?: string;
+  idempotencyKey?: string;
 }
 
 export interface MailResult {
@@ -22,6 +26,11 @@ export interface MailResult {
   transport: 'resend' | 'console' | 'custom';
   id?: string;
   error?: string;
+  statusCode?: number;
+  errorCode?: string;
+  retryAfterMs?: number;
+  retryable?: boolean;
+  ambiguous?: boolean;
 }
 
 export type MailTransport = (message: MailMessage) => Promise<MailResult>;
@@ -62,22 +71,41 @@ async function resendTransport(message: MailMessage): Promise<MailResult> {
     headers: {
       Authorization: `Bearer ${config.resendApiKey}`,
       'Content-Type': 'application/json',
+      ...(message.idempotencyKey ? { 'Idempotency-Key': message.idempotencyKey } : {}),
     },
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({
-      from: config.emailFrom,
+      from: message.from ?? config.emailFrom,
       to: [message.to],
       subject: message.subject,
       text: message.text,
       ...(message.html ? { html: message.html } : {}),
-      ...(config.emailReplyTo ? { reply_to: config.emailReplyTo } : {}),
+      ...((message.replyTo ?? config.emailReplyTo) ? { reply_to: message.replyTo ?? config.emailReplyTo } : {}),
     }),
   });
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    return { sent: false, transport: 'resend', error: `Resend responded ${response.status}: ${detail.slice(0, 300)}` };
+    let errorCode = 'provider_error';
+    try {
+      const name = (JSON.parse(detail) as { name?: unknown }).name;
+      if (typeof name === 'string' && /^[a-z_]{1,64}$/.test(name)) errorCode = name;
+    } catch { /* non-JSON provider error */ }
+    const header = response.headers.get('Retry-After');
+    const seconds = header === null ? NaN : Number(header);
+    const retryAfterMs = header === null ? undefined : Number.isFinite(seconds)
+      ? Math.max(0, seconds * 1000) : Math.max(0, Date.parse(header) - Date.now());
+    return {
+      sent: false, transport: 'resend', statusCode: response.status, errorCode,
+      error: `Resend responded ${response.status}: ${errorCode}`,
+      retryAfterMs: retryAfterMs !== undefined && Number.isFinite(retryAfterMs) ? retryAfterMs : undefined,
+      retryable: response.status === 429 || response.status >= 500 || response.status === 401 || response.status === 403
+        || errorCode === 'concurrent_idempotent_requests',
+      ambiguous: response.status >= 500 || errorCode === 'concurrent_idempotent_requests',
+    };
   }
   const data = (await response.json().catch(() => ({}))) as { id?: string };
-  return { sent: true, transport: 'resend', id: data.id };
+  return data.id ? { sent: true, transport: 'resend', id: data.id }
+    : { sent: false, transport: 'resend', errorCode: 'missing_provider_receipt', retryable: true, ambiguous: true };
 }
 
 async function consoleTransport(message: MailMessage): Promise<MailResult> {
@@ -95,7 +123,8 @@ export async function sendMail(message: MailMessage): Promise<MailResult> {
     return await consoleTransport(message);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    console.error(`[mail] failed to send to ${message.to}: ${reason}`);
-    return { sent: false, transport: override ? 'custom' : config.resendApiKey ? 'resend' : 'console', error: reason };
+    console.error('[mail] transport request failed');
+    return { sent: false, transport: override ? 'custom' : config.resendApiKey ? 'resend' : 'console', error: reason,
+      errorCode: 'transport_error', retryable: true, ambiguous: true };
   }
 }

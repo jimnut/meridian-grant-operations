@@ -6,7 +6,7 @@
  * never taken from client input.
  */
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -299,6 +299,38 @@ CREATE TABLE IF NOT EXISTS lead_mail_attempts (
   attempted_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_lead_mail_attempts_time ON lead_mail_attempts(attempted_at);
+
+-- Created only for newly accepted leads; migrations never mail historical submissions.
+CREATE TABLE IF NOT EXISTS lead_mail_outbox (
+  id TEXT PRIMARY KEY,
+  lead_id TEXT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL CHECK (kind IN ('acknowledgement', 'owner_notification')),
+  recipient TEXT NOT NULL,
+  envelope TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sending','sent','failed','held','cancelled','uncertain')),
+  attempts INTEGER NOT NULL DEFAULT 0,
+  next_attempt_at INTEGER NOT NULL,
+  attempt_started_at INTEGER,
+  ambiguous_since INTEGER,
+  lease_token TEXT,
+  lease_until INTEGER,
+  provider_id TEXT,
+  last_error TEXT,
+  created_at INTEGER NOT NULL,
+  sent_at INTEGER,
+  UNIQUE (lead_id, kind)
+);
+CREATE INDEX IF NOT EXISTS idx_lead_mail_due ON lead_mail_outbox(status, next_attempt_at);
+CREATE TABLE IF NOT EXISTS lead_reply_holds (
+  email TEXT PRIMARY KEY COLLATE NOCASE,
+  reason TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS lead_mail_provider_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  blocked_until INTEGER NOT NULL,
+  reason TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS billing_events (
   id           TEXT PRIMARY KEY,
