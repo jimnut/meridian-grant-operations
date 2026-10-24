@@ -51,8 +51,10 @@ function main(): void {
     stopScheduler();
     stopBackups();
     server.close(() => {
-      db.close();
-      process.exit(0);
+      void stopBackups.whenIdle().finally(() => {
+        db.close();
+        process.exit(0);
+      });
     });
     // Do not hang forever if a socket refuses to close.
     setTimeout(() => process.exit(0), 5000).unref();

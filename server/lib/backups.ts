@@ -338,6 +338,16 @@ export async function verifyBackup(options: { bundleDir: string; encryptionKey: 
   } finally { await fsp.rm(scratch, { recursive: true, force: true }); }
 }
 
+/** Exact object allowlist from the authenticated manifest; names alone do not prove encryption. */
+export async function authenticatedBackupObjectNames(options: { bundleDir: string; encryptionKey: string }): Promise<string[]> {
+  const key = decodeKey(options.encryptionKey);
+  try {
+    const bundle = await checkedPath(options.bundleDir);
+    const manifest = await readManifest(bundle, key);
+    return ['manifest.enc', manifest.database.object, ...manifest.documents.map((document) => document.object)];
+  } finally { key.fill(0); }
+}
+
 /** Remove only authenticated bundles older than the retention window, after a successful new backup. */
 export async function pruneBackups(options: { destinationDir: string; encryptionKey: string; retainDays: number; keepBackupId: string; now?: Date }): Promise<number> {
   if (!Number.isInteger(options.retainDays) || options.retainDays < 1 || options.retainDays > 90) throw new Error('Backup retention must be 1–90 days.');
