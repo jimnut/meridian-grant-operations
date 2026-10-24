@@ -177,6 +177,7 @@ export const config = {
   trialDays: envInt('TRIAL_DAYS', TRIAL_DAYS),
   /** Transactional email (Resend). Off unless the key is set; the app degrades gracefully. */
   resendApiKey: envString('RESEND_API_KEY'),
+  resendWebhookSecret: envString('RESEND_WEBHOOK_SECRET'),
   emailFrom: envString('EMAIL_FROM', 'GrantConsole <support@grantconsole.com>'),
   emailReplyTo: envString('EMAIL_REPLY_TO', 'support@grantconsole.com'),
   /** Stripe billing. Checkout appears only when a secret key and at least one price id exist. */

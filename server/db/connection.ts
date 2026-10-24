@@ -28,6 +28,10 @@ export function migrate(db: Db): void {
       db.exec(`ALTER TABLE ${migration.table} ADD COLUMN ${migration.column} ${migration.ddl}`);
     }
   }
+  // Preserve existing acceptance receipts; never enqueue historical leads.
+  db.exec(`INSERT OR IGNORE INTO lead_mail_receipts (provider_id, job_id, generation, accepted_at)
+    SELECT provider_id, id, retry_generation, COALESCE(sent_at, created_at)
+    FROM lead_mail_outbox WHERE provider_id IS NOT NULL`);
   db.prepare('INSERT INTO schema_meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(
     'schema_version',
     String(SCHEMA_VERSION),

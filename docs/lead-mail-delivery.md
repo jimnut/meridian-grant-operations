@@ -37,6 +37,42 @@ suppression still require normal operational review. Replying directly to an
 existing GrantConsole email or to its Gmail alias is separate from this public
 form pipeline; this worker does not read or automatically answer Gmail threads.
 
+## Delivery events after acceptance
+
+Resend can accept a request and subsequently emit `email.failed` with
+`failed.reason = reached_daily_quota`. HTTP retries alone cannot recover that
+case. Configure one signed webhook at `https://grantconsole.com/api/mail/webhook`
+and place its signing secret in `RESEND_WEBHOOK_SECRET`. The existing sending-only
+API key stays scoped to the sending domain; no full-access key is needed.
+Subscribe only to `email.sent`, `email.delivered`, `email.failed`, `email.bounced`,
+`email.complained`, `email.suppressed` and `email.delivery_delayed`.
+
+The route checks the Svix HMAC against the exact request bytes, requires a fresh
+signature timestamp, and persists unique event IDs with minimal metadata. It
+does not store raw webhook bodies or enquiry subjects. Callbacks arriving before
+the HTTP acceptance receipt are retained and reconciled once the receipt arrives.
+No configured signing secret means the route returns503 without processing.
+
+Only a definitive quota-failure event creates a new idempotency generation, after
+the applicable quota pause. The original message envelope stays unchanged and
+all previous provider receipts remain available for review. Ambiguous HTTP
+outcomes retain the same generation and existing23-hour safety window. Duplicate
+or old-attempt failures cannot enqueue another retry of a newer accepted message.
+Late delivery cancels an unsent quota retry. Bounce, complaint and suppression
+events stop retries and persist recipient holds; this never releases an existing
+operator hold. Unknown failure reasons stop for review rather than being retried.
+
+`delivery_status` is separate from the queue's `status`. Even `delivered` is a
+provider report that the destination mail server accepted the email; verify the
+actual mailbox separately when testing. Acknowledgements remain separate from
+human answers.
+
+For acceptance receipts created before webhook configuration, an operator may
+record a narrowly verified dashboard event using `recordLeadMailDeliveryEvent`
+with source `operator_verified_dashboard`. Inspect the exact provider ID and
+failure reason first. Never fabricate delivery events, retry unknown outcomes,
+or bulk replay historical spam.
+
 ## Holds and status
 
 Set `LEAD_REPLY_HOLD_EMAILS` to comma-separated addresses before deployment when a
@@ -71,4 +107,6 @@ without forcing an early retry. After quota recovery, verify the provider receip
 and the actual two inbox messages. Historical spam must never be bulk queued.
 
 Provider references: [Resend errors](https://resend.com/docs/api-reference/errors)
-and [idempotency keys](https://resend.com/docs/dashboard/emails/idempotency-keys).
+and [idempotency keys](https://resend.com/docs/dashboard/emails/idempotency-keys),
+[failed events](https://resend.com/docs/webhooks/emails/failed) and
+[Svix verification](https://docs.svix.com/receiving/verifying-payloads/how-manual).

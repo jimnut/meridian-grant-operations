@@ -41,6 +41,7 @@ import funderRoutes from './routes/funders';
 import grantChildRoutes from './routes/grant-children';
 import grantRoutes from './routes/grants';
 import publicRoutes from './routes/public';
+import { resendWebhookHandler } from './routes/mail-webhook';
 import teamRoutes from './routes/team';
 import workspaceRoutes from './routes/workspace';
 
@@ -130,6 +131,7 @@ export function createApp(options: AppOptions = {}): Express {
   // Stripe signs the raw body, so its webhook is parsed as bytes and mounted
   // ahead of the JSON parser and the CSRF gate; the signature is its auth.
   app.post('/api/billing/webhook', express.raw({ type: '*/*', limit: '1mb' }), stripeWebhookHandler);
+  app.post('/api/mail/webhook', express.raw({ type: '*/*', limit: '64kb' }), resendWebhookHandler);
   // Founder operations are called from a terminal with a bearer token.
   app.use('/api/admin', express.json({ limit: '256kb' }), adminRoutes);
 
