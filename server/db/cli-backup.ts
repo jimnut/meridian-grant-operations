@@ -1,18 +1,23 @@
 import Database from 'better-sqlite3';
 import { config } from '../config';
 import { restoreBackup, runBackupFromEnvironment, verifyBackup } from '../lib/backups';
+import { resolveBackupS3Credentials, resolveBackupS3Environment, uploadAndVerifyS3Backup } from '../lib/backup-s3';
 
 async function main(): Promise<void> {
   const [command, bundleDir, restoreDir] = process.argv.slice(2);
   const encryptionKey = process.env.BACKUP_ENCRYPTION_KEY;
   if (!encryptionKey) throw new Error('BACKUP_ENCRYPTION_KEY is required. Supply secrets through the environment, never CLI arguments.');
   if (command === 'create') {
+    const offsite = resolveBackupS3Environment();
+    const offsiteCredentials = offsite ? resolveBackupS3Credentials() : null;
     // Open the existing database without migrations or creating a missing database.
     const db = new Database(config.databaseFile, { readonly: true, fileMustExist: true });
     try {
       const receipt = await runBackupFromEnvironment(db, config.uploadsDir);
       if (!receipt) throw new Error('Set BACKUP_ENABLED=true to explicitly opt in.');
       console.info(JSON.stringify({ ...receipt, restoreVerified: true }));
+      if (offsite) console.info(JSON.stringify(await uploadAndVerifyS3Backup({ bundleDir: receipt.path, encryptionKey, destination: offsite,
+        credentials: offsiteCredentials ?? undefined })));
     } finally { db.close(); }
   } else if (command === 'verify' && bundleDir && !restoreDir) {
     console.info(JSON.stringify({ ...await verifyBackup({ bundleDir, encryptionKey }), restoreVerified: true }));

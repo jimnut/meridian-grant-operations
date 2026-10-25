@@ -43,9 +43,10 @@ Prepared 25 October 2026. **Every item starts pending unless dated evidence is e
 | Legal operator | Pending | — | Operator | Complete identity |
 | Customer DPA | Draft | `customer-dpa.md`, 25 October 2026 | Operator | Complete, approve and agree |
 | Supplier terms / transfers | Pending account verification | `suppliers-and-transfers.md` records public sources | Operator | Account evidence and assessment |
-| Application 2FA | Pending separate implementation verification | — | Engineering | Test and production evidence |
-| Backups | Pending separate implementation/operational verification | — | Operations | Schedule, independent destination, restore and alerts |
-| Live erasure | Pending separate implementation verification | — | Engineering | Success/failure/shared-user tests and deployment |
+| Application 2FA | Implemented, tested and deployed; opt-in per user | Reviewed commit `c5be274038b5ea24fea7f67fd1ae8b7b951694b9`; Render deployment `dep-dbei8bjrjlhs73fpjfqg`, Frankfurt, 25 October 2026 00:34:35 Amman time; production `/security` checked | Engineering | Record actual enrolment separately; verify provider-console MFA and access ownership |
+| Local backups and recovery | Daily encrypted local backups enabled; initial backup and full isolated restore verified | Production log, 25 October 2026 00:34:45 Amman time; `/var/data/backups`, configured 14-day retention, same production disk | Operations | Verify continued schedule, pruning, alert ownership and repeated restores; no guaranteed RPO/RTO established |
+| Independent offsite backups | Deferred by operator; not active or verified | Operator chose “Keep off-site backups pending” on 25 October 2026. Optional adapter prepared and tested in a separate draft change; no AWS credentials, uploads or lifecycle changes made | Operator / Operations | Resume only after renewed explicit approval; complete account/transfer review and real remote restore proof |
+| Live erasure | Improved implementation tested and deployed; no customer erasure performed for verification | Six synthetic API cases cover orphan identities, shared users, surviving references and filesystem failures; included in deployed security release | Engineering | Exercise an authorised complete export/deletion and restoration procedure before a contractual erasure assurance |
 | Operating procedures | Draft | `operating-safeguards.md`, 25 October 2026 | Operator | Adopt, assign and exercise |
 
 ## Safe procurement wording by evidence state

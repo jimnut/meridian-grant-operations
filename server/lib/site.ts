@@ -193,7 +193,7 @@ const PUBLIC_PAGES: Record<PublicInfoPath, PublicPage> = {
       </section>
       <section>
         <h2>Who processes data on our behalf</h2>
-        <p>Render (application hosting and storage), Stripe (payments), Google (analytics) and a transactional email provider (Resend). These providers publish their own processing terms. Account-specific acceptance, service scope and any international-transfer arrangements must be assessed before customer processing; this notice is not proof that a customer DPA has been agreed. We do not use advertising networks.</p>
+        <p>Render (application hosting and storage), Stripe (payments), Google (analytics) and a transactional email provider (Resend). ${process.env.BACKUP_S3_ENABLED === 'true' ? 'Amazon Web Services is also configured for application-encrypted recovery copies on S3 in Frankfurt, Germany; backup encryption keys are held separately. ' : ''}These providers publish their own processing terms. Account-specific acceptance, service scope and any international-transfer arrangements must be assessed before customer processing; this notice is not proof that a customer DPA has been agreed. We do not use advertising networks.</p>
       </section>
       <section>
         <h2>Retention and deletion</h2>
