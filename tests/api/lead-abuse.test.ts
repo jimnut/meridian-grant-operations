@@ -126,6 +126,28 @@ describe('public form abuse protection', () => {
     expect(outbox).toHaveLength(2);
   });
 
+  it.each([
+    'Вы стали обладателем уникального бонуса! Проверьте детали https://reward.example.invalid/claim',
+    'Вам перевод 12345 руб. Получить https://reward.example.invalid/transfer',
+    'Claim your free prize at https://reward.example.invalid/claim',
+  ])('quarantines a message-only reward solicitation before reserving or queueing mail: %s', async (message) => {
+    expect((await submit(1, { name: 'Synthetic Visitor', organization: 'Synthetic Visitor', message })).status).toBe(202);
+    expect(outbox).toHaveLength(0);
+    expect(ctx.db.prepare('SELECT quality_status, quality_reason FROM leads').get())
+      .toEqual({ quality_status: 'flagged', quality_reason: 'linked_reward_solicitation' });
+    expect(ctx.db.prepare('SELECT COUNT(*) AS n FROM lead_mail_outbox').get()).toEqual({ n: 0 });
+    expect(ctx.db.prepare('SELECT COUNT(*) AS n FROM lead_mail_attempts').get()).toEqual({ n: 0 });
+  });
+
+  it.each([
+    'Our staff bonus policy is at https://nonprofit.example.invalid/policy. Can we track it against restricted grants?',
+    'Мы получили грант. Нужна помощь с отчётностью: https://nonprofit.example.invalid/grants',
+  ])('keeps legitimate linked inquiries eligible for notifications: %s', async (message) => {
+    expect((await submit(1, { message })).status).toBe(201);
+    expect(ctx.db.prepare('SELECT quality_status FROM leads').get()).toEqual({ quality_status: 'unreviewed' });
+    expect(outbox).toHaveLength(2);
+  });
+
   it('limits changed messages from the same address even with rotating connections', async () => {
     for (let i = 0; i < 4; i++) {
       const result = await submit(i, { email: i % 2 ? 'SAME@example.org' : 'same@example.org' }, `198.51.100.${i + 1}`);
@@ -194,7 +216,24 @@ describe('persistent rolling notification limits', () => {
     [{ name: 'Normal\r\nBcc: test@example.org', organization: null, message: null }, 'identity_contains_newline'],
     [{ name: 'Self Employed', organization: 'Self Employed', message: 'Please send details.' }, null],
     [{ name: 'Jane', organization: 'River Foundation', message: 'Our site is https://nonprofit.example and we need reporting help.' }, null],
+    [{ name: 'Visitor', organization: 'Visitor', message: 'Ура! Ваш эксклюзивный подарок ждёт вас: www.reward.example.invalid' }, 'linked_reward_solicitation'],
+    [{ name: 'Visitor', organization: 'Visitor', message: 'You have won a cash prize. h\u200Bttps://reward.example.invalid' }, 'linked_reward_solicitation'],
+    [{ name: 'Jane', organization: 'River Foundation', message: 'You have won a cash prize.' }, null],
+    [{ name: 'أحمد', organization: 'مؤسسة الخير', message: 'هل تدعمون تقارير المنح؟ موقعنا https://nonprofit.example.invalid' }, null],
+    [{ name: 'Jane', organization: 'River Foundation', message: 'Can you confirm you have received our staff bonus policy? https://example.invalid/policy' }, null],
+    [{ name: 'Jane', organization: 'River Foundation', message: 'You have received an exclusive bonus: https://reward.example.invalid' }, 'linked_reward_solicitation'],
   ])('flags high-confidence abuse while preserving ordinary inquiries: %j', (input, expected) => {
     expect(leadFlag(input)).toBe(expected);
+  });
+
+  it.each([
+    'Our Q3 interim grant report is ready: https://example.invalid/grants/q3 — Section 5 covers the fund transfer schedule.',
+    'Could you confirm updated staff bonus amounts before payroll? Draft policy: https://example.invalid/hr/bonus-policy',
+    'Добрый день! Промежуточный отчёт по гранту размещён здесь: https://example.invalid/otchety — график траншей в разделе 4.',
+    'Просим подтвердить начисление премий сотрудникам до даты перевода зарплаты. Реестр: https://example.invalid/zarplata',
+    'مرحبًا، تقرير المنحة جاهز للمراجعة https://example.invalid/grants/report — وجدول تحويل الدفعات في الصفحة ٦.',
+    'نرجو اعتماد مستحقات مكافآت الموظفين قبل موعد تحويل الرواتب. التفاصيل: https://example.invalid/hr/bonuses',
+  ])('preserves a synthetic multilingual legitimate transfer/bonus context: %s', (message) => {
+    expect(leadFlag({ name: 'Synthetic Visitor', organization: 'Synthetic Foundation', message })).toBeNull();
   });
 });

@@ -27,6 +27,13 @@ export function leadFlag(input: { name: string | null; organization: string | nu
   if (/[\r\n]/.test(`${name}${organization}`)) return 'identity_contains_newline';
   if (name.length >= 24 && name === organization && name === message) return 'repeated_message_fields';
   if ((message.match(/https?:\/\//gi)?.length ?? 0) > 3) return 'excessive_message_links';
+  // Reward scams also put their only link in the message. Require both a
+  // second-person claim/collection lure and reward content; normal website
+  // links, grant questions and the language of an inquiry remain allowed.
+  const messageHasLink = /(?:https?:\/\/|www\.)/i.test(message);
+  const rewardLure = /(?:you(?:['’]ve|\s+have)?\s+won|you(?:['’]ve|\s+have)?\s+received\s+(?:(?:a|an|your|free|cash|exclusive|special)\s+){0,3}(?:bonus|reward|prize)\b|claim\s+(?:your|a)\s+(?:free\s+)?(?:bonus|reward|prize)|вы\s+(?:стали\s+обладателем|выиграли)|вам\s+(?:перевод|зачислен)|ваш(?:а|е|и)?\s+(?:эксклюзивн\S*\s+)?(?:бонус|подарок))/iu;
+  const rewardContent = /(?:\b(?:bonus|reward|prize|cash)\b|бонус|подарок|перевод|руб\.?)/iu;
+  if (messageHasLink && rewardLure.test(message) && rewardContent.test(message)) return 'linked_reward_solicitation';
   const repeated = name;
   const opaque = (value: string) => /^[A-Z0-9]{16,80}$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 5;
   if (repeated && repeated === input.organization?.trim() && opaque(repeated) && input.message && opaque(input.message.trim())) {
